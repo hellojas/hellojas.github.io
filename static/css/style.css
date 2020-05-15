@@ -1,3 +1,7 @@
+/* 
+thank you to:
+Copyright (c) 2020 by Lionel T (https://codepen.io/elrumordelaluz/pen/iogHk)
+*/
 @import url(https://fonts.googleapis.com/css?family=Josefin+Sans:100,400);
 
 body {
@@ -122,4 +126,15 @@ body {
 
 .txt a:hover {
   text-decoration:underline;
+}
+.footer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 1rem;
+  text-align: center;
+  /* background-color: #ddd; */
+  /* max-width: 30%; */
+  font-size: 13px; 
 }
