@@ -47,6 +47,8 @@
 
   $(window).load(function() {
     return window.signature.animate();
-  });
+  })
+
+  
 
 }).call(this);
