@@ -154,31 +154,40 @@ body {
 /* top popover */
 
 button {
-  font-size: 10px;
+  font-size: 12px;
   font-family: Verdana, Geneva, Tahoma, sans-serif;
+  /* max-width:100px; */
+
 }
 
 .ole, .elo {
-  background: rgb(223, 189, 180);
-  padding: 5px 16px;
+  padding: 1px 1px;
   display: inline-block;
   font-size: .2.em;
   border-radius: 4px;
   border: 0;
   cursor: pointer;
   color: #000;
+
 }
 
 .ct {
   text-align: center
+  
 }
+.popup {
+  font: 12px Arial, sans-serif;
+  padding: 1px 1px;
 
+}
 .two {
   background: rgb(223, 189, 150);
 }
 
 .three {
   background: rgb(223, 189, 150);
+  
+  
 }
 
 .four {
@@ -190,56 +199,61 @@ button {
   color: black;
   /* text-shadow: 1px 1px 1px #000; */
   box-shadow: 0 0 0 #555;
+
+  
 }
 
-.multiple_elements {
-  padding: 10px 0 10px 0;
-  text-align: center;
+
+/* pop up box */
+.popup-box {
+  position: relative;
+  border-radius: 5px;
+  max-width: 250px;
+  background: #fff;
+  display: none;
+  box-shadow: 1px 1px 5px rgba(0,0,0,0.2);
+  font-family: Arial, sans-serif;
+  z-index: 9999999;
+  font-size: 14px;
+  margin-bottom: 10%;
+  margin-left: 45%;
+
 }
 
-/*customizing tooltip color*/
-
-/*right tooltip*/
-
-.tooltip.right>.tooltip-arrow {
-  border-right-color: dodgerblue;
+.popup-box .close {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  font-family: Arial, Helvetica, sans-serif;  
+  font-weight: bold;
+  cursor: pointer;
+  color: #434343;
+  padding: 20px;
+  font-size: 20px;
 }
 
-/*bottom tooltip*/
-
-.tooltip.bottom>.tooltip-arrow {
-  border-bottom-color: dodgerblue;
+.popup-box .close:hover {
+  color: #000;
 }
 
-/*top tooltip*/
-
-.tooltip.top>.tooltip-arrow {
-  border-top-color: dodgerblue;
+.popup-box h2 {
+  padding: 0;
+  margin: 0;
+  font-size: 18px;
+}
+.popup-box .top {
+  padding: 20px;
 }
 
-/*left tooltip*/
+.popup-box .bottom {
+  background: #eee;
+  border-top: 1px solid #e5e5e5;
+  padding: 20px;
+  font-size: 12px;
+  font-family: 'Courier New', Courier, monospace, sans-serif;  
+  text-align: left;
 
-.tooltip.left>.tooltip-arrow {
-  border-left-color: dodgerblue;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
 }
 
-/*tooltip inner*/
-
-.tooltip>.tooltip-inner {
-  background-color: dodgerblue;
-  text-shadow: 0 1px 1px #000;
-  font-weight: normal;
-}
-
-code {
-  color: royalblue;
-  background-color: azure;
-  font-size: 10px;
-}
-
-@media (max-width:240px) {
-  .ole, .elo {
-    padding: 15px 16px;
-    font-size: 10px;
-  }
-}
