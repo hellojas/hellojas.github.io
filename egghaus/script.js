@@ -84,6 +84,15 @@ const products = [
         image: "🥯",
         rating: 4.4,
         description: "Freshly baked artisanal bagels. Choose from various flavors and enjoy with your favorite toppings."
+    },
+    {
+        id: 9,
+        name: "Milk Bread",
+        price: 2.00,
+        category: "noms",
+        image: "🍞",
+        rating: 4.5,
+        description: "Fluffy bites of heaven."
     }
 ];
 
