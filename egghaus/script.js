@@ -9,63 +9,88 @@ let currentQuantity = 1;
 // ===================================
 // PRODUCT DATA
 // ===================================
+// ===================================
+// PRODUCT DATA - Updated for Egghaus Social
+// ===================================
 
 const products = [
+    // DRINKS
     {
         id: 1,
-        name: "Premium Matcha Latte",
+        name: "Iced Matcha Latte",
         price: 8.50,
-        category: "latte",
+        category: "drinks",
         image: "🍵",
         rating: 4.8,
-        description: "Experience the perfect harmony of ceremonial grade matcha and steamed milk, creating a creamy and refreshing beverage that awakens your senses."
+        description: "Creamy iced matcha latte with premium ceremonial grade matcha and your choice of milk. Perfectly balanced and refreshing."
     },
     {
         id: 2,
-        name: "Traditional Matcha",
-        price: 6.00,
-        category: "matcha",
-        image: "🌿",
-        rating: 4.9,
-        description: "Pure ceremonial grade matcha whisked to perfection. A traditional preparation that delivers the authentic taste of Japanese tea ceremony."
+        name: "Iced Yuzu Matcha",
+        price: 9.00,
+        category: "drinks",
+        image: "🍋",
+        rating: 4.7,
+        description: "Unique fusion of earthy matcha and bright yuzu citrus served over ice. A refreshing twist on traditional matcha."
     },
     {
         id: 3,
-        name: "Iced Matcha Latte",
-        price: 9.00,
-        category: "latte",
-        image: "🧊",
-        rating: 4.7,
-        description: "Refreshing cold matcha latte with ice, perfect for warm days. Made with premium matcha and your choice of milk."
+        name: "Iced Hojicha",
+        price: 7.50,
+        category: "drinks",
+        image: "🍂",
+        rating: 4.6,
+        description: "Smooth roasted green tea with a nutty, caramel-like flavor served cold. Less caffeine, more comfort."
     },
     {
         id: 4,
-        name: "Matcha Cheesecake",
-        price: 7.50,
-        category: "dessert",
-        image: "🍰",
-        rating: 4.6,
-        description: "Creamy cheesecake infused with premium matcha powder. A perfect balance of sweet and earthy flavors."
+        name: "Iced Coffee",
+        price: 6.50,
+        category: "drinks",
+        image: "☕",
+        rating: 4.5,
+        description: "Classic cold brew coffee, smooth and bold. Perfect for coffee lovers seeking a refreshing caffeine kick."
     },
+    // DESSERTS
     {
         id: 5,
-        name: "Matcha Ice Cream",
-        price: 5.50,
+        name: "Burnt Basque Cheesecake",
+        price: 8.00,
         category: "dessert",
-        image: "🍦",
-        rating: 4.5,
-        description: "Rich and creamy matcha ice cream made with authentic Japanese matcha. A cooling treat for matcha lovers."
+        image: "🍰",
+        rating: 4.9,
+        description: "Rich, creamy cheesecake with a signature burnt top. Our most popular dessert with a perfectly caramelized exterior."
     },
     {
         id: 6,
-        name: "Matcha Bubble Tea",
-        price: 8.00,
-        category: "latte",
-        image: "🧋",
+        name: "Ube Cheesecake",
+        price: 8.50,
+        category: "dessert",
+        image: "💜",
         rating: 4.8,
-        description: "Fun and refreshing bubble tea with matcha flavor and chewy tapioca pearls. Instagram-worthy and delicious!"
+        description: "Vibrant purple yam cheesecake with a smooth, velvety texture. A Filipino-inspired treat that's Instagram-worthy and delicious."
+    },
+    {
+        id: 7,
+        name: "Chocolate Ganache Tart",
+        price: 7.50,
+        category: "dessert",
+        image: "🍫",
+        rating: 4.7,
+        description: "Decadent chocolate tart with silky smooth ganache filling. Rich, indulgent, and perfect for chocolate lovers."
+    },
+    // FOOD
+    {
+        id: 8,
+        name: "Bagels",
+        price: 5.50,
+        category: "food",
+        image: "🥯",
+        rating: 4.4,
+        description: "Freshly baked artisanal bagels. Choose from various flavors and enjoy with your favorite toppings."
     }
 ];
+
 
 // ===================================
 // UTILITY FUNCTIONS
