@@ -45,7 +45,7 @@ const products = [
         category: "coffee",
         image: "☕",
         rating: 4.5,
-        description: "Classic cold brew coffee, smooth and bold. Perfect for coffee lovers seeking a refreshing caffeine kick."
+        description: "Classic japanese drip iced coffee, smooth and bold. Perfect for coffee lovers seeking a refreshing caffeine kick.  Today's selection is a honey aponte columbian coffee from St. Kilda.  Tasting notes: grapefruit, guava, white peach."
     },
     // DESSERTS
     {
