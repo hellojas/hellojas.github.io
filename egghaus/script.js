@@ -18,7 +18,7 @@ const products = [
         category: "matcha",
         image: "🍵",
         rating: 4.8,
-        description: "Creamy iced matcha latte with premium ceremonial grade matcha and your choice of milk. Perfectly balanced and refreshing."
+        description: "Creamy iced matcha latte with premium ceremonial grade matcha and your choice of milk. Perfectly balanced and refreshing. Sourced from Agoshima, Japan"
     },
     {
         id: 2,
