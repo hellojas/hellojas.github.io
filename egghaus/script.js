@@ -9,17 +9,13 @@ let currentQuantity = 1;
 // ===================================
 // PRODUCT DATA
 // ===================================
-// ===================================
-// PRODUCT DATA - Updated for Egghaus Social
-// ===================================
-
 const products = [
     // DRINKS
     {
         id: 1,
         name: "Iced Matcha Latte",
         price: 8.50,
-        category: "drinks",
+        category: "matcha",
         image: "🍵",
         rating: 4.8,
         description: "Creamy iced matcha latte with premium ceremonial grade matcha and your choice of milk. Perfectly balanced and refreshing."
@@ -28,7 +24,7 @@ const products = [
         id: 2,
         name: "Iced Yuzu Matcha",
         price: 9.00,
-        category: "drinks",
+        category: "matcha",
         image: "🍋",
         rating: 4.7,
         description: "Unique fusion of earthy matcha and bright yuzu citrus served over ice. A refreshing twist on traditional matcha."
@@ -37,7 +33,7 @@ const products = [
         id: 3,
         name: "Iced Hojicha",
         price: 7.50,
-        category: "drinks",
+        category: "matcha",
         image: "🍂",
         rating: 4.6,
         description: "Smooth roasted green tea with a nutty, caramel-like flavor served cold. Less caffeine, more comfort."
@@ -46,7 +42,7 @@ const products = [
         id: 4,
         name: "Iced Coffee",
         price: 6.50,
-        category: "drinks",
+        category: "coffee",
         image: "☕",
         rating: 4.5,
         description: "Classic cold brew coffee, smooth and bold. Perfect for coffee lovers seeking a refreshing caffeine kick."
@@ -56,7 +52,7 @@ const products = [
         id: 5,
         name: "Burnt Basque Cheesecake",
         price: 8.00,
-        category: "dessert",
+        category: "noms",
         image: "🍰",
         rating: 4.9,
         description: "Rich, creamy cheesecake with a signature burnt top. Our most popular dessert with a perfectly caramelized exterior."
@@ -65,7 +61,7 @@ const products = [
         id: 6,
         name: "Ube Cheesecake",
         price: 8.50,
-        category: "dessert",
+        category: "noms",
         image: "💜",
         rating: 4.8,
         description: "Vibrant purple yam cheesecake with a smooth, velvety texture. A Filipino-inspired treat that's Instagram-worthy and delicious."
@@ -74,7 +70,7 @@ const products = [
         id: 7,
         name: "Chocolate Ganache Tart",
         price: 7.50,
-        category: "dessert",
+        category: "noms",
         image: "🍫",
         rating: 4.7,
         description: "Decadent chocolate tart with silky smooth ganache filling. Rich, indulgent, and perfect for chocolate lovers."
@@ -84,7 +80,7 @@ const products = [
         id: 8,
         name: "Bagels",
         price: 5.50,
-        category: "food",
+        category: "noms",
         image: "🥯",
         rating: 4.4,
         description: "Freshly baked artisanal bagels. Choose from various flavors and enjoy with your favorite toppings."
