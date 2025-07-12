@@ -1,1 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>egghaus</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Welcome Screen -->
+        <div class="welcome-screen" id="welcomeScreen">
+            <div class="matcha-illustration">🍵</div>
+            <h1 class="welcome-title">Egghaus Social</h1>
+            <h2 class="welcome-subtitle">Season 2</h2>
+            <button class="start-btn" onclick="showScreen('menu')">sip things. say too much.</button>
+        </div>
 
+        <!-- Menu Screen -->
+        <div class="menu-screen" id="menuScreen">
+            <div class="menu-header">
+                <div class="header-left">
+                    <h1 class="menu-title">Menu</h1>
+                </div>
+                <div class="profile-pic">M</div>
+            </div>
+
+            <div class="search-container">
+                <div class="search-icon">🔍</div>
+                <input type="text" class="search-input" placeholder="Search matcha..." oninput="searchProducts(this.value)">
+            </div>
+
+            <div class="categories">
+                <div class="category-item active" onclick="filterCategory('all')">
+                    <div class="category-icon">🍵</div>
+                    <div class="category-label">ALL</div>
+                </div>
+                <div class="category-item" onclick="filterCategory('matcha')">
+                    <div class="category-icon">🌿</div>
+                    <div class="category-label">Matcha</div>
+                </div>
+                <div class="category-item" onclick="filterCategory('latte')">
+                    <div class="category-icon">☕</div>
+                    <div class="category-label">Latte</div>
+                </div>
+                <div class="category-item" onclick="filterCategory('dessert')">
+                    <div class="category-icon">🍰</div>
+                    <div class="category-label">Dessert</div>
+                </div>
+            </div>
+
+            <div class="promotion-section">
+                <h2 class="section-title">Promotion</h2>
+                <div class="promotion-card">
+                    <div class="promotion-badge">Today's Offer</div>
+                    <div class="promotion-title">Free Roast</div>
+                    <div class="promotion-subtitle">on all orders above $25.00</div>
+                    <div class="promotion-image">🍪</div>
+                </div>
+            </div>
+
+            <div class="popular-section">
+                <h2 class="section-title">Popular</h2>
+                <div class="products-grid" id="productsGrid">
+                    <!-- Products will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Detail Screen -->
+        <div class="product-detail-screen" id="productDetailScreen">
+            <div class="product-detail-header">
+                <button class="back-btn" onclick="showScreen('menu')">←</button>
+                <div class="product-detail-image" id="detailImage">🍵</div>
+            </div>
+            <div class="product-detail-content">
+                <div class="rating-section">
+                    <div class="rating-badge">
+                        <span>⭐</span>
+                        <span id="detailRating">4.8</span>
+                    </div>
+                </div>
+                <div class="product-detail-price" id="detailPrice">$8.50</div>
+                <h1 class="product-detail-title" id="detailTitle">Premium Matcha Latte</h1>
+                <p class="product-detail-description" id="detailDescription">
+                    Experience the perfect harmony of ceremonial grade matcha and steamed milk, creating a creamy and refreshing beverage that awakens your senses.
+                </p>
+                <div class="quantity-section">
+                    <div class="quantity-controls">
+                        <button class="quantity-btn" onclick="adjustQuantity(-1)">-</button>
+                        <span class="quantity-display" id="quantityDisplay">1</span>
+                        <button class="quantity-btn" onclick="adjustQuantity(1)">+</button>
+                    </div>
+                </div>
+                <button class="add-to-cart-btn" onclick="addToCart()">Add to Cart</button>
+            </div>
+        </div>
+
+        <!-- Cart Screen -->
+        <div class="cart-screen" id="cartScreen">
+            <div class="cart-header">
+                <button class="back-btn" onclick="showScreen('menu')" style="position: static; background: #4a5c3a; margin-right: 1rem;">←</button>
+                <h1 class="cart-title">Cart</h1>
+                <div class="cart-count-badge" id="cartCountBadge">0 items</div>
+            </div>
+            <div class="cart-content">
+                <div id="cartItems">
+                    <!-- Cart items will be populated by JavaScript -->
+                </div>
+                
+                <div class="order-instructions">
+                    <div class="instructions-label">Order Instructions</div>
+                    <textarea class="instructions-input" placeholder="Add any special instructions for your order..."></textarea>
+                </div>
+
+                <div class="cart-summary">
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">$0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Tax (8.5%):</span>
+                        <span id="tax">$0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Total:</span>
+                        <span id="totalAmount">$0.00</span>
+                    </div>
+                </div>
+
+                <button class="checkout-btn" onclick="checkout()">Place Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (Optional) -->
+    <script type="module" src="firebase-config.js"></script>
+    <!-- Main App JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
