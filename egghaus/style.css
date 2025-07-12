@@ -459,17 +459,3 @@ body {
     font-size: 0.7rem;
   }
 }
-
-/* ===================================
-   THEME CUSTOMIZATION
-   ===================================
-   Want to change colors? Just update the variables at the top!
-   
-   Example:
-   :root {
-     --primary-green: #your-new-color;
-     --spacing-md: 1.5rem;
-   }
-   
-   This will update the entire app automatically!
-   =================================== */
