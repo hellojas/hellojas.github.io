@@ -4,6 +4,9 @@
 import { 
     collection, 
     addDoc, 
+    query,
+    where,
+    getDocs,
     doc,
     onSnapshot,
     updateDoc,
@@ -828,27 +831,38 @@ function startQueueTimer(minutes) {
 }
 
 /**
- * Start queue position simulation
+ * Start queue position based on active orders in Firebase
  */
-function startQueuePosition() {
+async function startQueuePosition() {
     const positionElement = getElement('queuePosition');
-    if (!positionElement) return;
-    
-    // Start with 2-4 people ahead
-    let currentPosition = Math.floor(Math.random() * 3) + 2;
-    
-    const updatePosition = () => {
-        positionElement.textContent = currentPosition;
-        
-        if (currentPosition > 0) {
-            setTimeout(() => {
-                currentPosition--;
-                updatePosition();
-            }, 45000 + Math.random() * 30000); // 45-75 seconds between updates
-        }
-    };
-    
-    updatePosition();
+    if (!positionElement || !db) return;
+
+    try {
+        // Firestore only allows up to 10 values in a not-in filter
+        const q = query(
+            collection(db, 'orders'),
+            where('status', 'not-in', ['ready', 'completed', 'cancelled'])
+        );
+
+        const snapshot = await getDocs(q);
+        let currentPosition = snapshot.size;
+
+        const updatePosition = () => {
+            positionElement.textContent = currentPosition;
+
+            if (currentPosition > 0) {
+                setTimeout(() => {
+                    currentPosition--;
+                    updatePosition();
+                }, 45000 + Math.random() * 30000);
+            }
+        };
+
+        updatePosition();
+    } catch (error) {
+        console.error('❌ Error loading queue position:', error);
+        positionElement.textContent = '—';
+    }
 }
 
 /**
