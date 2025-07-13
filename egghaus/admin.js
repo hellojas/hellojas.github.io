@@ -911,7 +911,7 @@ window.closeOrderModal = closeOrderModal;
 window.updateOrderFromModal = updateOrderFromModal;
 window.refreshOrders = refreshOrders;
 window.goToCustomerApp = goToCustomerApp;
-
+window.goToSalesAnalytics = goToSalesAnalytics;
 // ===================================
 // INITIALIZATION ON DOM LOAD
 // ===================================
