@@ -1613,5 +1613,6 @@ window.backToMenu = backToMenu;
 window.shareOrder = shareOrder;
 window.confirmPickup = confirmPickup;
 window.startNewOrder = startNewOrder;
+window.goToOrderQueue = goToOrderQueue;
 
 console.log('🍵 Egghaus Social script loaded successfully with profile navigation!');
