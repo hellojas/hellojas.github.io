@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egghaus Social - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <!-- Password Protection Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-container">
+            <div class="login-header">
+                <div class="login-logo">🥚</div>
+                <h1 class="login-title">Egghaus Social</h1>
+                <p class="login-subtitle">Admin Access Required</p>
+            </div>
+            <form class="login-form" onsubmit="handleLogin(event)">
+                <div class="login-input-group">
+                    <label for="adminPassword">Enter Admin Password</label>
+                    <input 
+                        type="password" 
+                        id="adminPassword" 
+                        placeholder="Enter password"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+                <button type="submit" class="login-btn">
+                    🔓 Access Dashboard
+                </button>
+                <div class="login-error" id="loginError" style="display: none;">
+                    ❌ Incorrect password. Try again.
+                </div>
+            </form>
+            <div class="login-footer">
+                <a href="./index.html" class="back-to-customer">← Back to Customer App</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-container" id="adminContainer" style="display: none;">
+        
+        <!-- Admin Header -->
+        <header class="admin-header">
+            <div class="admin-header-content">
+                <div class="admin-logo">
+                    <span class="admin-emoji">🥚</span>
+                    <h1 class="admin-title">Egghaus Social</h1>
+                    <span class="admin-badge">Admin</span>
+                </div>
+                <div class="admin-stats">
+                    <div class="stat-card">
+                        <span class="stat-number" id="totalOrders">0</span>
+                        <span class="stat-label">Total Orders</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="pendingOrders">0</span>
+                        <span class="stat-label">Pending</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="todayRevenue">$0</span>
+                        <span class="stat-label">Today's Revenue</span>
+                    </div>
+                </div>
+                <div class="admin-actions">
+                    <button class="refresh-btn" onclick="refreshOrders()">
+                        🔄 Refresh
+                    </button>
+                    <button class="customer-view-btn" onclick="goToCustomerApp()">
+                        👥 Customer View
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filterOrders('all')" data-status="all">
+                All Orders
+            </button>
+            <button class="filter-tab" onclick="filterOrders('pending')" data-status="pending">
+                🟡 Pending
+            </button>
+            <button class="filter-tab" onclick="filterOrders('preparing')" data-status="preparing">
+                🟠 Preparing
+            </button>
+            <button class="filter-tab" onclick="filterOrders('ready')" data-status="ready">
+                🟢 Ready
+            </button>
+            <button class="filter-tab" onclick="filterOrders('completed')" data-status="completed">
+                ✅ Completed
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading-state" id="loadingState">
+            <div class="loading-spinner"></div>
+            <p>Loading orders...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-icon">📋</div>
+            <h3>No orders found</h3>
+            <p>Orders will appear here when customers place them.</p>
+        </div>
+
+        <!-- Orders Grid -->
+        <div class="orders-grid" id="ordersGrid">
+            <!-- Orders will be populated here -->
+        </div>
+
+        <!-- Order Detail Modal -->
+        <div class="modal-overlay" id="orderModal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalOrderId">Order #EH123456</h2>
+                    <button class="modal-close" onclick="closeOrderModal()">×</button>
+                </div>
+                <div class="modal-body" id="modalContent">
+                    <!-- Order details will be populated here -->
+                </div>
+                <div class="modal-actions">
+                    <button class="modal-btn secondary" onclick="closeOrderModal()">Close</button>
+                    <button class="modal-btn primary" id="modalActionBtn" onclick="updateOrderFromModal()">
+                        Mark Ready
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="firebase-config.js"></script>
+    <!-- Admin JavaScript -->
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
