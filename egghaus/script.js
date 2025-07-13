@@ -1358,14 +1358,27 @@ function initializeApp() {
     console.log(`🎭 Default season: ${appConfig.defaultSeason}`);
     console.log(`🖼️ Profile images: ${appConfig.profileImagePath}/`);
     
-    // Check if returning user
+    // Check for user from URL or localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlUser = urlParams.get('user');
     const savedUserName = localStorage.getItem('currentUserName');
-    if (savedUserName) {
+    
+    if (urlUser) {
+        currentUserName = urlUser.trim();
+        localStorage.setItem('currentUserName', currentUserName);
+        console.log(`👤 User from URL: ${currentUserName}`);
+    } else if (savedUserName) {
         currentUserName = savedUserName;
-        userProfileImage = `${appConfig.profileImagePath}/${savedUserName.toLowerCase()}.png`;
-        console.log(`👤 Returning user: ${currentUserName}`);
+        console.log(`👤 Returning user from storage: ${currentUserName}`);
     }
     
+    // Set profile image path
+    if (currentUserName) {
+        userProfileImage = `${appConfig.profileImagePath}/${currentUserName.toLowerCase()}.png`;
+        showScreen('menu'); // Skip welcome screen
+    } else {
+        showScreen('welcome'); // Show welcome if no user info
+}
     // Initialize season and products
     currentProducts = getProductsBySeason(currentSeason);
     console.log(`🎭 Loading season ${currentSeason} with ${currentProducts.length} products`);
