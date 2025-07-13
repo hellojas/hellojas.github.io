@@ -89,11 +89,12 @@ body {
   white-space: nowrap;
   overflow: hidden;
 }
+
 .welcome-title {
   margin: 0;
   font-size: 3.2rem; /* optional base sizing */
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 1.;
   text-align: center;
 }
 
@@ -102,6 +103,8 @@ body {
   text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.15);
   display: inline-block;
   font-size: 3.7rem; /* or adjust to taste */
+  margin: 0;
+  padding: 0;
 }
 
 .social-text {
