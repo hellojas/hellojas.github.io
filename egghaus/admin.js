@@ -888,7 +888,7 @@ function refreshOrders() {
  * Navigate to customer app
  */
 function goToCustomerApp() {
-    window.location.href = './index.html';
+    window.location.href = './queue.html';
 }
 
 // ===================================
