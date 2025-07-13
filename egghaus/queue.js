@@ -60,7 +60,7 @@ function setupOrdersListener() {
         // Query for orders that are preparing or ready (visible to customers)
         const ordersQuery = query(
             collection(db, 'orders'),
-            where('status', 'in', ['preparing', 'ready']),
+            where('status', 'in', ['pending', 'preparing', 'ready']),
             orderBy('createdAt', 'asc') // Oldest orders first
         );
 
