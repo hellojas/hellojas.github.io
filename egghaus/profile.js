@@ -1,19 +1,7 @@
 // ===================================
 // EGGHAUS SOCIAL - PROFILE PAGE (CHART + FIREBASE)
 // ===================================
-
-// ✅ Chart.js ESM + Luxon setup
-import {
-  Chart,
-  registerables
-} from 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.esm.js';
-import * as luxon from 'https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/es6/luxon.min.js';
-window.luxon = luxon; // Required for adapter to work
-import 'https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.1.0/dist/chartjs-adapter-luxon.esm.js';
-
-Chart.register(...registerables);
-
-// ✅ Firebase
+// Firebase
 import {
   collection,
   query,
@@ -24,13 +12,18 @@ import {
 } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 import { db } from './firebase-config.js';
 
-// ✅ Local data
 import {
   products,
   seasons,
   appConfig,
   getSeasonInfo
 } from './data.js';
+
+// Chart.js is now available globally via <script> tag
+// No import needed — just use Chart directly
+
+// Optionally register all components globally
+Chart.register(...Chart.registry.items);
 
 // ===================================
 // GLOBAL VARIABLES
