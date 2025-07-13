@@ -891,6 +891,14 @@ function goToCustomerApp() {
     window.location.href = './queue.html';
 }
 
+
+/**
+ * Navigate to sales analytics
+ */
+function goToSalesAnalytics() {
+    window.location.href = './sales.html';
+}
+
 // ===================================
 // GLOBAL FUNCTION EXPOSURE
 // ===================================
