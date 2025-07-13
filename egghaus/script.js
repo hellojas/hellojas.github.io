@@ -1355,26 +1355,16 @@ function shareOrder() {
 function initializeApp() {
     console.log('🚀 Initializing Egghaus Social app...');
     console.log(`🎫 Guest list loaded with ${getGuestList().length} VIP members`);
-    console.log(`🎭 Default season: ${appConfig.defaultSeason}`);
-    console.log(`🖼️ Profile images: ${appConfig.profileImagePath}/`);
 
-    // Check for user from URL or localStorage
     const urlParams = new URLSearchParams(window.location.search);
     const urlUser = urlParams.get('user');
-    const savedUserName = localStorage.getItem('currentUserName');
+    const savedUserName = localStorage.getItem('currentUserName'); // Optional: for prefill
 
     if (urlUser) {
         currentUserName = urlUser.trim();
         localStorage.setItem('currentUserName', currentUserName);
-        console.log(`👤 User from URL: ${currentUserName}`);
-    } else if (savedUserName) {
-        currentUserName = savedUserName;
-        console.log(`👤 Returning user from storage: ${currentUserName}`);
-    }
-
-    // Set profile image path
-    if (currentUserName) {
         userProfileImage = `${appConfig.profileImagePath}/${currentUserName.toLowerCase()}.png`;
+        console.log(`👤 User from URL: ${currentUserName}`);
 
         // Guest list check
         if (!isOnGuestList(currentUserName)) {
@@ -1386,16 +1376,18 @@ function initializeApp() {
             console.log(`✅ ${currentUserName} is on the guest list`);
         }
 
-        showScreen('menu'); // Skip welcome
+        showScreen('menu'); // ✅ Only show menu if ?user= is present
     } else {
-        showScreen('welcome'); // Show welcome if no user info
+        // Optional: prefill input from localStorage if available
+        if (savedUserName) {
+            document.getElementById('nameModalInput').value = savedUserName;
+        }
+        showScreen('welcome'); // ✅ Force welcome screen
     }
 
-    // Load season & products
+    // Load initial product data and set up app
     currentProducts = getProductsBySeason(currentSeason);
     displayProducts();
-
-    // Add cart icon and update cart state
     addCartIconToHeader();
     updateCartSummary();
     updateCartCount();
@@ -1403,7 +1395,6 @@ function initializeApp() {
 
     console.log('🍵 Egghaus Social app initialized successfully!');
 }
-
 
 /**
  * Add cart icon to menu header
