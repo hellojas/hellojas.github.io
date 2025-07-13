@@ -165,92 +165,90 @@
 /* ===================================
    PROFILE SECTION STYLES
    =================================== */
-
 .profile-section {
-    display: flex;
-    align-items: center;
-    margin-left: auto;
+  display: flex;
+  align-items: center;
 }
 
 .menu-title-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .menu-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #3e2723;
-    margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #3e2723;
+  margin: 0;
 }
 
 .season-selector {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .season-dropdown {
-    background: linear-gradient(135deg, #f5f2eb, #fff);
-    border: 2px solid rgba(212, 175, 55, 0.3);
-    border-radius: 12px;
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #5d4037;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-family: 'Inter', sans-serif;
-    outline: none;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%235d4037' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 0.5rem center;
-    background-repeat: no-repeat;
-    background-size: 1.5em 1.5em;
-    padding-right: 2.5rem;
-    min-width: 200px;
+  background: linear-gradient(135deg, #f5f2eb, #fff);
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #5d4037;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%235d4037' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+  min-width: 200px;
 }
 
 .season-dropdown:hover {
-    border-color: #d4af37;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+  border-color: #d4af37;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
 }
 
 .season-dropdown:focus {
-    border-color: #d4af37;
-    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+  border-color: #d4af37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
 }
 
 .season-dropdown option {
-    background: #faf8f3;
-    color: #5d4037;
-    padding: 0.5rem;
-    font-weight: 500;
+  background: #faf8f3;
+  color: #5d4037;
+  padding: 0.5rem;
+  font-weight: 500;
 }
 
 .profile-pic {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #5d4037, #8d6e63);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 600;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(93, 64, 55, 0.2);
-    border: 2px solid rgba(212, 175, 55, 0.3);
-    cursor: pointer;
-    transition: all 0.3s ease;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5d4037, #8d6e63);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(93, 64, 55, 0.2);
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .profile-pic:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 20px rgba(93, 64, 55, 0.3);
-    border-color: #d4af37;
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(93, 64, 55, 0.3);
+  border-color: #d4af37;
 }
 
 #profileImage {
