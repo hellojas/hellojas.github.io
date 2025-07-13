@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Analytics - Egghaus Social</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="sales.css">
+</head>
+<body>
+    <div class="sales-container">
+        
+        <!-- Sales Header -->
+        <header class="sales-header">
+            <div class="sales-header-content">
+                <div class="back-section">
+                    <button class="sales-back-btn" onclick="goBackToAdmin()">←</button>
+                    <div class="header-info">
+                        <h1 class="sales-title">Sales Analytics</h1>
+                        <p class="sales-subtitle">Real-time insights from EgghausCloud</p>
+                    </div>
+                </div>
+                <div class="sales-stats-overview">
+                    <div class="overview-stat">
+                        <span class="overview-number" id="todayOrders">0</span>
+                        <span class="overview-label">Today's Orders</span>
+                    </div>
+                    <div class="overview-stat">
+                        <span class="overview-number" id="todayRevenue">$0</span>
+                        <span class="overview-label">Today's Revenue</span>
+                    </div>
+                    <div class="overview-stat">
+                        <span class="overview-number" id="avgPrepTime">0min</span>
+                        <span class="overview-label">Avg Prep Time</span>
+                    </div>
+                </div>
+                <div class="sales-actions">
+                    <button class="refresh-sales-btn" onclick="refreshSalesData()">
+                        🔄 Refresh
+                    </button>
+                    <button class="export-sales-btn" onclick="exportSalesData()">
+                        📊 Export Data
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Time Period Filter -->
+        <div class="time-filter-section">
+            <div class="time-filters">
+                <button class="time-filter-btn active" data-period="today" onclick="filterByTimePeriod('today')">
+                    Today
+                </button>
+                <button class="time-filter-btn" data-period="week" onclick="filterByTimePeriod('week')">
+                    This Week
+                </button>
+                <button class="time-filter-btn" data-period="month" onclick="filterByTimePeriod('month')">
+                    This Month
+                </button>
+                <button class="time-filter-btn" data-period="all" onclick="filterByTimePeriod('all')">
+                    All Time
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="sales-loading" id="salesLoading">
+            <div class="loading-spinner"></div>
+            <p>Loading sales analytics...</p>
+        </div>
+
+        <!-- Analytics Grid -->
+        <div class="analytics-grid" id="analyticsGrid" style="display: none;">
+            
+            <!-- Revenue Trends -->
+            <div class="chart-section revenue-section">
+                <div class="chart-header">
+                    <h3 class="chart-title">Revenue Trends</h3>
+                    <p class="chart-subtitle">Daily revenue over time</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+                <div class="chart-stats">
+                    <div class="stat-item">
+                        <span class="stat-value" id="totalRevenue">$0</span>
+                        <span class="stat-label">Total Revenue</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="avgOrderValue">$0</span>
+                        <span class="stat-label">Avg Order Value</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Popularity -->
+            <div class="chart-section popularity-section">
+                <div class="chart-header">
+                    <h3 class="chart-title">Product Popularity</h3>
+                    <p class="chart-subtitle">Best-selling items</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="popularityChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Hourly Sales Pattern -->
+            <div class="chart-section hourly-section">
+                <div class="chart-header">
+                    <h3 class="chart-title">Hourly Sales Pattern</h3>
+                    <p class="chart-subtitle">Peak ordering times</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="hourlyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Category Performance -->
+            <div class="chart-section category-section">
+                <div class="chart-header">
+                    <h3 class="chart-title">Category Performance</h3>
+                    <p class="chart-subtitle">Revenue by category</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Preparation Times -->
+            <div class="chart-section prep-section">
+                <div class="chart-header">
+                    <h3 class="chart-title">Preparation Times</h3>
+                    <p class="chart-subtitle">From order to ready</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="prepTimeChart"></canvas>
+                </div>
+                <div class="chart-stats">
+                    <div class="stat-item">
+                        <span class="stat-value" id="fastestOrder">0min</span>
+                        <span class="stat-label">Fastest Order</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="slowestOrder">0min</span>
+                        <span class="stat-label">Slowest Order</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Analysis -->
+            <div class="chart-section customer-section">
+                <div class="chart-header">
+                    <h3 class="chart-title">Customer Analysis</h3>
+                    <p class="chart-subtitle">Ordering frequency</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="customerChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Order Status Flow -->
+            <div class="chart-section status-section">
+                <div class="chart-header">
+                    <h3 class="chart-title">Order Status Flow</h3>
+                    <p class="chart-subtitle">Status distribution</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Seasonal Trends -->
+            <div class="chart-section seasonal-section">
+                <div class="chart-header">
+                    <h3 class="chart-title">Seasonal Trends</h3>
+                    <p class="chart-subtitle">Season popularity</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="seasonalChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            <div class="chart-section metrics-section">
+                <div class="chart-header">
+                    <h3 class="chart-title">Performance Metrics</h3>
+                    <p class="chart-subtitle">Operational efficiency</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="metricsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Daily Patterns -->
+            <div class="chart-section daily-section">
+                <div class="chart-header">
+                    <h3 class="chart-title">Daily Patterns</h3>
+                    <p class="chart-subtitle">Day of week analysis</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="dailyChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Detailed Tables Section -->
+        <div class="tables-section" id="tablesSection" style="display: none;">
+            
+            <!-- Top Products Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>Top 10 Products</h3>
+                    <p>Ranked by total sales</p>
+                </div>
+                <div class="table-container">
+                    <table class="sales-table" id="topProductsTable">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Product</th>
+                                <th>Orders</th>
+                                <th>Revenue</th>
+                                <th>Avg Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Customer Insights Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>Customer Insights</h3>
+                    <p>VIP customer activity</p>
+                </div>
+                <div class="table-container">
+                    <table class="sales-table" id="customerInsightsTable">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Orders</th>
+                                <th>Total Spent</th>
+                                <th>Avg Order</th>
+                                <th>Favorite</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Real-time Updates Indicator -->
+        <div class="realtime-indicator" id="realtimeIndicator">
+            <div class="indicator-dot"></div>
+            <span>Live Data from EgghausCloud</span>
+        </div>
+
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.1.0/dist/chartjs-adapter-luxon.min.js"></script>
+    
+    <!-- Firebase and App Logic -->
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="data.js"></script>
+    <script type="module" src="sales.js"></script>
+</body>
+</html>
