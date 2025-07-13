@@ -4,6 +4,8 @@
 
 // Chart.js + Luxon Adapter (for time-based charts)
 import * as Chart from 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.esm.js';
+import * as luxon from 'https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/es6/luxon.min.js';
+window.luxon = luxon;
 import 'https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.1.0';
 
 // Register all Chart.js components (controllers, scales, plugins, etc)
