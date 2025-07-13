@@ -220,8 +220,8 @@ export const appConfig = {
     // Default season when app loads
     defaultSeason: 2,
     
-    // Profile image directory
-    profileImagePath: 'egghaus/eggs',
+    // Profile image directory (relative path for GitHub Pages)
+    profileImagePath: './eggs',
     
     // Tax rate for calculations
     taxRate: 0.085,
