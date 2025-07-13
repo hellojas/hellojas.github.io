@@ -739,24 +739,25 @@ function displayCartItems() {
     Object.values(cart).forEach(item => {
     const cartItem = createElement('div', {
         className: 'cart-item'
-    }, `
-        <div class="cart-item-image">
-            <img src="${item.image}" alt="${item.name}" />
-        </div>
-        <div class="cart-item-info">
-            <div class="cart-item-name">${item.name}</div>
-            <div class="cart-item-price">${formatPrice(item.price * item.quantity)}</div>
-        </div>
-        <div class="cart-item-controls">
-            <button class="cart-quantity-btn" onclick="updateCartQuantity(${item.id}, -1)">-</button>
-            <span class="cart-quantity-display">${item.quantity}</span>
-            <button class="cart-quantity-btn" onclick="updateCartQuantity(${item.id}, 1)">+</button>
-            <button class="remove-btn" onclick="removeFromCart(${item.id})">×</button>
-        </div>
-    `);
+        }, `
+            <div class="cart-item-image">
+                <img src="${item.image}" alt="${item.name}" />
+            </div>
+            <div class="cart-item-info">
+                <div class="cart-item-name">${item.name}</div>
+                <div class="cart-item-price">${formatPrice(item.price * item.quantity)}</div>
+            </div>
+            <div class="cart-item-controls">
+                <button class="cart-quantity-btn" onclick="updateCartQuantity(${item.id}, -1)">-</button>
+                <span class="cart-quantity-display">${item.quantity}</span>
+                <button class="cart-quantity-btn" onclick="updateCartQuantity(${item.id}, 1)">+</button>
+                <button class="remove-btn" onclick="removeFromCart(${item.id})">×</button>
+            </div>
+        `);
+    
+        cartItems.appendChild(cartItem);
+    });
 
-    cartItems.appendChild(cartItem);
-});
 
 /**
  * Update cart item quantity
