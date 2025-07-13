@@ -2,13 +2,44 @@
 // EGGHAUS SOCIAL - PROFILE PAGE (FIREBASE INTEGRATION)
 // ===================================
 
-// Chart.js + Luxon Adapter (for time-based charts)
 import * as Chart from 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.esm.js';
-import * as luxon from 'https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/es6/luxon.min.js';
-window.luxon = luxon;
-import 'https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.1.0';
+import { DateTime } from 'https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/es6/luxon.min.js';
 
-// Register all Chart.js components (controllers, scales, plugins, etc)
+// Manually register Luxon adapter
+Chart.adapters._date.override({
+  _id: 'luxon',
+  formats: () => ({
+    datetime: 'DDD t',
+    millisecond: 'HH:mm:ss.SSS',
+    second: 'HH:mm:ss',
+    minute: 'HH:mm',
+    hour: 'HH',
+    day: 'ccc d',
+    week: 'DD',
+    month: 'LLL',
+    quarter: 'qqq',
+    year: 'yyyy'
+  }),
+  parse: (value, format) => {
+    return typeof value === 'number' ? DateTime.fromMillis(value) : DateTime.fromISO(value);
+  },
+  format: (time, format) => {
+    return DateTime.fromMillis(time).toFormat(format);
+  },
+  add: (time, amount, unit) => {
+    return DateTime.fromMillis(time).plus({ [unit]: amount }).toMillis();
+  },
+  diff: (max, min, unit) => {
+    return DateTime.fromMillis(max).diff(DateTime.fromMillis(min)).as(unit);
+  },
+  startOf: (time, unit, weekday) => {
+    return DateTime.fromMillis(time).startOf(unit).toMillis();
+  },
+  endOf: (time, unit) => {
+    return DateTime.fromMillis(time).endOf(unit).toMillis();
+  }
+});
+
 Chart.register(...Chart.registerables);
 
 // Firebase imports
