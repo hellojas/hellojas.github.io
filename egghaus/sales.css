@@ -1,0 +1,606 @@
+/* ===================================
+   SALES ANALYTICS PAGE STYLES
+   =================================== */
+
+.sales-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 1rem;
+  min-height: 100vh;
+  background: #f5f2eb;
+}
+
+/* ===================================
+   SALES HEADER
+   =================================== */
+
+.sales-header {
+  background: linear-gradient(135deg, #faf8f3, #fff);
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 32px rgba(93, 64, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.sales-header-content {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 2rem;
+  align-items: center;
+}
+
+.back-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sales-back-btn {
+  background: rgba(93, 64, 55, 0.1);
+  border: none;
+  color: #5d4037;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.sales-back-btn:hover {
+  background: rgba(93, 64, 55, 0.2);
+  transform: translateX(-2px);
+}
+
+.header-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.sales-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #3e2723;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.sales-subtitle {
+  color: #8d6e63;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 0.3rem 0 0 0;
+}
+
+.sales-stats-overview {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.overview-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: rgba(212, 175, 55, 0.1);
+  border-radius: 15px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  min-width: 120px;
+}
+
+.overview-number {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #5d4037;
+  margin-bottom: 0.3rem;
+  line-height: 1;
+}
+
+.overview-label {
+  font-size: 0.8rem;
+  color: #8d6e63;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.sales-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.refresh-sales-btn,
+.export-sales-btn {
+  background: linear-gradient(135deg, #d4af37, #ffd700);
+  color: #5d4037;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 15px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+  font-family: 'Inter', sans-serif;
+}
+
+.export-sales-btn {
+  background: linear-gradient(135deg, #8d6e63, #5d4037);
+  color: white;
+}
+
+.refresh-sales-btn:hover,
+.export-sales-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+}
+
+/* ===================================
+   TIME FILTER SECTION
+   =================================== */
+
+.time-filter-section {
+  margin-bottom: 2rem;
+}
+
+.time-filters {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.time-filter-btn {
+  background: #faf8f3;
+  border: 2px solid rgba(212, 175, 55, 0.2);
+  color: #5d4037;
+  padding: 0.8rem 2rem;
+  border-radius: 15px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+}
+
+.time-filter-btn:hover {
+  background: rgba(212, 175, 55, 0.1);
+  transform: translateY(-1px);
+}
+
+.time-filter-btn.active {
+  background: linear-gradient(135deg, #d4af37, #ffd700);
+  color: #5d4037;
+  border-color: #d4af37;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+/* ===================================
+   LOADING STATE
+   =================================== */
+
+.sales-loading {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #8d6e63;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 1rem;
+  border: 4px solid rgba(212, 175, 55, 0.2);
+  border-left: 4px solid #d4af37;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===================================
+   ANALYTICS GRID
+   =================================== */
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.chart-section {
+  background: #faf8f3;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(93, 64, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  transition: all 0.3s ease;
+}
+
+.chart-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(93, 64, 55, 0.12);
+}
+
+/* Special sizing for important charts */
+.revenue-section {
+  grid-column: span 2;
+}
+
+.popularity-section,
+.hourly-section {
+  grid-column: span 1;
+}
+
+.prep-section {
+  grid-column: span 2;
+}
+
+.chart-header {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.chart-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #3e2723;
+  margin-bottom: 0.3rem;
+}
+
+.chart-subtitle {
+  font-size: 0.9rem;
+  color: #8d6e63;
+  margin: 0;
+}
+
+.chart-container {
+  position: relative;
+  height: 300px;
+  margin-bottom: 1rem;
+}
+
+.chart-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #d4af37;
+  margin-bottom: 0.3rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #8d6e63;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===================================
+   TABLES SECTION
+   =================================== */
+
+.tables-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.table-card {
+  background: #faf8f3;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(93, 64, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.table-header {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.table-header h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #3e2723;
+  margin-bottom: 0.3rem;
+}
+
+.table-header p {
+  font-size: 0.9rem;
+  color: #8d6e63;
+  margin: 0;
+}
+
+.table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+.sales-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.sales-table th {
+  background: rgba(212, 175, 55, 0.1);
+  color: #5d4037;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.8rem;
+}
+
+.sales-table td {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+  color: #3e2723;
+}
+
+.sales-table tr:hover {
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.sales-table .rank-cell {
+  width: 60px;
+  text-align: center;
+  font-weight: 700;
+  color: #d4af37;
+}
+
+.sales-table .product-cell {
+  font-weight: 600;
+}
+
+.sales-table .number-cell {
+  text-align: right;
+  font-weight: 600;
+  color: #5d4037;
+}
+
+/* ===================================
+   REAL-TIME INDICATOR
+   =================================== */
+
+.realtime-indicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(16, 185, 129, 0.9);
+  color: white;
+  padding: 0.8rem 1.2rem;
+  border-radius: 25px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+}
+
+.indicator-dot {
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+/* ===================================
+   SPECIAL CHART STYLES
+   =================================== */
+
+/* Larger height for specific charts */
+.revenue-section .chart-container,
+.prep-section .chart-container {
+  height: 350px;
+}
+
+.metrics-section .chart-container {
+  height: 250px;
+}
+
+/* Chart loading states */
+.chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #8d6e63;
+  font-style: italic;
+}
+
+.chart-loading::before {
+  content: '📊';
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+}
+
+/* ===================================
+   RESPONSIVE DESIGN
+   =================================== */
+
+@media (max-width: 1200px) {
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .revenue-section,
+  .prep-section {
+    grid-column: span 1;
+  }
+  
+  .tables-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .sales-container {
+    padding: 0.5rem;
+  }
+  
+  .sales-header {
+    padding: 1.5rem;
+  }
+  
+  .sales-header-content {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .sales-stats-overview {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .overview-stat {
+    min-width: 100px;
+    padding: 0.8rem 1rem;
+  }
+  
+  .overview-number {
+    font-size: 1.4rem;
+  }
+  
+  .analytics-grid {
+    gap: 1rem;
+  }
+  
+  .chart-section {
+    padding: 1rem;
+  }
+  
+  .chart-container {
+    height: 250px;
+  }
+  
+  .time-filters {
+    justify-content: flex-start;
+  }
+  
+  .time-filter-btn {
+    padding: 0.6rem 1.5rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sales-header {
+    padding: 1rem;
+  }
+  
+  .sales-title {
+    font-size: 1.6rem;
+  }
+  
+  .chart-container {
+    height: 200px;
+  }
+  
+  .sales-table {
+    font-size: 0.8rem;
+  }
+  
+  .sales-table th,
+  .sales-table td {
+    padding: 0.6rem 0.4rem;
+  }
+  
+  .realtime-indicator {
+    bottom: 10px;
+    right: 10px;
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* ===================================
+   ANIMATIONS
+   =================================== */
+
+.chart-section {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.table-card {
+  animation: fadeInScale 0.5s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Success/Error states for data loading */
+.data-success {
+  border-left: 4px solid #10b981;
+}
+
+.data-error {
+  border-left: 4px solid #ef4444;
+}
+
+.data-warning {
+  border-left: 4px solid #f59e0b;
+}
