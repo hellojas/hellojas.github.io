@@ -101,7 +101,7 @@ body {
   color: #5d4037;
   text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.15);
   display: inline-block;
-  font-size: 3.2rem; /* or adjust to taste */
+  font-size: 3.7rem; /* or adjust to taste */
 }
 
 .social-text {
@@ -111,7 +111,7 @@ body {
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1));
   display: inline-block;
-  font-size: 3.6rem; /* slightly bigger for emphasis */
+  font-size: 3.9rem; /* slightly bigger for emphasis */
   font-weight: 900;
 }
 
