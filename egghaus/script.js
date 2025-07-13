@@ -1357,12 +1357,12 @@ function initializeApp() {
     console.log(`🎫 Guest list loaded with ${getGuestList().length} VIP members`);
     console.log(`🎭 Default season: ${appConfig.defaultSeason}`);
     console.log(`🖼️ Profile images: ${appConfig.profileImagePath}/`);
-    
+
     // Check for user from URL or localStorage
     const urlParams = new URLSearchParams(window.location.search);
     const urlUser = urlParams.get('user');
     const savedUserName = localStorage.getItem('currentUserName');
-    
+
     if (urlUser) {
         currentUserName = urlUser.trim();
         localStorage.setItem('currentUserName', currentUserName);
@@ -1371,33 +1371,39 @@ function initializeApp() {
         currentUserName = savedUserName;
         console.log(`👤 Returning user from storage: ${currentUserName}`);
     }
-    
+
     // Set profile image path
     if (currentUserName) {
         userProfileImage = `${appConfig.profileImagePath}/${currentUserName.toLowerCase()}.png`;
-        showScreen('menu'); // Skip welcome screen
+
+        // Guest list check
+        if (!isOnGuestList(currentUserName)) {
+            console.warn(`⚠️ ${currentUserName} is NOT on the guest list`);
+            setTimeout(() => {
+                alert(`⚠️ Guest List Notice\n\nHi ${currentUserName}! We don't see you on our VIP guest list.\n\nYou can browse the menu, but you'll need to be on the guest list to place an order.`);
+            }, 500);
+        } else {
+            console.log(`✅ ${currentUserName} is on the guest list`);
+        }
+
+        showScreen('menu'); // Skip welcome
     } else {
         showScreen('welcome'); // Show welcome if no user info
-}
-    // Initialize season and products
+    }
+
+    // Load season & products
     currentProducts = getProductsBySeason(currentSeason);
-    console.log(`🎭 Loading season ${currentSeason} with ${currentProducts.length} products`);
-    
-    // Add cart icon to menu header
-    addCartIconToHeader();
-    
-    // Initialize products display
     displayProducts();
-    
-    // Initialize cart display
+
+    // Add cart icon and update cart state
+    addCartIconToHeader();
     updateCartSummary();
     updateCartCount();
-    
-    // Add event listeners
     addEventListeners();
-    
+
     console.log('🍵 Egghaus Social app initialized successfully!');
 }
+
 
 /**
  * Add cart icon to menu header
