@@ -195,21 +195,14 @@ export const seasons = [
 
 export const guestList = [
     'jas',
-    'alex',
-    'sarah',
-    'john',
-    'emily',
-    'mike',
-    'jessica',
-    'david',
-    'amanda',
-    'chris',
-    'taylor',
-    'jordan',
-    'casey',
-    'riley',
-    'morgan'
-    // Add more approved VIP guests here
+    'martin',
+    'sam',
+    'eric',
+    'jenni',
+    'rachel',
+    'marco',
+    'tudi',
+    'alaric'
 ];
 
 // ===================================
