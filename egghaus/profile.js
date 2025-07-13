@@ -22,9 +22,6 @@ import {
 // Chart.js is now available globally via <script> tag
 // No import needed — just use Chart directly
 
-// Optionally register all components globally
-Chart.register(...Chart.registry.items);
-
 // ===================================
 // GLOBAL VARIABLES
 // ===================================
