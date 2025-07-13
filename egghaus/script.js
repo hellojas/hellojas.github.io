@@ -323,6 +323,9 @@ function submitNameFromDialog() {
     currentUserName = name;
     console.log('👤 User name set:', currentUserName);
     
+    // Store in localStorage for persistence
+    localStorage.setItem('currentUserName', currentUserName);
+    
     // Set up profile image path
     userProfileImage = `${appConfig.profileImagePath}/${name.toLowerCase()}.png`;
     
@@ -349,26 +352,12 @@ function submitNameFromDialog() {
 }
 
 /**
- * Set up profile display in menu
+ * Set up profile display in menu (removed profile name display)
  */
 function setupProfile() {
-    const profileName = getElement('profileName');
     const profileImage = getElement('profileImage');
     const profileFallback = getElement('profileFallback');
     const profilePic = getElement('profilePic');
-    
-    if (profileName) {
-        // Add VIP status indicator
-        const vipStatus = isOnGuestList(currentUserName) ? ' 🌟' : ' ⚠️';
-        profileName.textContent = (currentUserName || 'Guest') + vipStatus;
-        
-        // Color coding
-        if (isOnGuestList(currentUserName)) {
-            profileName.style.color = '#10b981'; // Green for VIP
-        } else {
-            profileName.style.color = '#ffa500'; // Orange for non-VIP
-        }
-    }
     
     if (currentUserName && profileImage && profileFallback && profilePic) {
         // Add loading class
@@ -395,6 +384,40 @@ function setupProfile() {
         // Set the image source
         profileImage.src = userProfileImage;
         profileImage.alt = `${currentUserName}'s profile picture`;
+        
+        // Set up profile tooltip
+        profilePic.title = `View ${currentUserName}'s Profile`;
+    }
+}
+
+/**
+ * Navigate to profile page with user name parameter
+ */
+function goToProfile() {
+    if (!currentUserName || currentUserName === 'Guest') {
+        alert('Please enter your name first to view your profile.');
+        return;
+    }
+    
+    // Save current state
+    localStorage.setItem('currentUserName', currentUserName);
+    
+    // Navigate to profile page with user parameter
+    const profileUrl = `profile.html?user=${encodeURIComponent(currentUserName)}`;
+    console.log(`👤 Navigating to profile: ${profileUrl}`);
+    
+    // Show brief loading feedback
+    const profilePic = getElement('profilePic');
+    if (profilePic) {
+        const originalTitle = profilePic.title;
+        profilePic.title = 'Loading profile...';
+        profilePic.style.opacity = '0.7';
+        
+        setTimeout(() => {
+            window.location.href = profileUrl;
+        }, 200);
+    } else {
+        window.location.href = profileUrl;
     }
 }
 
@@ -1335,6 +1358,14 @@ function initializeApp() {
     console.log(`🎭 Default season: ${appConfig.defaultSeason}`);
     console.log(`🖼️ Profile images: ${appConfig.profileImagePath}/`);
     
+    // Check if returning user
+    const savedUserName = localStorage.getItem('currentUserName');
+    if (savedUserName) {
+        currentUserName = savedUserName;
+        userProfileImage = `${appConfig.profileImagePath}/${savedUserName.toLowerCase()}.png`;
+        console.log(`👤 Returning user: ${currentUserName}`);
+    }
+    
     // Initialize season and products
     currentProducts = getProductsBySeason(currentSeason);
     console.log(`🎭 Loading season ${currentSeason} with ${currentProducts.length} products`);
@@ -1452,6 +1483,7 @@ function handleKeyboardNavigation(event) {
                     // Reset to welcome if user wants to change name
                     if (event.shiftKey) {
                         currentUserName = '';
+                        localStorage.removeItem('currentUserName');
                         showNameDialog();
                     } else {
                         showScreen('welcome');
@@ -1529,6 +1561,7 @@ window.showScreen = showScreen;
 window.showNameDialog = showNameDialog;
 window.closeNameDialog = closeNameDialog;
 window.submitNameFromDialog = submitNameFromDialog;
+window.goToProfile = goToProfile; // NEW: Profile navigation function
 window.changeSeason = changeSeason;
 window.filterCategory = filterCategory;
 window.searchProducts = searchProducts;
@@ -1541,4 +1574,4 @@ window.backToMenu = backToMenu;
 window.shareOrder = shareOrder;
 window.confirmPickup = confirmPickup;
 
-console.log('🍵 Egghaus Social script loaded successfully with centralized data management!');
+console.log('🍵 Egghaus Social script loaded successfully with profile navigation!');
