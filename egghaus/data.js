@@ -205,6 +205,7 @@ export const seasons = {
  * Guest list for exclusive event access
  */
 export const guestList = [
+    'jas',
     'martin',
     'sam',
     'eric',
