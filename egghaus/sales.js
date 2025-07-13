@@ -732,6 +732,9 @@ async function createCustomerChart() {
 /**
  * Create whimsical customer spenders chart with egg avatars
  */
+/**
+ * Create whimsical customer spenders chart with egg avatars
+ */
 async function createCustomerSpendersChart() {
     const canvas = document.getElementById('customerSpendersChart');
     if (!canvas) return;
@@ -822,9 +825,9 @@ async function createCustomerSpendersChart() {
                             const amount = context.parsed.y;
                             const orders = customerSpending[customerName]?.orders || 0;
                             return [
-                                `💰 Total Spent: ${amount.toFixed(2)}`,
+                                `💰 Total Spent: $${amount.toFixed(2)}`,
                                 `📦 Orders: ${orders}`,
-                                `📊 Avg Order: ${(amount / orders).toFixed(2)}`
+                                `📊 Avg Order: $${(amount / orders).toFixed(2)}`
                             ];
                         },
                         title: function(context) {
@@ -845,8 +848,100 @@ async function createCustomerSpendersChart() {
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
-                            return '
-
+                            return '$' + value.toFixed(0);
+                        },
+                        color: '#5d4037',
+                        font: { family: 'Inter', weight: '600' }
+                    },
+                    grid: {
+                        color: 'rgba(212, 175, 55, 0.2)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        color: '#5d4037',
+                        font: { family: 'Inter', weight: '600', size: 10 }
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            animation: {
+                duration: 2000,
+                easing: 'easeOutBounce'
+            }
+        },
+        plugins: [{
+            id: 'customerEggIcons',
+            afterDraw: function(chart) {
+                const ctx = chart.ctx;
+                chart.data.labels.forEach((label, index) => {
+                    const meta = chart.getDatasetMeta(0);
+                    const bar = meta.data[index];
+                    
+                    if (bar) {
+                        const x = bar.x;
+                        const y = bar.y - 25; // Position above the bar
+                        
+                        // Draw customer image or default egg
+                        if (customerImages[label]) {
+                            const img = customerImages[label];
+                            const size = 20;
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.arc(x, y, size/2, 0, 2 * Math.PI);
+                            ctx.clip();
+                            ctx.drawImage(img, x - size/2, y - size/2, size, size);
+                            ctx.restore();
+                            
+                            // Add a cute border
+                            ctx.beginPath();
+                            ctx.arc(x, y, size/2 + 1, 0, 2 * Math.PI);
+                            ctx.strokeStyle = '#D4AF37';
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
+                        } else {
+                            // Draw default egg emoji
+                            ctx.font = '20px Arial';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            
+                            // Add shadow for depth
+                            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                            ctx.fillText('🥚', x + 1, y + 1);
+                            
+                            // Main emoji
+                            ctx.fillStyle = '#FFD700';
+                            ctx.fillText('🥚', x, y);
+                        }
+                        
+                        // Add sparkles for top 3 customers
+                        if (index < 3) {
+                            const sparkles = ['✨', '🌟', '⭐'];
+                            ctx.font = '12px Arial';
+                            ctx.fillStyle = whimsicalColors[index];
+                            ctx.fillText(sparkles[index], x + 15, y - 10);
+                        }
+                    }
+                });
+            }
+        }]
+    });
+    
+    // Update stats
+    if (topSpenders.length > 0) {
+        const topSpenderAmount = topSpenders[0][1].total;
+        const loyalCustomers = Object.values(customerSpending).filter(c => c.orders >= 3).length;
+        
+        const topSpenderEl = document.getElementById('topSpenderAmount');
+        const loyalCustomersEl = document.getElementById('loyalCustomers');
+        
+        if (topSpenderEl) topSpenderEl.textContent = `$${topSpenderAmount.toFixed(0)}`;
+        if (loyalCustomersEl) loyalCustomersEl.textContent = loyalCustomers;
+    }
+}
 /**
  * Create order status flow chart
  */
