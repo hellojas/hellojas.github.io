@@ -22,7 +22,7 @@ export const products = [
         image: "🍋",
         rating: 4.7,
         description: "Unique fusion of earthy matcha and bright yuzu citrus served over ice. A refreshing twist on traditional matcha.",
-        season: [1, 2, 3] // Available in all seasons
+        season: [2] // Available in all seasons
     },
     {
         id: 3,
@@ -54,7 +54,7 @@ export const products = [
         image: "🍰",
         rating: 4.9,
         description: "Rich, creamy cheesecake with a signature burnt top. Our most popular dessert with a perfectly caramelized exterior.",
-        season: [1] // Season 1 exclusive
+        season: [2]
     },
     {
         id: 6,
@@ -64,7 +64,7 @@ export const products = [
         image: "💜",
         rating: 4.8,
         description: "Vibrant purple yam cheesecake with a smooth, velvety texture. A Filipino-inspired treat that's Instagram-worthy and delicious.",
-        season: [1, 3] // Season 1 and 3
+        season: [2]
     },
     
     // SEASON 2 SPECIALS
@@ -79,16 +79,6 @@ export const products = [
         season: [2] // Season 2 exclusive
     },
     {
-        id: 8,
-        name: "Strawberry Matcha Parfait",
-        price: 9.50,
-        category: "noms",
-        image: "🍓",
-        rating: 4.6,
-        description: "Layers of matcha mousse, fresh strawberries, and house-made granola. A perfect balance of sweet and earthy flavors.",
-        season: [2, 3] // Season 2 and 3
-    },
-    {
         id: 9,
         name: "Bagels",
         price: 5.50,
@@ -96,30 +86,10 @@ export const products = [
         image: "🥯",
         rating: 4.4,
         description: "Freshly baked artisanal bagels. Choose from various flavors and enjoy with your favorite toppings.",
-        season: [2, 3] // Available from season 2 onwards
+        season: [1,2] // Available from season 2 onwards
     },
     
-    // SEASON 3 INNOVATIONS
-    {
-        id: 10,
-        name: "Cold Brew Matcha Float",
-        price: 10.00,
-        category: "matcha",
-        image: "🧊",
-        rating: 4.9,
-        description: "Innovative cold brew matcha with vanilla ice cream float. A unique twist that's both refreshing and indulgent.",
-        season: [3] // Season 3 exclusive
-    },
-    {
-        id: 11,
-        name: "Miso Caramel Latte",
-        price: 8.75,
-        category: "coffee",
-        image: "🍯",
-        rating: 4.8,
-        description: "Bold espresso with house-made miso caramel syrup. Sweet, salty, and umami flavors in perfect harmony.",
-        season: [3] // Season 3 exclusive
-    },
+
     {
         id: 12,
         name: "Milk Bread French Toast",
@@ -128,40 +98,8 @@ export const products = [
         image: "🍞",
         rating: 4.7,
         description: "Fluffy Japanese milk bread transformed into decadent French toast. Served with matcha butter and maple syrup.",
-        season: [3] // Season 3 exclusive
+        season: [2] // Season 3 exclusive
     },
-    {
-        id: 13,
-        name: "Seasonal Fruit Tart",
-        price: 9.00,
-        category: "noms",
-        image: "🥧",
-        rating: 4.5,
-        description: "Beautiful tart featuring the best seasonal fruits on pastry cream. Changes with the seasons for peak freshness.",
-        season: [3] // Season 3 exclusive
-    },
-    
-    // CROSS-SEASON FAVORITES
-    {
-        id: 14,
-        name: "Matcha Tiramisu",
-        price: 9.25,
-        category: "noms",
-        image: "🍮",
-        rating: 4.8,
-        description: "Japanese twist on the Italian classic. Layers of matcha-soaked ladyfingers and mascarpone cream.",
-        season: [1, 2, 3] // Popular across all seasons
-    },
-    {
-        id: 15,
-        name: "Sparkling Yuzu Lemonade",
-        price: 6.75,
-        category: "coffee", // Using coffee category for beverages
-        image: "✨",
-        rating: 4.6,
-        description: "Refreshing sparkling water with fresh yuzu juice and a hint of honey. Perfect palate cleanser.",
-        season: [2, 3] // Summer refreshment
-    }
 ];
 
 // ===================================
@@ -184,7 +122,7 @@ export const seasons = [
     {
         id: 3,
         name: "Season 3",
-        subtitle: "Innovation", 
+        subtitle: "Innovation?", 
         description: "Bold new flavors and creative fusion creations"
     }
 ];
@@ -220,7 +158,7 @@ export const appConfig = {
     taxRate: 0.085,
     
     // Order timing
-    basePreparationTime: 8, // Base time in minutes
+    basePreparationTime: 1, // Base time in minutes
     timePerItem: 2, // Additional minutes per item
     
     // UI Settings
