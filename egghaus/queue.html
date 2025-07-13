@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egghaus Social - Order Queue</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="queue.css">
+</head>
+<body>
+    <div class="queue-container">
+        
+        <!-- Header -->
+        <header class="queue-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo">🍵</div>
+                    <div class="title-section">
+                        <h1 class="main-title">Egghaus Social</h1>
+                        <p class="subtitle">Order Queue</p>
+                    </div>
+                </div>
+                <div class="refresh-section">
+                    <button class="refresh-btn" onclick="refreshQueue()">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Status Legend -->
+        <div class="status-legend">
+            <div class="legend-item">
+                <span class="status-dot preparing"></span>
+                <span>Preparing</span>
+            </div>
+            <div class="legend-item">
+                <span class="status-dot ready"></span>
+                <span>Ready for Pickup</span>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading-state" id="loadingState">
+            <div class="loading-spinner"></div>
+            <p>Loading current orders...</p>
+        </div>
+
+        <!-- Queue List -->
+        <div class="queue-section" id="queueSection" style="display: none;">
+            <h2 class="section-title">Current Orders</h2>
+            <div class="orders-list" id="ordersList">
+                <!-- Orders will be populated here -->
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-icon">☕</div>
+            <h3>No orders in queue</h3>
+            <p>All orders have been completed!</p>
+        </div>
+
+        <!-- Footer -->
+        <footer class="queue-footer">
+            <div class="footer-content">
+                <p>Orders update automatically every few seconds</p>
+                <div class="footer-links">
+                    <a href="./index.html" class="footer-link">🛒 Place New Order</a>
+                    <a href="./admin.html" class="footer-link">👨‍💼 Staff Login</a>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="firebase-config.js"></script>
+    <!-- Queue JavaScript -->
+    <script type="module" src="queue.js"></script>
+</body>
+</html>
