@@ -485,7 +485,6 @@ function initializeCharts() {
  */
 function createCategoryChart() {
     const ctx = document.getElementById('categoryChart');
-    console.log('🧪 categoryChart canvas:', ctx); // must not be null
     if (!ctx) return;
     
     // Calculate category data from real orders
