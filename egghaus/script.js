@@ -1,14 +1,19 @@
+// ===================================
+// FIREBASE IMPORTS
+// ===================================
 import { 
-  collection, 
-  addDoc, 
-  serverTimestamp 
+    collection, 
+    addDoc, 
+    doc,
+    onSnapshot,
+    updateDoc,
+    serverTimestamp 
 } from 'firebase/firestore';
 import { db } from './firebase-config.js';
 
 // ===================================
 // GLOBAL VARIABLES
 // ===================================
-
 let cart = {};
 let currentProduct = {};
 let currentQuantity = 1;
@@ -52,7 +57,7 @@ const products = [
         category: "coffee",
         image: "☕",
         rating: 4.5,
-        description: "Classic japanese drip iced coffee, smooth and bold. Perfect for coffee lovers seeking a refreshing caffeine kick.  Today's selection is a honey aponte columbian coffee from St. Kilda.  Tasting notes: grapefruit, guava, white peach."
+        description: "Classic japanese drip iced coffee, smooth and bold. Perfect for coffee lovers seeking a refreshing caffeine kick. Today's selection is a honey aponte columbian coffee from St. Kilda. Tasting notes: grapefruit, guava, white peach."
     },
     // DESSERTS
     {
@@ -102,7 +107,6 @@ const products = [
         description: "Fluffy bites of heaven."
     }
 ];
-
 
 // ===================================
 // UTILITY FUNCTIONS
@@ -156,14 +160,31 @@ const debounce = (func, delay) => {
     };
 };
 
+/**
+ * Generate a simple order ID
+ * @returns {string}
+ */
+function generateOrderId() {
+    const timestamp = Date.now().toString().slice(-6);
+    const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+    return `EH${timestamp}${random}`;
+}
+
+/**
+ * Calculate estimated preparation time
+ * @param {number} itemCount - Number of items in order
+ * @returns {number} - Estimated time in minutes
+ */
+function calculateEstimatedTime(itemCount) {
+    const baseTime = 8; // Base time in minutes
+    const timePerItem = 2; // Additional minutes per item
+    const randomVariation = Math.floor(Math.random() * 4) - 2; // ±2 minutes
+    return Math.max(5, baseTime + (itemCount * timePerItem) + randomVariation);
+}
+
 // ===================================
 // SCREEN NAVIGATION
 // ===================================
-
-/**
- * Show specific screen and hide others
- * @param {string} screenName - Name of screen to show
- */
 
 /**
  * Show specific screen and hide others
@@ -195,9 +216,7 @@ function showScreen(screenName) {
             displayCart();
             break;
         case 'queue':
-            if (typeof initializeQueue === 'function') {
-                initializeQueue();
-            }
+            initializeQueue();
             break;
     }
 }
@@ -505,112 +524,8 @@ function updateCartSummary() {
 }
 
 // ===================================
-// CHECKOUT FUNCTIONS
+// FIREBASE FUNCTIONS
 // ===================================
-
-/**
- * Process checkout with Firebase
- */
-async function checkout() {
-    if (Object.keys(cart).length === 0) {
-        alert('Your cart is empty!');
-        return;
-    }
-    
-    // Get customer name and validate
-    const nameInput = document.querySelector('.customer-name-input');
-    const customerName = nameInput ? nameInput.value.trim() : '';
-    
-    if (!customerName) {
-        alert('Please enter your name to continue with the order.');
-        if (nameInput) {
-            nameInput.focus();
-            nameInput.style.borderColor = '#ff4757';
-            nameInput.style.background = '#fff5f5';
-        }
-        return;
-    }
-    
-    // Show loading state
-    const checkoutBtn = document.querySelector('.checkout-btn');
-    const originalText = checkoutBtn.textContent;
-    checkoutBtn.textContent = '⏳ Submitting Order...';
-    checkoutBtn.disabled = true;
-    
-    try {
-        // Prepare order data
-        const orderId = generateOrderId();
-        const orderData = {
-            // Basic order info
-            orderId: orderId,
-            status: 'pending',
-            
-            // Customer info
-            customer: {
-                name: customerName
-            },
-            
-            // Items
-            items: Object.values(cart).map(item => ({
-                name: item.name,
-                price: item.price,
-                quantity: item.quantity,
-                total: item.price * item.quantity
-            })),
-            
-            // Pricing
-            pricing: {
-                subtotal: calculateSubtotal(),
-                tax: calculateTax(), 
-                total: calculateTotal()
-            },
-            
-            // Details
-            instructions: document.querySelector('.instructions-input')?.value.trim() || '',
-            estimatedTime: calculateEstimatedTime(Object.keys(cart).length),
-            
-            // Timestamps
-            createdAt: serverTimestamp(),
-            source: 'web_app'
-        };
-        
-        // 🔥 SAVE TO FIREBASE
-        const docRef = await addDoc(collection(db, 'orders'), orderData);
-        console.log('✅ Order saved to Firebase:', docRef.id);
-        
-        // Store for queue page
-        window.currentOrder = {
-            ...orderData,
-            firebaseId: docRef.id,
-            orderTime: new Date()
-        };
-        
-        // Success!
-        alert(`🎉 Order #${orderId} submitted successfully!\n\nFirebase ID: ${docRef.id.substring(0, 8)}...`);
-        
-        // Clear cart and go to queue
-        cart = {};
-        showScreen('queue');
-        
-    } catch (error) {
-        console.error('❌ Firebase error:', error);
-        alert('⚠️ Order could not be submitted to the kitchen system. Please try again or contact staff.');
-        
-    } finally {
-        // Reset button
-        checkoutBtn.textContent = originalText;
-        checkoutBtn.disabled = false;
-    }
-}
-
-
-// ===================================
-// FIREBASE ORDER SUBMISSION SYSTEM
-// ===================================
-
-// Import Firebase functions (add to your firebase-config.js or main script)
-import { doc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db } from './firebase-config.js';
 
 /**
  * Save order to Firebase Firestore
@@ -667,38 +582,51 @@ async function saveOrderToFirebase(orderData) {
         // Add to Firebase collection
         const docRef = await addDoc(collection(db, 'orders'), firebaseOrder);
         
-        console.log('Order saved to Firebase with ID:', docRef.id);
+        console.log('✅ Order saved to Firebase with ID:', docRef.id);
         return docRef.id;
         
     } catch (error) {
-        console.error('Error saving order to Firebase:', error);
+        console.error('❌ Error saving order to Firebase:', error);
         throw error;
     }
 }
 
 /**
- * Update order status in Firebase
- * @param {string} firebaseOrderId - Firebase document ID
- * @param {string} newStatus - New order status
- * @returns {Promise}
+ * Listen to real-time order updates
+ * @param {string} orderId - Firebase document ID
+ * @param {Function} callback - Callback function for updates
+ * @returns {Function} Unsubscribe function
  */
-async function updateOrderStatus(firebaseOrderId, newStatus) {
+function listenToOrderUpdates(orderId, callback) {
+    if (!db) {
+        console.warn('Firebase not available for real-time updates');
+        return () => {};
+    }
+
     try {
-        const orderRef = doc(db, 'orders', firebaseOrderId);
-        await updateDoc(orderRef, {
-            status: newStatus,
-            updatedAt: serverTimestamp()
+        const orderRef = doc(db, "orders", orderId);
+        
+        const unsubscribe = onSnapshot(orderRef, (doc) => {
+            if (doc.exists()) {
+                const orderData = { id: doc.id, ...doc.data() };
+                console.log('📡 Real-time order update:', orderData.status);
+                callback(orderData);
+            } else {
+                console.warn('Order document not found');
+            }
+        }, (error) => {
+            console.error('❌ Error in order listener:', error);
         });
         
-        console.log('Order status updated to:', newStatus);
+        return unsubscribe;
     } catch (error) {
-        console.error('Error updating order status:', error);
-        throw error;
+        console.error('❌ Error setting up order listener:', error);
+        return () => {};
     }
 }
 
 // ===================================
-// UPDATED CHECKOUT FUNCTION WITH FIREBASE
+// CHECKOUT FUNCTIONS
 // ===================================
 
 /**
@@ -732,7 +660,11 @@ async function checkout() {
     
     try {
         // Prepare order data
+        const orderId = generateOrderId();
+        const estimatedTime = calculateEstimatedTime(Object.keys(cart).length);
+        
         const orderData = {
+            orderId: orderId,
             items: Object.values(cart).map(item => ({
                 name: item.name,
                 price: item.price,
@@ -749,22 +681,20 @@ async function checkout() {
                 email: document.querySelector('.customer-email-input')?.value.trim() || ""
             },
             instructions: document.querySelector('.instructions-input')?.value.trim() || "",
-            timestamp: new Date().toISOString()
+            estimatedTime: estimatedTime,
+            orderTime: new Date()
         };
         
-        // Generate order ID
-        const orderId = generateOrderId();
-        orderData.orderId = orderId;
-        orderData.orderTime = new Date();
+        // Try to save to Firebase
+        let firebaseOrderId = null;
+        try {
+            firebaseOrderId = await saveOrderToFirebase(orderData);
+            console.log('✅ Order saved to Firebase:', firebaseOrderId);
+        } catch (firebaseError) {
+            console.warn('⚠️ Firebase save failed, continuing with local order:', firebaseError.message);
+        }
         
-        // Calculate estimated time
-        const estimatedTime = calculateEstimatedTime(orderData.items.length);
-        orderData.estimatedTime = estimatedTime;
-        
-        // Save to Firebase
-        const firebaseOrderId = await saveOrderToFirebase(orderData);
-        
-        // Store order data for queue page (include Firebase ID)
+        // Store order data for queue page
         window.currentOrder = {
             ...orderData,
             firebaseOrderId: firebaseOrderId,
@@ -772,25 +702,19 @@ async function checkout() {
         };
         
         // Show success message
-        showOrderSubmissionSuccess(orderId, firebaseOrderId);
+        const successMessage = firebaseOrderId 
+            ? `🎉 Order #${orderId} submitted successfully!\n\nYour order has been sent to our kitchen and will be ready in about ${estimatedTime} minutes.`
+            : `🎉 Order #${orderId} confirmed!\n\nEstimated time: ${estimatedTime} minutes\n\n⚠️ Order saved locally - please check with staff.`;
         
-        // Clear cart
+        setTimeout(() => alert(successMessage), 300);
+        
+        // Clear cart and go to queue
         cart = {};
-        
-        // Navigate to queue page
         showScreen('queue');
         
     } catch (error) {
-        console.error('Checkout error:', error);
-        
-        // Show error message but still proceed to queue (graceful degradation)
-        alert('⚠️ Order submitted locally, but may not have reached the kitchen system. Please check with staff.');
-        
-        // Create order without Firebase
-        const orderData = createLocalOrder();
-        window.currentOrder = orderData;
-        cart = {};
-        showScreen('queue');
+        console.error('❌ Checkout error:', error);
+        alert('⚠️ There was an issue processing your order. Please try again or contact staff.');
         
     } finally {
         // Reset button state
@@ -799,126 +723,21 @@ async function checkout() {
     }
 }
 
-/**
- * Create local order as fallback
- * @returns {Object}
- */
-function createLocalOrder() {
-    const nameInput = document.querySelector('.customer-name-input');
-    const customerName = nameInput ? nameInput.value.trim() : 'Guest';
-    
-    return {
-        items: Object.values(cart).map(item => ({
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            total: item.price * item.quantity
-        })),
-        subtotal: calculateSubtotal(),
-        tax: calculateTax(),
-        total: calculateTotal(),
-        customerInfo: {
-            name: customerName,
-            phone: "",
-            email: ""
-        },
-        instructions: document.querySelector('.instructions-input')?.value.trim() || "",
-        orderId: generateOrderId(),
-        orderTime: new Date(),
-        estimatedTime: calculateEstimatedTime(Object.keys(cart).length),
-        status: 'pending'
-    };
-}
-
-/**
- * Show order submission success message
- * @param {string} orderId - Local order ID
- * @param {string} firebaseOrderId - Firebase document ID
- */
-function showOrderSubmissionSuccess(orderId, firebaseOrderId) {
-    const message = `🎉 Order submitted successfully!
-
-Order #: ${orderId}
-Database ID: ${firebaseOrderId.substring(0, 8)}...
-
-Your order has been sent to the kitchen!`;
-    
-    // Create custom success popup (optional)
-    setTimeout(() => {
-        alert(message);
-    }, 500);
-}
-
 // ===================================
-// FIREBASE ORDER MANAGEMENT FUNCTIONS
-// ===================================
-
-/**
- * Get order from Firebase by ID
- * @param {string} firebaseOrderId - Firebase document ID
- * @returns {Promise<Object>}
- */
-async function getOrderFromFirebase(firebaseOrderId) {
-    try {
-        const docRef = doc(db, 'orders', firebaseOrderId);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-            return { id: docSnap.id, ...docSnap.data() };
-        } else {
-            throw new Error('Order not found');
-        }
-    } catch (error) {
-        console.error('Error getting order:', error);
-        throw error;
-    }
-}
-
-/**
- * Listen to order status changes (real-time updates)
- * @param {string} firebaseOrderId - Firebase document ID
- * @param {Function} callback - Callback function for status updates
- */
-function listenToOrderUpdates(firebaseOrderId, callback) {
-    try {
-        const orderRef = doc(db, 'orders', firebaseOrderId);
-        
-        const unsubscribe = onSnapshot(orderRef, (doc) => {
-            if (doc.exists()) {
-                const orderData = { id: doc.id, ...doc.data() };
-                callback(orderData);
-            }
-        });
-        
-        // Store unsubscribe function for cleanup
-        window.orderListener = unsubscribe;
-        
-    } catch (error) {
-        console.error('Error setting up order listener:', error);
-    }
-}
-
-/**
- * Stop listening to order updates
- */
-function stopOrderListener() {
-    if (window.orderListener) {
-        window.orderListener();
-        window.orderListener = null;
-    }
-}
-
-// ===================================
-// ENHANCED QUEUE PAGE WITH FIREBASE
+// QUEUE PAGE FUNCTIONS
 // ===================================
 
 /**
  * Initialize queue with Firebase real-time updates
  */
 function initializeQueue() {
-    if (!window.currentOrder) return;
+    if (!window.currentOrder) {
+        console.warn('No current order found');
+        return;
+    }
     
     const order = window.currentOrder;
+    console.log('🍵 Initializing queue for order:', order.orderId);
     
     // Update order information
     updateQueueOrderInfo(order);
@@ -932,20 +751,24 @@ function initializeQueue() {
     // Start queue position simulation
     startQueuePosition();
     
-    // Update order status
-    updateOrderStatus('preparing');
+    // Update initial order status
+    updateOrderStatus('confirmed');
     
-    // Listen for real-time Firebase updates (if Firebase ID exists)
+    // Set up Firebase real-time updates if available
     if (order.firebaseOrderId) {
-        listenToOrderUpdates(order.firebaseOrderId, (updatedOrder) => {
-            console.log('Order status updated from Firebase:', updatedOrder.status);
+        console.log('📡 Setting up real-time updates for Firebase order:', order.firebaseOrderId);
+        
+        window.currentOrderListener = listenToOrderUpdates(order.firebaseOrderId, (updatedOrder) => {
+            console.log('🔄 Firebase order update received:', updatedOrder.status);
             
             // Update local order data
             window.currentOrder.status = updatedOrder.status;
             
             // Update UI based on Firebase status
-            updateQueueFromFirebase(updatedOrder);
+            updateQueueFromFirebaseStatus(updatedOrder);
         });
+    } else {
+        console.log('📱 Running in offline mode - using local timer');
     }
 }
 
@@ -953,405 +776,23 @@ function initializeQueue() {
  * Update queue UI from Firebase order data
  * @param {Object} firebaseOrder - Order data from Firebase
  */
-function updateQueueFromFirebase(firebaseOrder) {
+function updateQueueFromFirebaseStatus(firebaseOrder) {
     const statusMapping = {
-        'pending': 'confirmed',
-        'preparing': 'preparing', 
-        'ready': 'ready',
-        'completed': 'completed'
+        'pending': { ui: 'confirmed', icon: '✅', text: 'Order Confirmed' },
+        'preparing': { ui: 'preparing', icon: '👩‍🍳', text: 'Preparing Your Order' },
+        'ready': { ui: 'ready', icon: '🎉', text: 'Order Ready!' },
+        'completed': { ui: 'completed', icon: '✅', text: 'Order Complete' }
     };
     
-    const uiStatus = statusMapping[firebaseOrder.status] || firebaseOrder.status;
-    updateOrderStatus(uiStatus);
-    
-    if (firebaseOrder.status === 'ready') {
-        showOrderReady();
-    }
-}
-
-/**
- * Clean up Firebase listeners when leaving queue
- */
-function backToMenu() {
-    // Stop Firebase listener
-    stopOrderListener();
-    
-    // Clear any running timer
-    if (window.queueTimer) {
-        clearInterval(window.queueTimer);
-        window.queueTimer = null;
-    }
-    
-    // Clear current order
-    window.currentOrder = null;
-    
-    // Navigate to menu
-    showScreen('menu');
-}
-
-// ===================================
-// FIREBASE ADMIN FUNCTIONS (Optional)
-// ===================================
-
-/**
- * Get all orders for admin dashboard
- * @returns {Promise<Array>}
- */
-async function getAllOrders() {
-    try {
-        const ordersCollection = collection(db, 'orders');
-        const orderSnapshot = await getDocs(ordersCollection);
+    const statusConfig = statusMapping[firebaseOrder.status];
+    if (statusConfig) {
+        updateOrderStatus(statusConfig.ui);
         
-        return orderSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-    } catch (error) {
-        console.error('Error getting orders:', error);
-        throw error;
-    }
-}
-
-/**
- * Get orders by status
- * @param {string} status - Order status to filter by
- * @returns {Promise<Array>}
- */
-async function getOrdersByStatus(status) {
-    try {
-        const ordersCollection = collection(db, 'orders');
-        const q = query(ordersCollection, where('status', '==', status));
-        const querySnapshot = await getDocs(q);
-        
-        return querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-    } catch (error) {
-        console.error('Error getting orders by status:', error);
-        throw error;
-    }
-}
-/**
- * Generate a simple order ID
- * @returns {string}
- */
-function generateOrderId() {
-    const timestamp = Date.now().toString().slice(-6);
-    const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
-    return `EH${timestamp}${random}`;
-}
-
-/**
- * Calculate estimated preparation time
- * @param {number} itemCount - Number of items in order
- * @returns {number} - Estimated time in minutes
- */
-function calculateEstimatedTime(itemCount) {
-    const baseTime = 8; // Base time in minutes
-    const timePerItem = 2; // Additional minutes per item
-    const randomVariation = Math.floor(Math.random() * 4) - 2; // ±2 minutes
-    return Math.max(5, baseTime + (itemCount * timePerItem) + randomVariation);
-}
-
-// ===================================
-// ADD VISUAL FEEDBACK FOR NAME INPUT
-// ===================================
-
-/**
- * Add event listeners for name input validation
- */
-document.addEventListener('DOMContentLoaded', function() {
-    const nameInput = document.querySelector('.customer-name-input');
-    if (nameInput) {
-        // Reset styling when user starts typing
-        nameInput.addEventListener('input', function() {
-            if (this.value.trim()) {
-                this.style.borderColor = '#10b981';
-                this.style.background = '#f0fff4';
-            } else {
-                this.style.borderColor = '';
-                this.style.background = '';
-            }
-        });
-        
-        // Validate on blur
-        nameInput.addEventListener('blur', function() {
-            if (!this.value.trim()) {
-                this.style.borderColor = '#ff4757';
-                this.style.background = '#fff5f5';
-            }
-        });
-    }
-});
-
-
-/**
- * Prepare order data object - Updated to collect customer info
- * @returns {Object}
- */
-function prepareOrderData() {
-    const nameInput = document.querySelector('.customer-name-input');
-    const emailInput = document.querySelector('.customer-email-input');
-    const phoneInput = document.querySelector('.customer-phone-input');
-    const instructionsInput = document.querySelector('.instructions-input');
-    
-    // Ensure customer name is provided
-    const customerName = nameInput ? nameInput.value.trim() : '';
-    if (!customerName) {
-        alert('Please enter your name to continue with the order.');
-        if (nameInput) nameInput.focus();
-        throw new Error('Customer name is required');
-    }
-    
-    return {
-        items: Object.values(cart).map(item => ({
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            total: item.price * item.quantity
-        })),
-        subtotal: calculateSubtotal(),
-        tax: calculateTax(),
-        total: calculateTotal(),
-        customerInfo: {
-            name: customerName,
-            phone: phoneInput ? phoneInput.value.trim() : "",
-            email: emailInput ? emailInput.value.trim() : ""
-        },
-        instructions: instructionsInput ? instructionsInput.value.trim() : "",
-        timestamp: new Date().toISOString()
-    };
-}
-
-
-/**
- * Show order confirmation with order ID
- * @param {Object} orderData - Order data
- * @param {string} orderId - Firebase order ID
- */
-function showOrderConfirmation(orderData, orderId) {
-    const orderSummary = orderData.items
-        .map(item => `${item.quantity}x ${item.name}`)
-        .join(', ');
-
-    alert(`🎉 Order confirmed! Order ID: ${orderId}\n\nItems: ${orderSummary}\nTotal: ${formatPrice(orderData.total)}\n\nThank you! Your matcha order will be ready in 10-15 minutes.`);
-    
-    clearCartAndReturnToMenu();
-}
-
-/**
- * Show basic order confirmation without order ID
- * @param {Object} orderData - Order data
- */
-function showBasicOrderConfirmation(orderData) {
-    const orderSummary = orderData.items
-        .map(item => `${item.quantity}x ${item.name}`)
-        .join(', ');
-
-    alert(`🎉 Order confirmed!\n\nItems: ${orderSummary}\nTotal: ${formatPrice(orderData.total)}\n\nThank you! Your matcha order will be ready in 10-15 minutes.`);
-    
-    clearCartAndReturnToMenu();
-}
-
-/**
- * Clear cart and return to menu
- */
-function clearCartAndReturnToMenu() {
-    cart = {};
-    showScreen('menu');
-}
-
-
-/**
- * Generate a simple order ID
- * @returns {string}
- */
-function generateOrderId() {
-    const timestamp = Date.now().toString().slice(-6);
-    const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
-    return `EH${timestamp}${random}`;
-}
-
-/**
- * Calculate estimated preparation time
- * @param {number} itemCount - Number of items in order
- * @returns {number} - Estimated time in minutes
- */
-function calculateEstimatedTime(itemCount) {
-    const baseTime = 8; // Base time in minutes
-    const timePerItem = 2; // Additional minutes per item
-    const randomVariation = Math.floor(Math.random() * 4) - 2; // ±2 minutes
-    return Math.max(5, baseTime + (itemCount * timePerItem) + randomVariation);
-}
-
-
-// ===================================
-// INITIALIZATION
-// ===================================
-
-/**
- * Initialize the application
- */
-function initializeApp() {
-    // Add cart icon to menu header
-    addCartIconToHeader();
-    
-    // Initialize products display
-    displayProducts();
-    
-    // Initialize cart display
-    updateCartSummary();
-    updateCartCount();
-    
-    // Add event listeners
-    addEventListeners();
-    
-    console.log('🍵 Matcha app initialized successfully!');
-}
-
-/**
- * Add cart icon to menu header
- */
-function addCartIconToHeader() {
-    const menuHeader = document.querySelector('.menu-header');
-    if (!menuHeader) return;
-    
-    const cartIcon = createElement('div', {
-        innerHTML: '💖',
-        style: 'font-size: 1.5rem; cursor: pointer; margin-left: auto;',
-        onclick: () => showScreen('cart')
-    });
-    
-    menuHeader.appendChild(cartIcon);
-}
-
-/**
- * Add event listeners
- */
-function addEventListeners() {
-    // Search input event listener
-    const searchInput = document.querySelector('.search-input');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => searchProducts(e.target.value));
-    }
-    
-    // Keyboard navigation
-    document.addEventListener('keydown', handleKeyboardNavigation);
-}
-
-/**
- * Handle keyboard navigation
- * @param {KeyboardEvent} event - Keyboard event
- */
-function handleKeyboardNavigation(event) {
-    // Escape key to go back
-    if (event.key === 'Escape') {
-        const currentScreen = document.querySelector('.screen-active');
-        if (currentScreen) {
-            const screenId = currentScreen.id;
-            switch (screenId) {
-                case 'productDetailScreen':
-                case 'cartScreen':
-                    showScreen('menu');
-                    break;
-                case 'menuScreen':
-                    showScreen('welcome');
-                    break;
-            }
+        // If order is ready, show notification and stop timer
+        if (firebaseOrder.status === 'ready') {
+            showOrderReady();
         }
     }
-}
-
-// ===================================
-// ERROR HANDLING
-// ===================================
-
-/**
- * Global error handler
- */
-window.addEventListener('error', (event) => {
-    console.error('Global error:', event.error);
-    // In production, you might want to send this to an error tracking service
-});
-
-/**
- * Handle unhandled promise rejections
- */
-window.addEventListener('unhandledrejection', (event) => {
-    console.error('Unhandled promise rejection:', event.reason);
-    // Prevent the default browser behavior
-    event.preventDefault();
-});
-
-// ===================================
-// APP STARTUP
-// ===================================
-
-/**
- * Start the application when DOM is loaded
- */
-document.addEventListener('DOMContentLoaded', initializeApp);
-
-// ===================================
-// MOBILE RESPONSIVENESS
-// ===================================
-
-/**
- * Handle mobile-specific optimizations
- */
-if (window.innerWidth <= 768) {
-    // Add mobile-specific optimizations
-    document.body.classList.add('mobile-device');
-    
-    // Prevent zoom on input focus (iOS)
-    const viewportMeta = document.querySelector('meta[name="viewport"]');
-    if (viewportMeta) {
-        viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-    }
-}
-
-// ===================================
-// PERFORMANCE MONITORING
-// ===================================
-
-/**
- * Log performance metrics
- */
-window.addEventListener('load', () => {
-    if (window.performance) {
-        const loadTime = window.performance.timing.loadEventEnd - window.performance.timing.navigationStart;
-        console.log(`🚀 App loaded in ${loadTime}ms`);
-    }
-});
-
-
-// ===================================
-// QUEUE PAGE FUNCTIONS
-// ===================================
-
-/**
- * Initialize the queue page
- */
-function initializeQueue() {
-    if (!window.currentOrder) return;
-    
-    const order = window.currentOrder;
-    
-    // Update order information
-    updateQueueOrderInfo(order);
-    
-    // Display order summary
-    displayQueueOrderSummary(order);
-    
-    // Start countdown timer
-    startQueueTimer(order.estimatedTime);
-    
-    // Start queue position simulation
-    startQueuePosition();
-    
-    // Update order status
-    updateOrderStatus('preparing');
 }
 
 /**
@@ -1417,18 +858,20 @@ function startQueueTimer(minutes) {
         if (timeLeft > 0) {
             timeLeft--;
             
-            // Update status at certain intervals
-            const totalTime = minutes * 60;
-            const progress = (totalTime - timeLeft) / totalTime;
-            
-            if (progress > 0.3 && progress < 0.7) {
-                updateOrderStatus('preparing');
-            } else if (progress > 0.7 && progress < 0.95) {
-                updateOrderStatus('almost-ready');
-            } else if (timeLeft === 0) {
-                updateOrderStatus('ready');
-                showOrderReady();
-                return;
+            // Update status at certain intervals (only if not using Firebase)
+            if (!window.currentOrder?.firebaseOrderId) {
+                const totalTime = minutes * 60;
+                const progress = (totalTime - timeLeft) / totalTime;
+                
+                if (progress > 0.3 && progress < 0.7) {
+                    updateOrderStatus('preparing');
+                } else if (progress > 0.7 && progress < 0.95) {
+                    updateOrderStatus('almost-ready');
+                } else if (timeLeft === 0) {
+                    updateOrderStatus('ready');
+                    showOrderReady();
+                    return;
+                }
             }
         }
     };
@@ -1465,7 +908,7 @@ function startQueuePosition() {
 }
 
 /**
- * Update order status
+ * Update order status display
  * @param {string} status - New status
  */
 function updateOrderStatus(status) {
@@ -1506,6 +949,7 @@ function updateOrderStatus(status) {
  * Show order ready notification
  */
 function showOrderReady() {
+    // Clear timer
     if (window.queueTimer) {
         clearInterval(window.queueTimer);
     }
@@ -1515,6 +959,12 @@ function showOrderReady() {
         timerElement.textContent = 'Ready!';
         timerElement.style.color = '#10b981';
         timerElement.style.fontWeight = 'bold';
+    }
+    
+    // Update Firebase status if connected
+    if (window.currentOrder?.firebaseOrderId && window.updateOrderStatus) {
+        window.updateOrderStatus(window.currentOrder.firebaseOrderId, 'ready')
+            .catch(error => console.warn('Could not update Firebase status:', error));
     }
     
     // Show notification
@@ -1533,6 +983,9 @@ function addPickupButton() {
     const actionsElement = getElement('queueActions');
     if (!actionsElement) return;
     
+    // Check if button already exists
+    if (actionsElement.querySelector('.queue-pickup-btn')) return;
+    
     const pickupBtn = document.createElement('button');
     pickupBtn.className = 'queue-pickup-btn';
     pickupBtn.textContent = '✅ Confirm Pickup';
@@ -1545,6 +998,13 @@ function addPickupButton() {
  * Confirm order pickup
  */
 function confirmPickup() {
+    // Update Firebase status if connected
+    if (window.currentOrder?.firebaseOrderId && window.updateOrderStatus) {
+        window.updateOrderStatus(window.currentOrder.firebaseOrderId, 'completed')
+            .then(() => console.log('✅ Order marked as completed in Firebase'))
+            .catch(error => console.warn('Could not update Firebase status:', error));
+    }
+    
     alert('Thank you for choosing Egghaus Social! 🍵\n\nEnjoy your order and have a great day!');
     backToMenu();
 }
@@ -1553,6 +1013,13 @@ function confirmPickup() {
  * Go back to menu from queue
  */
 function backToMenu() {
+    // Stop Firebase listener
+    if (window.currentOrderListener) {
+        window.currentOrderListener();
+        window.currentOrderListener = null;
+        console.log('📡 Stopped Firebase order listener');
+    }
+    
     // Clear any running timer
     if (window.queueTimer) {
         clearInterval(window.queueTimer);
@@ -1592,13 +1059,85 @@ function shareOrder() {
     }
 }
 
-
 // ===================================
-// UPDATED KEYBOARD NAVIGATION
+// INITIALIZATION
 // ===================================
 
 /**
- * Handle keyboard navigation - Updated to include queue page
+ * Initialize the application
+ */
+function initializeApp() {
+    // Add cart icon to menu header
+    addCartIconToHeader();
+    
+    // Initialize products display
+    displayProducts();
+    
+    // Initialize cart display
+    updateCartSummary();
+    updateCartCount();
+    
+    // Add event listeners
+    addEventListeners();
+    
+    console.log('🍵 Egghaus Social app initialized successfully!');
+}
+
+/**
+ * Add cart icon to menu header
+ */
+function addCartIconToHeader() {
+    const menuHeader = document.querySelector('.menu-header');
+    if (!menuHeader) return;
+    
+    const cartIcon = createElement('div', {
+        innerHTML: '💖',
+        style: 'font-size: 1.5rem; cursor: pointer; margin-left: auto;',
+        onclick: () => showScreen('cart')
+    });
+    
+    menuHeader.appendChild(cartIcon);
+}
+
+/**
+ * Add event listeners
+ */
+function addEventListeners() {
+    // Search input event listener
+    const searchInput = document.querySelector('.search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => searchProducts(e.target.value));
+    }
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', handleKeyboardNavigation);
+    
+    // Name input validation
+    const nameInput = document.querySelector('.customer-name-input');
+    if (nameInput) {
+        // Reset styling when user starts typing
+        nameInput.addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.style.borderColor = '#10b981';
+                this.style.background = '#f0fff4';
+            } else {
+                this.style.borderColor = '';
+                this.style.background = '';
+            }
+        });
+        
+        // Validate on blur
+        nameInput.addEventListener('blur', function() {
+            if (!this.value.trim()) {
+                this.style.borderColor = '#ff4757';
+                this.style.background = '#fff5f5';
+            }
+        });
+    }
+}
+
+/**
+ * Handle keyboard navigation
  * @param {KeyboardEvent} event - Keyboard event
  */
 function handleKeyboardNavigation(event) {
@@ -1623,118 +1162,62 @@ function handleKeyboardNavigation(event) {
     }
 }
 
+// ===================================
+// ERROR HANDLING
+// ===================================
+
+/**
+ * Global error handler
+ */
+window.addEventListener('error', (event) => {
+    console.error('Global error:', event.error);
+});
+
+/**
+ * Handle unhandled promise rejections
+ */
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled promise rejection:', event.reason);
+    event.preventDefault();
+});
 
 // ===================================
-// FIREBASE ORDER SUBMISSION SYSTEM
+// APP STARTUP
 // ===================================
 
-// Import Firebase functions (add to your firebase-config.js or main script)
-// import { doc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
-// import { db } from './firebase-config.js';
+/**
+ * Start the application when DOM is loaded
+ */
+document.addEventListener('DOMContentLoaded', initializeApp);
+
+// ===================================
+// MOBILE RESPONSIVENESS
+// ===================================
 
 /**
- * Save order to Firebase Firestore
- * @param {Object} orderData - Order data object
- * @returns {Promise<string>} - Returns Firebase document ID
+ * Handle mobile-specific optimizations
  */
-async function saveOrderToFirebase(orderData) {
-    try {
-        // Prepare order for Firebase
-        const firebaseOrder = {
-            // Order identification
-            orderId: orderData.orderId,
-            status: 'pending', // pending, preparing, ready, completed, cancelled
-            
-            // Customer information
-            customer: {
-                name: orderData.customerInfo.name,
-                email: orderData.customerInfo.email || null,
-                phone: orderData.customerInfo.phone || null
-            },
-            
-            // Order items
-            items: orderData.items.map(item => ({
-                name: item.name,
-                price: item.price,
-                quantity: item.quantity,
-                total: item.total,
-                category: item.category || 'unknown'
-            })),
-            
-            // Pricing
-            pricing: {
-                subtotal: orderData.subtotal,
-                tax: orderData.tax,
-                total: orderData.total,
-                taxRate: 0.085
-            },
-            
-            // Order details
-            instructions: orderData.instructions || '',
-            estimatedTime: orderData.estimatedTime || 15,
-            orderType: 'pickup', // pickup, delivery
-            
-            // Timestamps
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-            estimatedReadyTime: new Date(Date.now() + (orderData.estimatedTime * 60000)),
-            
-            // Metadata
-            source: 'web_app',
-            version: '1.0'
-        };
-        
-        // Add to Firebase collection
-        const docRef = await addDoc(collection(db, 'orders'), firebaseOrder);
-        
-        console.log('Order saved to Firebase with ID:', docRef.id);
-        return docRef.id;
-        
-    } catch (error) {
-        console.error('Error saving order to Firebase:', error);
-        throw error;
+if (window.innerWidth <= 768) {
+    document.body.classList.add('mobile-device');
+    
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (viewportMeta) {
+        viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
     }
 }
 
-/**
- * Update order status in Firebase
- * @param {string} firebaseOrderId - Firebase document ID
- * @param {string} newStatus - New order status
- * @returns {Promise}
- */
-async function updateOrderStatus(firebaseOrderId, newStatus) {
-    try {
-        const orderRef = doc(db, 'orders', firebaseOrderId);
-        await updateDoc(orderRef, {
-            status: newStatus,
-            updatedAt: serverTimestamp()
-        });
-        
-        console.log('Order status updated to:', newStatus);
-    } catch (error) {
-        console.error('Error updating order status:', error);
-        throw error;
-    }
-}
+// ===================================
+// PERFORMANCE MONITORING
+// ===================================
 
 /**
- * Test function to verify Firebase is working
+ * Log performance metrics
  */
-async function testFirebaseConnection() {
-    try {
-        const testOrder = {
-            test: true,
-            message: 'Firebase connection test',
-            timestamp: serverTimestamp()
-        };
-        
-        const docRef = await addDoc(collection(db, 'test'), testOrder);
-        console.log('✅ Firebase test successful! Document ID:', docRef.id);
-        alert('🔥 Firebase is connected and working!');
-        
-    } catch (error) {
-        console.error('❌ Firebase test failed:', error);
-        alert('⚠️ Firebase connection failed: ' + error.message);
+window.addEventListener('load', () => {
+    if (window.performance) {
+        const loadTime = window.performance.timing.loadEventEnd - window.performance.timing.navigationStart;
+        console.log(`🚀 App loaded in ${loadTime}ms`);
     }
-}
+});
 
+console.log('🍵 Egghaus Social script loaded successfully!');
