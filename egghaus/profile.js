@@ -1,13 +1,14 @@
 // ===================================
 // EGGHAUS SOCIAL - PROFILE PAGE (FIREBASE INTEGRATION)
 // ===================================
-
+// Chart.js + Luxon
 import * as Chart from 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.esm.js';
 import { DateTime } from 'https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/es6/luxon.min.js';
 
-// Manually register Luxon adapter
-Chart.adapters._date.override({
-  _id: 'luxon',
+// ✅ Custom Luxon adapter for Chart.js
+const luxonAdapter = {
+  id: 'luxon',
+  // Required: define how to parse, format, etc.
   formats: () => ({
     datetime: 'DDD t',
     millisecond: 'HH:mm:ss.SSS',
@@ -18,10 +19,12 @@ Chart.adapters._date.override({
     week: 'DD',
     month: 'LLL',
     quarter: 'qqq',
-    year: 'yyyy'
+    year: 'yyyy',
   }),
   parse: (value, format) => {
-    return typeof value === 'number' ? DateTime.fromMillis(value) : DateTime.fromISO(value);
+    return typeof value === 'number'
+      ? DateTime.fromMillis(value)
+      : DateTime.fromISO(value);
   },
   format: (time, format) => {
     return DateTime.fromMillis(time).toFormat(format);
@@ -37,10 +40,13 @@ Chart.adapters._date.override({
   },
   endOf: (time, unit) => {
     return DateTime.fromMillis(time).endOf(unit).toMillis();
-  }
-});
+  },
+};
 
+// ✅ Register adapter + components
+Chart.adapters.register(luxonAdapter);
 Chart.register(...Chart.registerables);
+
 
 // Firebase imports
 import {
