@@ -200,7 +200,7 @@
             <div class="empty-orders" id="emptyOrders" style="display: none;">
                 <div class="empty-icon">📋</div>
                 <h3>No Orders Found</h3>
-                <p>No order history found in Firebase for this account.</p>
+                <p>No order history found in the ☁️ EgghausCloud for this account.</p>
                 <p style="font-size: 0.9rem; color: #8d6e63; margin-top: 1rem;">
                     Orders will appear here after you place them through the menu.
                 </p>
@@ -214,7 +214,7 @@
         <div class="analytics-section">
             <h2 class="section-title">Your Analytics</h2>
             <p style="font-size: 0.9rem; color: #8d6e63; margin-bottom: 1.5rem; text-align: center;">
-                📊 All data sourced from Firebase • Real order history
+                📊 All data sourced from the Egghaus Cloud
             </p>
             
             <div class="charts-grid">
@@ -293,7 +293,7 @@
 
     <!-- Data Source Indicator -->
     <div class="data-source-indicator firebase-connected" id="dataSourceIndicator">
-        🔥 Firebase Connected
+        ☁️ Egghaus Cloud Connected
     </div>
 
     <!-- Data & Scripts -->
@@ -316,7 +316,7 @@
             
             // Test if Firebase is available
             if (window.db) {
-                indicator.textContent = '🔥 Database Connected';
+                indicator.textContent = '☁️ Egghaus Cloud Connected';
                 indicator.className = 'data-source-indicator firebase-connected';
             } else {
                 indicator.textContent = '📱 Local Orders Only';
