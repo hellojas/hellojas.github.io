@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Sample Orders to Firebase</title>
+</head>
+<body>
+  <h2>Adding sample orders to Firestore…</h2>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+    import { getFirestore, collection, addDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+    // TODO: replace with your own config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Utility functions
+    const parseTime = (hour, min) => {
+      const date = new Date("2025-07-12T00:00:00");
+      date.setHours(hour, min);
+      return Timestamp.fromDate(date);
+    };
+
+    const generateOrder = (name, hour, min, items) => {
+      const createdAt = parseTime(hour, min);
+      const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const orderId = `EH${Math.floor(Math.random() * 1000000000)}`;
+
+      return {
+        createdAt,
+        estimatedTime: 8,
+        estimatedReadyTime: Timestamp.fromDate(new Date(createdAt.toDate().getTime() + 8 * 60000)),
+        customer: { name },
+        items,
+        orderId,
+        orderNumber: orderId,
+        orderType: "pickup",
+        pricing: {
+          subtotal: total,
+          taxRate: 0.085,
+          tax: +(total * 0.085).toFixed(2),
+          total: +(total * 1.085).toFixed(2)
+        },
+        source: "web_app",
+        status: "completed",
+        instructions: ""
+      };
+    };
+
+    // Item price map
+    const prices = {
+      "Matcha Latte": 5,
+      "Houjicha Latte": 5,
+      "Yuzu Matcha": 5,
+      "Bagel": 4,
+      "Milk Bread": 4,
+      "Burnt Basque Cheesecake": 8,
+      "Ube Cheesecake": 8,
+      "Ganache Chocolate": 6
+    };
+
+    const makeItem = (name, quantity = 1) => ({
+      category: "noms",
+      name,
+      price: prices[name],
+      quantity,
+      total: prices[name] * quantity
+    });
+
+    // All orders
+    const orders = [
+      // jenni
+      generateOrder("jenni", 11, 0, [makeItem("Houjicha Latte"), makeItem("Bagel")]),
+      generateOrder("jenni", 12, 0, [makeItem("Matcha Latte")]),
+      generateOrder("jenni", 13, 0, [makeItem("Burnt Basque Cheesecake"), makeItem("Ube Cheesecake")]),
+      generateOrder("jenni", 14, 0, [makeItem("Milk Bread"), makeItem("Ganache Chocolate")]),
+
+      // marco
+      generateOrder("marco", 10, 55, [
+        makeItem("Matcha Latte"),
+        makeItem("Bagel"),
+        makeItem("Milk Bread", 2),
+        makeItem("Burnt Basque Cheesecake"),
+        makeItem("Ube Cheesecake")
+      ]),
+      generateOrder("marco", 15, 0, [
+        makeItem("Burnt Basque Cheesecake"),
+        makeItem("Ube Cheesecake"),
+        makeItem("Milk Bread")
+      ]),
+
+      // martin
+      generateOrder("martin", 10, 45, [makeItem("Matcha Latte")]),
+      generateOrder("martin", 11, 30, [makeItem("Yuzu Matcha")]),
+
+      // samshimi
+      generateOrder("samshimi", 10, 40, [makeItem("Matcha Latte")]),
+      generateOrder("samshimi", 11, 30, [makeItem("Bagel"), makeItem("Milk Bread")]),
+
+      // rachel
+      generateOrder("rachel", 12, 30, [makeItem("Matcha Latte"), makeItem("Bagel"), makeItem("Milk Bread")]),
+
+      // eric
+      generateOrder("eric", 11, 0, [
+        makeItem("Matcha Latte"),
+        makeItem("Bagel"),
+        makeItem("Milk Bread"),
+        makeItem("Burnt Basque Cheesecake")
+      ])
+    ];
+
+    // Upload to Firestore
+    for (const order of orders) {
+      try {
+        await addDoc(collection(db, "orders"), order);
+        console.log("✅ Added order for", order.customer.name, order.createdAt.toDate());
+      } catch (err) {
+        console.error("❌ Failed to add order for", order.customer.name, err);
+      }
+    }
+
+    console.log("🎉 All sample orders added!");
+  </script>
+</body>
+</html>
