@@ -15,7 +15,7 @@ export const products = [
         image: "🍵",
         rating: 4.8,
         description: "Creamy iced matcha latte with premium ceremonial grade matcha and your choice of milk. Perfectly balanced and refreshing. Sourced from Agoshima, Japan",
-        season: [2, 3], // Spring, Summer
+        season: [1,2],
         caffeine: 70, // mg
         popularity: 95
     },
@@ -27,7 +27,7 @@ export const products = [
         image: "🍋",
         rating: 4.7,
         description: "Unique fusion of earthy matcha and bright yuzu citrus served over ice. A refreshing twist on traditional matcha.",
-        season: [2, 3], // Spring, Summer
+        season: [2,], // Spring, Summer
         caffeine: 60,
         popularity: 78
     },
@@ -39,7 +39,7 @@ export const products = [
         image: "🍂",
         rating: 4.6,
         description: "Smooth roasted green tea with a nutty, caramel-like flavor served cold. Less caffeine, more comfort.",
-        season: [1, 4], // Winter, Fall
+        season: [1, 2], // Winter, Fall
         caffeine: 35,
         popularity: 65
     },
@@ -51,7 +51,7 @@ export const products = [
         image: "🫖",
         rating: 4.9,
         description: "Traditional hot matcha latte, perfect for cooler days. Ceremonial grade matcha with steamed milk.",
-        season: [1, 4], // Winter, Fall
+        season: [1], 
         caffeine: 70,
         popularity: 82
     },
@@ -65,7 +65,7 @@ export const products = [
         image: "☕",
         rating: 4.5,
         description: "Classic japanese drip iced coffee, smooth and bold. Perfect for coffee lovers seeking a refreshing caffeine kick. Today's selection is a honey aponte columbian coffee from St. Kilda. Tasting notes: grapefruit, guava, white peach.",
-        season: [2, 3], // Spring, Summer
+        season: [1,2], 
         caffeine: 120,
         popularity: 88
     },
@@ -77,7 +77,7 @@ export const products = [
         image: "☕",
         rating: 4.6,
         description: "Artisanal hot coffee, carefully brewed to perfection. Single origin beans with notes of chocolate and caramel.",
-        season: [1, 4], // Winter, Fall
+        season: [1,], 
         caffeine: 140,
         popularity: 92
     },
@@ -91,7 +91,7 @@ export const products = [
         image: "🍰",
         rating: 4.9,
         description: "Rich, creamy cheesecake with a signature burnt top. Our most popular dessert with a perfectly caramelized exterior.",
-        season: [1, 2, 3, 4], // All seasons
+        season: [2],
         caffeine: 0,
         popularity: 98
     },
@@ -103,7 +103,7 @@ export const products = [
         image: "💜",
         rating: 4.8,
         description: "Vibrant purple yam cheesecake with a smooth, velvety texture. A Filipino-inspired treat that's Instagram-worthy and delicious.",
-        season: [2, 3], // Spring, Summer
+        season: [2], 
         caffeine: 0,
         popularity: 85
     },
@@ -115,7 +115,7 @@ export const products = [
         image: "🍫",
         rating: 4.7,
         description: "Decadent chocolate tart with silky smooth ganache filling. Rich, indulgent, and perfect for chocolate lovers.",
-        season: [1, 4], // Winter, Fall
+        season: [2], 
         caffeine: 15, // Small amount from chocolate
         popularity: 79
     },
@@ -127,7 +127,7 @@ export const products = [
         image: "🥯",
         rating: 4.4,
         description: "Freshly baked artisanal bagels. Choose from various flavors and enjoy with your favorite toppings.",
-        season: [1, 2, 3, 4], // All seasons
+        season: [1, 2], // All seasons
         caffeine: 0,
         popularity: 70
     },
