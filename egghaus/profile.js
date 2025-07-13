@@ -420,7 +420,6 @@ function createOrderElement(order) {
                 <div class="order-date">${dateStr} at ${timeStr}</div>
                 ${statusBadge}
             </div>
-            <div class="order-season">${seasonInfo ? seasonInfo.name : `Season ${order.season}`}</div>
         </div>
         <div class="order-items">
             ${itemsHTML}
