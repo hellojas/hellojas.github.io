@@ -506,3 +506,6 @@ document.addEventListener('DOMContentLoaded', function() {
 console.log('🔥 Firebase configuration loaded successfully!');
 console.log('🛒 Queue system integration ready!');
 console.log('📊 Real-time order tracking enabled!');
+
+export { db };
+window.db = db;
