@@ -7,13 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="profile.css">
-    <!-- Chart.js for data visualization -->
-    <!-- Chart.js Core -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    
-    <!-- ✅ Date adapter for time scale -->
-    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/global/luxon.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.0/dist/chartjs-adapter-luxon.min.js"></script>
     <style>
         /* Additional styles for Firebase integration */
         .order-status-badge {
@@ -300,6 +293,10 @@
     <div class="data-source-indicator firebase-connected" id="dataSourceIndicator">
         ☁️ Egghaus Cloud Connected
     </div>
+    <!-- Chart.js + Luxon + Adapter (keep here in <head>) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.0/dist/chartjs-adapter-luxon.min.js"></script>
 
     <!-- Data & Scripts -->
     <script type="module" src="firebase-config.js"></script>
