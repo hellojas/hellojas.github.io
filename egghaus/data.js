@@ -12,7 +12,7 @@ export const products = [
         name: "Iced Matcha Latte",
         price: 8.50,
         category: "matcha",
-        image: "🍵",
+        image: "/menu/matcha.png", // ✅ Replace emoji with path
         rating: 4.8,
         description: "Creamy iced matcha latte with premium ceremonial grade matcha and your choice of milk. Perfectly balanced and refreshing. Sourced from Agoshima, Japan",
         season: [1,2],
