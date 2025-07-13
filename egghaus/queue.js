@@ -174,32 +174,36 @@ function createOrderItem(order, index) {
     const item = document.createElement('div');
     item.className = 'order-item';
     item.style.animationDelay = `${index * 0.1}s`;
-    
-    // Format order time
+
     const orderTime = order.createdAt ? 
         order.createdAt.toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit'
         }) : '';
-    
-    // Get status display info
+
     const statusInfo = getStatusInfo(order.status);
-    
+
+    // Normalize name to lowercase and use first word
+    const nameRaw = order.customerName || 'customer';
+    const nameNormalized = nameRaw.split(' ')[0].toLowerCase();
+    const profileSrc = `/eggs/${nameNormalized}.png`;
+
     item.innerHTML = `
         <div class="order-number">
             #${order.orderId || order.id.slice(-6).toUpperCase()}
         </div>
-        
+
         <div class="order-info">
+            <img src="${profileSrc}" alt="${nameNormalized}" class="profile-icon" onerror="this.style.display='none';" />
             <div class="customer-name">${order.customerName}</div>
             <div class="order-time">Ordered at ${orderTime}</div>
         </div>
-        
+
         <div class="order-status ${statusInfo.class}">
             ${statusInfo.icon} ${statusInfo.text}
         </div>
     `;
-    
+
     return item;
 }
 
