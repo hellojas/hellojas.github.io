@@ -11,14 +11,15 @@
     import { getFirestore, collection, addDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
     // TODO: replace with your own config
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyBazsH8MbHnuFmGKlwGkVghZHMHXkNhuJA",
+  authDomain: "egghaus-2dbf0.firebaseapp.com",
+  projectId: "egghaus-2dbf0",
+  storageBucket: "egghaus-2dbf0.firebasestorage.app",
+  messagingSenderId: "36412340657",
+  appId: "1:36412340657:web:35adc14508d825752fe590",
+  measurementId: "G-2LSC0NJ0E0"
+};
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
