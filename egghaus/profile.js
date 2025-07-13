@@ -1,52 +1,21 @@
 // ===================================
 // EGGHAUS SOCIAL - PROFILE PAGE (FIREBASE INTEGRATION)
 // ===================================
-// Chart.js + Luxon
+// ✅ Chart.js 3.9.1 + Luxon adapter setup (ESM-safe)
 import * as Chart from 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.esm.js';
 import { DateTime } from 'https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/es6/luxon.min.js';
 
-// ✅ Custom Luxon adapter for Chart.js
-const luxonAdapter = {
-  id: 'luxon',
-  // Required: define how to parse, format, etc.
-  formats: () => ({
-    datetime: 'DDD t',
-    millisecond: 'HH:mm:ss.SSS',
-    second: 'HH:mm:ss',
-    minute: 'HH:mm',
-    hour: 'HH',
-    day: 'ccc d',
-    week: 'DD',
-    month: 'LLL',
-    quarter: 'qqq',
-    year: 'yyyy',
-  }),
-  parse: (value, format) => {
-    return typeof value === 'number'
-      ? DateTime.fromMillis(value)
-      : DateTime.fromISO(value);
-  },
-  format: (time, format) => {
-    return DateTime.fromMillis(time).toFormat(format);
-  },
-  add: (time, amount, unit) => {
-    return DateTime.fromMillis(time).plus({ [unit]: amount }).toMillis();
-  },
-  diff: (max, min, unit) => {
-    return DateTime.fromMillis(max).diff(DateTime.fromMillis(min)).as(unit);
-  },
-  startOf: (time, unit, weekday) => {
-    return DateTime.fromMillis(time).startOf(unit).toMillis();
-  },
-  endOf: (time, unit) => {
-    return DateTime.fromMillis(time).endOf(unit).toMillis();
-  },
-};
+// ✅ Attach to window BEFORE adapter is loaded
+window.luxon = { DateTime };
 
-// ✅ Register adapter + components
-Chart.adapters.register(luxonAdapter);
+// ✅ Then import the Luxon adapter AFTER DateTime is available
+import 'https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.1.0/dist/chartjs-adapter-luxon.esm.js';
+
+// ✅ Register all chart components
 Chart.register(...Chart.registerables);
 
+// (optional, but useful for debugging)
+console.log('📈 Chart.js + Luxon initialized');
 
 // Firebase imports
 import {
