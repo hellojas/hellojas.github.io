@@ -1,4 +1,75 @@
 // ===================================
+// SEASON MANAGEMENT FUNCTIONS
+// ===================================
+
+/**
+ * Change current season and update products display
+ * @param {string|number} seasonId - Season ID
+ */
+function changeSeason(seasonId) {
+    const newSeason = parseInt(seasonId);
+    console.log(`🎭 Changing to season ${newSeason}`);
+    
+    currentSeason = newSeason;
+    
+    // Update products for current season
+    currentProducts = getProductsBySeason(currentSeason);
+    console.log(`📦 Loaded ${currentProducts.length} products for season ${currentSeason}`);
+    
+    // Clear any active category filters and show all products for this season
+    document.querySelectorAll('.category-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    document.querySelector('.category-item').classList.add('active'); // First item (ALL)
+    
+    // Update display
+    displayProducts(currentProducts);
+    
+    // Show season change feedback
+    const seasonInfo = getSeasonInfo(currentSeason);
+    if (seasonInfo) {
+        showSeasonChangeFeedback(seasonInfo);
+    }
+}
+
+/**
+ * Show visual feedback when season changes
+ * @param {Object} seasonInfo - Season information
+ */
+function showSeasonChangeFeedback(seasonInfo) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #d4af37, #ffd700);
+        color: #5d4037;
+        padding: 1rem 1.5rem;
+        border-radius: 15px;
+        font-weight: 600;
+        z-index: 1001;
+        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+        animation: slideInDown 0.3s ease-out;
+        text-align: center;
+        max-width: 90vw;
+    `;
+    
+    notification.innerHTML = `
+        <div style="font-size: 1.1rem; margin-bottom: 0.3rem;">
+            🎭 ${seasonInfo.name}
+        </div>
+        <div style="font-size: 0.85rem; opacity: 0.8;">
+            ${seasonInfo.subtitle} • ${currentProducts.length} items
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, appConfig.notificationDuration);
+}// ===================================
 // FIREBASE IMPORTS - FIXED FOR BROWSER
 // ===================================
 import { 
@@ -15,6 +86,23 @@ import {
 import { db } from './firebase-config.js';
 
 // ===================================
+// DATA IMPORTS
+// ===================================
+import { 
+    products, 
+    seasons, 
+    guestList,
+    appConfig,
+    getProductsBySeason, 
+    getSeasonInfo,
+    isOnGuestList,
+    addToGuestList,
+    getGuestList,
+    getProductsByCategory,
+    searchProductsInSeason
+} from './data.js';
+
+// ===================================
 // GLOBAL VARIABLES
 // ===================================
 let cart = {};
@@ -22,137 +110,39 @@ let currentProduct = {};
 let currentQuantity = 1;
 let currentUserName = '';
 let userProfileImage = '';
+let currentSeason = appConfig.defaultSeason; // Use default from config
+let currentProducts = []; // Currently displayed products
 
 // ===================================
-// GUEST LIST CONFIGURATION
+// ADMIN FUNCTIONS (using imported data functions)
 // ===================================
-const guestList = [
-    'jas',
-    'alex',
-    'sarah',
-    'john',
-    'emily',
-    'mike',
-    'jessica',
-    'david',
-    'amanda',
-    'chris'
-    // Add more approved guests here
-];
-
-// Helper function to check if user is on guest list
-function isOnGuestList(name) {
-    return guestList.includes(name.toLowerCase().trim());
-}
 
 // Admin function to check guest list (for debugging)
 window.checkGuestList = function() {
-    console.log('🎫 Current Guest List:', guestList);
-    console.log('📊 Total VIP guests:', guestList.length);
-    return guestList;
+    const list = getGuestList();
+    console.log('🎫 Current Guest List:', list);
+    console.log('📊 Total VIP guests:', list.length);
+    return list;
 };
 
 // Admin function to add guest (for debugging)
 window.addToGuestList = function(name) {
-    const cleanName = name.toLowerCase().trim();
-    if (!guestList.includes(cleanName)) {
-        guestList.push(cleanName);
-        console.log(`✅ Added ${cleanName} to guest list`);
+    const success = addToGuestList(name);
+    if (success) {
+        console.log(`✅ Added ${name.toLowerCase()} to guest list`);
     } else {
-        console.log(`⚠️ ${cleanName} is already on the guest list`);
+        console.log(`⚠️ ${name.toLowerCase()} is already on the guest list`);
     }
-    return guestList;
+    return getGuestList();
 };
 
-// ===================================
-// PRODUCT DATA
-// ===================================
-const products = [
-    // DRINKS
-    {
-        id: 1,
-        name: "Iced Matcha Latte",
-        price: 8.50,
-        category: "matcha",
-        image: "🍵",
-        rating: 4.8,
-        description: "Creamy iced matcha latte with premium ceremonial grade matcha and your choice of milk. Perfectly balanced and refreshing. Sourced from Agoshima, Japan"
-    },
-    {
-        id: 2,
-        name: "Iced Yuzu Matcha",
-        price: 9.00,
-        category: "matcha",
-        image: "🍋",
-        rating: 4.7,
-        description: "Unique fusion of earthy matcha and bright yuzu citrus served over ice. A refreshing twist on traditional matcha."
-    },
-    {
-        id: 3,
-        name: "Iced Hojicha",
-        price: 7.50,
-        category: "matcha",
-        image: "🍂",
-        rating: 4.6,
-        description: "Smooth roasted green tea with a nutty, caramel-like flavor served cold. Less caffeine, more comfort."
-    },
-    {
-        id: 4,
-        name: "Iced Coffee",
-        price: 6.50,
-        category: "coffee",
-        image: "☕",
-        rating: 4.5,
-        description: "Classic japanese drip iced coffee, smooth and bold. Perfect for coffee lovers seeking a refreshing caffeine kick. Today's selection is a honey aponte columbian coffee from St. Kilda. Tasting notes: grapefruit, guava, white peach."
-    },
-    // DESSERTS
-    {
-        id: 5,
-        name: "Burnt Basque Cheesecake",
-        price: 8.00,
-        category: "noms",
-        image: "🍰",
-        rating: 4.9,
-        description: "Rich, creamy cheesecake with a signature burnt top. Our most popular dessert with a perfectly caramelized exterior."
-    },
-    {
-        id: 6,
-        name: "Ube Cheesecake",
-        price: 8.50,
-        category: "noms",
-        image: "💜",
-        rating: 4.8,
-        description: "Vibrant purple yam cheesecake with a smooth, velvety texture. A Filipino-inspired treat that's Instagram-worthy and delicious."
-    },
-    {
-        id: 7,
-        name: "Chocolate Ganache Tart",
-        price: 7.50,
-        category: "noms",
-        image: "🍫",
-        rating: 4.7,
-        description: "Decadent chocolate tart with silky smooth ganache filling. Rich, indulgent, and perfect for chocolate lovers."
-    },
-    // FOOD
-    {
-        id: 8,
-        name: "Bagels",
-        price: 5.50,
-        category: "noms",
-        image: "🥯",
-        rating: 4.4,
-        description: "Freshly baked artisanal bagels. Choose from various flavors and enjoy with your favorite toppings."
-    },
-    {
-        id: 9,
-        name: "Milk Bread",
-        price: 2.00,
-        category: "noms",
-        image: "🍞",
-        rating: 4.5,
-        description: "Fluffy bites of heaven."
-    }
-];
+// Admin function to view app configuration
+window.getAppConfig = function() {
+    console.log('⚙️ App Configuration:', appConfig);
+    return appConfig;
+};
+
+
 
 // ===================================
 // UTILITY FUNCTIONS
@@ -222,8 +212,8 @@ function generateOrderId() {
  * @returns {number} - Estimated time in minutes
  */
 function calculateEstimatedTime(itemCount) {
-    const baseTime = 8; // Base time in minutes
-    const timePerItem = 2; // Additional minutes per item
+    const baseTime = appConfig.basePreparationTime;
+    const timePerItem = appConfig.timePerItem;
     const randomVariation = Math.floor(Math.random() * 4) - 2; // ±2 minutes
     return Math.max(5, baseTime + (itemCount * timePerItem) + randomVariation);
 }
@@ -242,11 +232,14 @@ function showNameDialog() {
     if (modal && input) {
         modal.style.display = 'flex';
         
+        // Set max length from config
+        input.maxLength = appConfig.maxNameLength;
+        
         // Focus on input after animation
         setTimeout(() => {
             input.focus();
             input.value = '';
-        }, 300);
+        }, appConfig.modalAnimationTime);
         
         // Add Enter key listener
         input.addEventListener('keypress', function(event) {
@@ -331,7 +324,7 @@ function submitNameFromDialog() {
     console.log('👤 User name set:', currentUserName);
     
     // Set up profile image path
-    userProfileImage = `vips/${name.toLowerCase()}.png`;
+    userProfileImage = `${appConfig.profileImagePath}/${name.toLowerCase()}.png`;
     
     // Show loading state on button
     const submitBtn = document.querySelector('.name-modal-submit');
@@ -348,7 +341,7 @@ function submitNameFromDialog() {
             // Close modal and proceed to menu
             closeNameDialog();
             showScreen('menu');
-        }, 800);
+        }, appConfig.loadingSimulationTime);
     } else {
         closeNameDialog();
         showScreen('menu');
@@ -390,7 +383,7 @@ function setupProfile() {
         };
         
         profileImage.onerror = function() {
-            console.log('⚠️ Profile image not found in /vips/ directory, using fallback:', userProfileImage);
+            console.log(`⚠️ Profile image not found in /${appConfig.profileImagePath}/ directory, using fallback:`, userProfileImage);
             profileImage.style.display = 'none';
             profileFallback.style.display = 'flex';
             profilePic.classList.remove('loading');
@@ -449,6 +442,10 @@ function showScreen(screenName) {
     // Initialize screen-specific data
     switch (screenName) {
         case 'menu':
+            // Ensure we have current season products loaded
+            if (currentProducts.length === 0) {
+                currentProducts = getProductsBySeason(currentSeason);
+            }
             displayProducts();
             setupProfile();
             break;
@@ -502,11 +499,22 @@ function initializeNameEntry() {
  * Display products in the grid
  * @param {Array} filteredProducts - Array of products to display
  */
-function displayProducts(filteredProducts = products) {
+function displayProducts(filteredProducts = currentProducts) {
     const grid = getElement('productsGrid');
     if (!grid) return;
     
     grid.innerHTML = '';
+    
+    if (filteredProducts.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #8d6e63;">
+                <div style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;">🍵</div>
+                <p><strong>No items found</strong></p>
+                <p>Try a different category or season</p>
+            </div>
+        `;
+        return;
+    }
     
     filteredProducts.forEach(product => {
         const productCard = createElement('div', {
@@ -521,14 +529,16 @@ function displayProducts(filteredProducts = products) {
         
         grid.appendChild(productCard);
     });
+    
+    console.log(`📦 Displayed ${filteredProducts.length} products`);
 }
 
 /**
- * Filter products by category
+ * Filter products by category within current season
  * @param {string} category - Category to filter by
  */
 function filterCategory(category) {
-    console.log('🔍 Filtering by category:', category);
+    console.log('🔍 Filtering by category:', category, 'in season', currentSeason);
     
     // Update active category indicator
     document.querySelectorAll('.category-item').forEach(item => {
@@ -542,33 +552,27 @@ function filterCategory(category) {
         }
     }
     
-    // Filter and display products
-    if (category === 'all') {
-        displayProducts();
-    } else {
-        const filtered = products.filter(product => product.category === category);
-        displayProducts(filtered);
-    }
+    // Use utility function to get filtered products
+    const filtered = getProductsByCategory(category, currentSeason);
+    displayProducts(filtered);
+    
+    console.log(`📋 Showing ${filtered.length} ${category} items from season ${currentSeason}`);
 }
 
 /**
- * Search products by name or description
+ * Search products by name or description within current season
  * @param {string} query - Search query
  */
 const searchProducts = debounce((query) => {
     if (!query.trim()) {
-        displayProducts();
+        displayProducts(currentProducts);
         return;
     }
     
-    const searchTerm = query.toLowerCase();
-    const filtered = products.filter(product => 
-        product.name.toLowerCase().includes(searchTerm) ||
-        product.description.toLowerCase().includes(searchTerm)
-    );
-    
+    const filtered = searchProductsInSeason(query, currentSeason);
     displayProducts(filtered);
-}, 300);
+    console.log(`🔍 Search "${query}" found ${filtered.length} results in season ${currentSeason}`);
+}, appConfig.searchDebounceTime);
 
 // ===================================
 // PRODUCT DETAIL FUNCTIONS
@@ -765,7 +769,7 @@ function calculateSubtotal() {
  * @returns {number}
  */
 function calculateTax() {
-    return calculateSubtotal() * 0.085;
+    return calculateSubtotal() * appConfig.taxRate;
 }
 
 /**
@@ -794,6 +798,15 @@ function updateCartSummary() {
         const element = getElement(id);
         if (element) {
             element.textContent = value;
+        }
+    });
+    
+    // Update tax percentage display dynamically
+    const taxPercentage = (appConfig.taxRate * 100).toFixed(1);
+    const summaryRows = document.querySelectorAll('.summary-row span');
+    summaryRows.forEach(span => {
+        if (span.textContent === 'Tax:') {
+            span.textContent = `Tax (${taxPercentage}%):`;
         }
     });
 }
@@ -1318,7 +1331,13 @@ function shareOrder() {
  */
 function initializeApp() {
     console.log('🚀 Initializing Egghaus Social app...');
-    console.log(`🎫 Guest list loaded with ${guestList.length} VIP members`);
+    console.log(`🎫 Guest list loaded with ${getGuestList().length} VIP members`);
+    console.log(`🎭 Default season: ${appConfig.defaultSeason}`);
+    console.log(`🖼️ Profile images: ${appConfig.profileImagePath}/`);
+    
+    // Initialize season and products
+    currentProducts = getProductsBySeason(currentSeason);
+    console.log(`🎭 Loading season ${currentSeason} with ${currentProducts.length} products`);
     
     // Add cart icon to menu header
     addCartIconToHeader();
@@ -1510,6 +1529,7 @@ window.showScreen = showScreen;
 window.showNameDialog = showNameDialog;
 window.closeNameDialog = closeNameDialog;
 window.submitNameFromDialog = submitNameFromDialog;
+window.changeSeason = changeSeason;
 window.filterCategory = filterCategory;
 window.searchProducts = searchProducts;
 window.adjustQuantity = adjustQuantity;
@@ -1521,4 +1541,4 @@ window.backToMenu = backToMenu;
 window.shareOrder = shareOrder;
 window.confirmPickup = confirmPickup;
 
-console.log('🍵 Egghaus Social script loaded successfully with VIP modal and guest list system!');
+console.log('🍵 Egghaus Social script loaded successfully with centralized data management!');
