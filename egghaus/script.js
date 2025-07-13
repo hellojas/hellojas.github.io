@@ -25,7 +25,6 @@ import {
     getProductsBySeason, 
     getSeasonInfo,
     isOnGuestList,
-    addToGuestList,
     getGuestList,
     getProductsByCategory,
     searchProductsInSeason
