@@ -23,29 +23,225 @@ let allOrders = [];
 let currentFilter = 'all';
 let ordersListener = null;
 let selectedOrder = null;
+let isLoggedIn = false;
+
+// Admin password (in production, this should be handled more securely)
+const ADMIN_PASSWORD = 'egghaus2024';
+
+// ===================================
+// LOGIN FUNCTIONS
+// ===================================
+
+/**
+ * Handle admin login form submission
+ * @param {Event} event - Form submit event
+ */
+window.handleLogin = async function(event) {
+    event.preventDefault();
+    
+    const passwordInput = document.getElementById('adminPassword');
+    const errorElement = document.getElementById('loginError');
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    
+    if (!passwordInput || !errorElement || !submitBtn) {
+        console.error('Login form elements not found');
+        return;
+    }
+    
+    const enteredPassword = passwordInput.value.trim();
+    const originalBtnText = submitBtn.textContent;
+    
+    // Show loading state
+    submitBtn.textContent = '🔓 Checking...';
+    submitBtn.disabled = true;
+    errorElement.style.display = 'none';
+    
+    try {
+        // Simulate a small delay for better UX
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        if (enteredPassword === ADMIN_PASSWORD) {
+            console.log('✅ Admin login successful');
+            
+            // Hide login overlay
+            const loginOverlay = document.getElementById('loginOverlay');
+            const adminContainer = document.getElementById('adminContainer');
+            
+            if (loginOverlay && adminContainer) {
+                loginOverlay.style.display = 'none';
+                adminContainer.style.display = 'block';
+            }
+            
+            // Set login status
+            isLoggedIn = true;
+            
+            // Initialize admin dashboard with Firebase data
+            await initializeAdmin();
+            
+        } else {
+            // Show error for incorrect password
+            errorElement.style.display = 'block';
+            passwordInput.value = '';
+            passwordInput.focus();
+            
+            // Add shake animation to the form
+            const loginContainer = document.querySelector('.login-container');
+            if (loginContainer) {
+                loginContainer.style.animation = 'shake 0.5s ease-in-out';
+                setTimeout(() => {
+                    loginContainer.style.animation = '';
+                }, 500);
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ Login error:', error);
+        errorElement.textContent = '❌ Login failed. Please try again.';
+        errorElement.style.display = 'block';
+        
+    } finally {
+        // Reset button state
+        submitBtn.textContent = originalBtnText;
+        submitBtn.disabled = false;
+    }
+};
+
+/**
+ * Check if user is logged in
+ * @returns {boolean}
+ */
+function checkLoginStatus() {
+    return isLoggedIn;
+}
+
+/**
+ * Logout function (optional - for future use)
+ */
+window.adminLogout = function() {
+    isLoggedIn = false;
+    
+    // Stop Firebase listeners
+    if (ordersListener) {
+        ordersListener();
+        ordersListener = null;
+    }
+    
+    // Show login overlay again
+    const loginOverlay = document.getElementById('loginOverlay');
+    const adminContainer = document.getElementById('adminContainer');
+    
+    if (loginOverlay && adminContainer) {
+        loginOverlay.style.display = 'flex';
+        adminContainer.style.display = 'none';
+    }
+    
+    // Clear password field
+    const passwordInput = document.getElementById('adminPassword');
+    if (passwordInput) {
+        passwordInput.value = '';
+    }
+    
+    console.log('👋 Admin logged out');
+};
 
 // ===================================
 // INITIALIZATION
 // ===================================
 
 /**
- * Initialize admin dashboard
+ * Initialize admin dashboard (only after successful login)
  */
 async function initializeAdmin() {
+    if (!checkLoginStatus()) {
+        console.warn('⚠️ Admin not logged in');
+        return;
+    }
+    
     console.log('🚀 Initializing admin dashboard...');
     
     try {
         // Show loading state
         showLoading(true);
         
+        // Test Firebase connection first
+        const connectionStatus = await testFirebaseConnection();
+        if (!connectionStatus) {
+            throw new Error('Firebase connection failed');
+        }
+        
         // Set up real-time orders listener
         setupOrdersListener();
         
         console.log('✅ Admin dashboard initialized successfully');
+        
+        // Show welcome message
+        showWelcomeMessage();
+        
     } catch (error) {
         console.error('❌ Error initializing admin:', error);
-        showError('Failed to initialize admin dashboard');
+        showError('Failed to initialize admin dashboard. Please check your connection and try again.');
     }
+}
+
+/**
+ * Test Firebase connection
+ * @returns {Promise<boolean>}
+ */
+async function testFirebaseConnection() {
+    if (!db) {
+        console.error('Firebase not available');
+        return false;
+    }
+
+    try {
+        // Try to read from orders collection
+        const testQuery = query(collection(db, 'orders'));
+        await getDocs(testQuery);
+        console.log('✅ Firebase connection successful');
+        return true;
+    } catch (error) {
+        console.error('❌ Firebase connection failed:', error);
+        
+        // Show helpful error message
+        if (error.code === 'permission-denied') {
+            showError('Database access denied. Please check Firestore security rules.');
+        } else {
+            showError(`Database connection failed: ${error.message}`);
+        }
+        
+        return false;
+    }
+}
+
+/**
+ * Show welcome message after successful login
+ */
+function showWelcomeMessage() {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 15px;
+        font-weight: 600;
+        z-index: 1001;
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        animation: slideInRight 0.3s ease-out;
+    `;
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            🎉 <span>Welcome to Egghaus Admin!</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 4000);
 }
 
 /**
@@ -79,17 +275,22 @@ function setupOrdersListener() {
             });
 
             allOrders = orders;
-            console.log(`📊 Loaded ${orders.length} orders`);
+            console.log(`📊 Loaded ${orders.length} orders from Firebase`);
             
             // Update UI
             showLoading(false);
             displayOrders(currentFilter);
             updateStatistics();
             
+            // Show data loaded notification
+            if (orders.length > 0) {
+                showDataLoadedNotification(orders.length);
+            }
+            
         }, (error) => {
             console.error('❌ Error in orders listener:', error);
             showLoading(false);
-            showError('Failed to load orders');
+            showError('Failed to load orders. Please refresh the page.');
         });
 
     } catch (error) {
@@ -97,6 +298,36 @@ function setupOrdersListener() {
         showLoading(false);
         showError('Failed to connect to database');
     }
+}
+
+/**
+ * Show notification when data is loaded
+ * @param {number} count - Number of orders loaded
+ */
+function showDataLoadedNotification(count) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #d4af37, #ffd700);
+        color: #5d4037;
+        padding: 0.8rem 1.2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        z-index: 1001;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        animation: slideInUp 0.3s ease-out;
+        font-size: 0.9rem;
+    `;
+    notification.innerHTML = `📊 ${count} orders loaded from Firebase`;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideInUp 0.3s ease-out reverse';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
 }
 
 // ===================================
@@ -138,6 +369,8 @@ function displayOrders(filter = 'all') {
         const orderCard = createOrderCard(order);
         ordersGrid.appendChild(orderCard);
     });
+    
+    console.log(`📋 Displaying ${filteredOrders.length} orders (filter: ${filter})`);
 }
 
 /**
@@ -327,7 +560,7 @@ function showStatusUpdateSuccess(status) {
     
     const message = messages[status] || 'Order status updated!';
     
-    // Simple success feedback (you could make this fancier)
+    // Simple success feedback
     const notification = document.createElement('div');
     notification.style.cssText = `
         position: fixed;
@@ -340,7 +573,7 @@ function showStatusUpdateSuccess(status) {
         font-weight: 600;
         z-index: 1001;
         box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
-        animation: slideIn 0.3s ease-out;
+        animation: slideInRight 0.3s ease-out;
     `;
     notification.textContent = message;
     
@@ -374,6 +607,8 @@ function filterOrders(status) {
     
     // Display filtered orders
     displayOrders(status);
+    
+    console.log(`🔍 Filtered orders by status: ${status}`);
 }
 
 // ===================================
@@ -415,6 +650,8 @@ function updateStatistics() {
     document.getElementById('totalOrders').textContent = totalOrders;
     document.getElementById('pendingOrders').textContent = pendingOrders;
     document.getElementById('todayRevenue').textContent = `$${todayRevenue.toFixed(2)}`;
+    
+    console.log(`📊 Statistics updated - Total: ${totalOrders}, Pending: ${pendingOrders}, Revenue: $${todayRevenue.toFixed(2)}`);
 }
 
 // ===================================
@@ -601,8 +838,30 @@ function showLoading(show) {
  */
 function showError(message) {
     console.error(message);
-    // You could implement a more sophisticated error display here
-    alert(`Error: ${message}`);
+    
+    // Create error notification
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 15px;
+        font-weight: 600;
+        z-index: 1001;
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+        animation: slideInRight 0.3s ease-out;
+        max-width: 300px;
+    `;
+    notification.innerHTML = `⚠️ ${message}`;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
 }
 
 /**
@@ -629,7 +888,7 @@ function refreshOrders() {
  * Navigate to customer app
  */
 function goToCustomerApp() {
-    window.location.href = './index.html'; // or whatever your main app file is called
+    window.location.href = './index.html';
 }
 
 // ===================================
@@ -649,7 +908,29 @@ window.goToCustomerApp = goToCustomerApp;
 // INITIALIZATION ON DOM LOAD
 // ===================================
 
-document.addEventListener('DOMContentLoaded', initializeAdmin);
+// Only set up login form when DOM is loaded
+// Don't initialize admin until after successful login
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎯 Admin dashboard script loaded');
+    
+    // Focus on password input
+    const passwordInput = document.getElementById('adminPassword');
+    if (passwordInput) {
+        passwordInput.focus();
+    }
+    
+    // Add Enter key listener to password field
+    if (passwordInput) {
+        passwordInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                const form = this.closest('form');
+                if (form) {
+                    form.dispatchEvent(new Event('submit'));
+                }
+            }
+        });
+    }
+});
 
 // ===================================
 // CLEANUP ON PAGE UNLOAD
