@@ -1584,3 +1584,30 @@ body {
 .host-link:hover {
   background-color: #3e2723;
 }
+
+@media (max-width: 480px) {
+  .welcome-title {
+    font-size: 3rem;
+  }
+
+  .start-btn, .host-link {
+    font-size: 0.85rem;
+    padding: 0.7rem 1.1rem;
+  }
+}
+
+.welcome-content {
+  animation: fadeInUp 0.6s ease both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
