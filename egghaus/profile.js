@@ -2,9 +2,16 @@
 // EGGHAUS SOCIAL - PROFILE PAGE (FIREBASE INTEGRATION)
 // ===================================
 
+// Chart.js + Luxon Adapter (for time-based charts)
+import Chart from 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js';
+import 'https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.1.0';
+
+// Register all Chart.js components (controllers, scales, plugins, etc)
+Chart.register(...Chart.registerables);
+
 // Firebase imports
-import { 
-    collection, 
+import {
+    collection,
     query,
     where,
     orderBy,
@@ -14,19 +21,13 @@ import {
 import { db } from './firebase-config.js';
 
 // Data imports
-import { 
-    products, 
-    seasons, 
+import {
+    products,
+    seasons,
     appConfig,
     getSeasonInfo
 } from './data.js';
 
-import 'https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.1.0';
-
-import Chart from 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js';
-
-// ✅ Add this if it’s missing:
-Chart.register(...Chart.registerables);
 // ===================================
 // GLOBAL VARIABLES
 // ===================================
