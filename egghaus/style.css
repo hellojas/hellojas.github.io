@@ -1566,11 +1566,12 @@ body {
   transition: all 0.2s ease-in-out;
 }
 
-#newOrderButton {
-  bottom: 1.5rem;
+.host-link {
+  bottom: 5.2rem; /* appears above New Order */
+  background-color: #5d4037;
+  color: white;
 }
 
-#hostButton {
-  bottom: 5.2rem; /* Appears above the New Order button */
-  display: none;  /* Hidden by default */
+.host-link:hover {
+  background-color: #3e2723;
 }
