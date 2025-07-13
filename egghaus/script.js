@@ -1514,6 +1514,10 @@ function startNewOrder() {
     window.location.href = 'order.html';
 }
 
+function goToOrderQueue() {
+    window.location.href = 'queue.html';
+}
+
 function toggleFloatingLinks() {
     const welcomeScreen = document.getElementById("welcomeScreen");
     const onWelcomeScreen = welcomeScreen?.classList.contains("screen-active");
