@@ -1,5 +1,5 @@
 // ===================================
-// EGGHAUS SOCIAL - SALES ANALYTICS DASHBOARD
+// EGGHAUS SOCIAL - SALES ANALYTICS DASHBOARD - FIXED
 // ===================================
 
 // Firebase imports
@@ -27,6 +27,76 @@ let salesListener = null;
 let isLoading = false;
 
 // ===================================
+// CHART CLEANUP UTILITIES
+// ===================================
+
+/**
+ * Safely destroy existing chart and clean up canvas
+ * @param {string} chartKey - Key in charts object
+ * @param {string} canvasId - Canvas element ID
+ */
+function destroyExistingChart(chartKey, canvasId) {
+    // Destroy chart instance if it exists
+    if (charts[chartKey]) {
+        try {
+            charts[chartKey].destroy();
+        } catch (error) {
+            console.warn(`Warning destroying chart ${chartKey}:`, error);
+        }
+        delete charts[chartKey];
+    }
+    
+    // Get canvas and clear it
+    const canvas = document.getElementById(canvasId);
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        // Remove Chart.js data attributes
+        canvas.removeAttribute('data-chartjs-chart-id');
+        
+        // Clear any Chart.js instances attached to canvas
+        if (window.Chart && window.Chart.getChart) {
+            const existingChart = window.Chart.getChart(canvas);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+        }
+    }
+}
+
+/**
+ * Destroy all existing charts safely
+ */
+function destroyAllCharts() {
+    console.log('🧹 Cleaning up existing charts...');
+    
+    const chartConfigs = [
+        { key: 'revenue', canvasId: 'revenueChart' },
+        { key: 'popularity', canvasId: 'popularityChart' },
+        { key: 'hourly', canvasId: 'hourlyChart' },
+        { key: 'category', canvasId: 'categoryChart' },
+        { key: 'prepTime', canvasId: 'prepTimeChart' },
+        { key: 'customer', canvasId: 'customerChart' },
+        { key: 'status', canvasId: 'statusChart' },
+        { key: 'seasonal', canvasId: 'seasonalChart' },
+        { key: 'metrics', canvasId: 'metricsChart' },
+        { key: 'daily', canvasId: 'dailyChart' }
+    ];
+    
+    chartConfigs.forEach(({ key, canvasId }) => {
+        destroyExistingChart(key, canvasId);
+    });
+    
+    // Clear the charts object
+    charts = {};
+    
+    console.log('✅ Chart cleanup completed');
+}
+
+// ===================================
 // INITIALIZATION
 // ===================================
 
@@ -38,6 +108,9 @@ async function initializeSalesDashboard() {
     
     try {
         showLoading(true);
+        
+        // First, clean up any existing charts
+        destroyAllCharts();
         
         // Load orders from Firebase
         await loadOrdersData();
@@ -237,13 +310,11 @@ async function updateAllAnalytics() {
     try {
         showLoading(true);
         
-        // Destroy existing charts
-        Object.values(charts).forEach(chart => {
-            if (chart && typeof chart.destroy === 'function') {
-                chart.destroy();
-            }
-        });
-        charts = {};
+        // Destroy existing charts properly
+        destroyAllCharts();
+        
+        // Small delay to ensure cleanup is complete
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         // Recreate all charts
         await initializeAllCharts();
@@ -256,6 +327,7 @@ async function updateAllAnalytics() {
         
     } catch (error) {
         console.error('❌ Error updating analytics:', error);
+        showError('Failed to update analytics');
     } finally {
         showLoading(false);
     }
@@ -266,28 +338,39 @@ async function updateAllAnalytics() {
 // ===================================
 
 /**
- * Initialize all charts
+ * Initialize all charts with proper error handling
  */
 async function initializeAllCharts() {
     console.log('📊 Initializing all charts...');
     
     try {
-        await Promise.all([
-            createRevenueChart(),
-            createPopularityChart(),
-            createHourlyChart(),
-            createCategoryChart(),
-            createPrepTimeChart(),
-            createCustomerChart(),
-            createStatusChart(),
-            createSeasonalChart(),
-            createMetricsChart(),
-            createDailyChart()
-        ]);
+        // Initialize charts one by one with error handling
+        const chartInitializers = [
+            { name: 'Revenue', fn: createRevenueChart },
+            { name: 'Popularity', fn: createPopularityChart },
+            { name: 'Hourly', fn: createHourlyChart },
+            { name: 'Category', fn: createCategoryChart },
+            { name: 'Prep Time', fn: createPrepTimeChart },
+            { name: 'Customer', fn: createCustomerChart },
+            { name: 'Status', fn: createStatusChart },
+            { name: 'Seasonal', fn: createSeasonalChart },
+            { name: 'Metrics', fn: createMetricsChart },
+            { name: 'Daily', fn: createDailyChart }
+        ];
         
-        console.log('✅ All charts initialized successfully');
+        for (const { name, fn } of chartInitializers) {
+            try {
+                await fn();
+                console.log(`✅ ${name} chart initialized`);
+            } catch (error) {
+                console.error(`❌ Error initializing ${name} chart:`, error);
+                // Continue with other charts even if one fails
+            }
+        }
+        
+        console.log('✅ All charts initialization completed');
     } catch (error) {
-        console.error('❌ Error initializing charts:', error);
+        console.error('❌ Error in chart initialization process:', error);
         throw error;
     }
 }
@@ -296,8 +379,13 @@ async function initializeAllCharts() {
  * Create revenue trends chart
  */
 async function createRevenueChart() {
-    const ctx = document.getElementById('revenueChart');
-    if (!ctx) return;
+    const canvas = document.getElementById('revenueChart');
+    if (!canvas) return;
+    
+    // Ensure canvas is clean
+    destroyExistingChart('revenue', 'revenueChart');
+    
+    const ctx = canvas.getContext('2d');
     
     // Group orders by date and calculate daily revenue
     const dailyRevenue = {};
@@ -356,8 +444,11 @@ async function createRevenueChart() {
  * Create product popularity chart
  */
 async function createPopularityChart() {
-    const ctx = document.getElementById('popularityChart');
-    if (!ctx) return;
+    const canvas = document.getElementById('popularityChart');
+    if (!canvas) return;
+    
+    destroyExistingChart('popularity', 'popularityChart');
+    const ctx = canvas.getContext('2d');
     
     // Calculate product popularity
     const productCounts = {};
@@ -408,8 +499,11 @@ async function createPopularityChart() {
  * Create hourly sales pattern chart
  */
 async function createHourlyChart() {
-    const ctx = document.getElementById('hourlyChart');
-    if (!ctx) return;
+    const canvas = document.getElementById('hourlyChart');
+    if (!canvas) return;
+    
+    destroyExistingChart('hourly', 'hourlyChart');
+    const ctx = canvas.getContext('2d');
     
     // Calculate hourly order counts
     const hourlyData = new Array(24).fill(0);
@@ -452,8 +546,11 @@ async function createHourlyChart() {
  * Create category performance chart
  */
 async function createCategoryChart() {
-    const ctx = document.getElementById('categoryChart');
-    if (!ctx) return;
+    const canvas = document.getElementById('categoryChart');
+    if (!canvas) return;
+    
+    destroyExistingChart('category', 'categoryChart');
+    const ctx = canvas.getContext('2d');
     
     // Calculate category revenue
     const categoryRevenue = {};
@@ -503,14 +600,17 @@ async function createCategoryChart() {
  * Create preparation times chart
  */
 async function createPrepTimeChart() {
-    const ctx = document.getElementById('prepTimeChart');
-    if (!ctx) return;
+    const canvas = document.getElementById('prepTimeChart');
+    if (!canvas) return;
+    
+    destroyExistingChart('prepTime', 'prepTimeChart');
+    const ctx = canvas.getContext('2d');
     
     // Get orders with prep times
     const ordersWithPrepTime = filteredOrders.filter(order => order.prepTime !== null);
     
     if (ordersWithPrepTime.length === 0) {
-        showEmptyChart(ctx, 'No preparation time data available');
+        showEmptyChart(canvas, 'No preparation time data available');
         return;
     }
     
@@ -562,16 +662,21 @@ async function createPrepTimeChart() {
     const fastest = Math.min(...prepTimes);
     const slowest = Math.max(...prepTimes);
     
-    document.getElementById('fastestOrder').textContent = `${fastest}min`;
-    document.getElementById('slowestOrder').textContent = `${slowest}min`;
+    const fastestEl = document.getElementById('fastestOrder');
+    const slowestEl = document.getElementById('slowestOrder');
+    if (fastestEl) fastestEl.textContent = `${fastest}min`;
+    if (slowestEl) slowestEl.textContent = `${slowest}min`;
 }
 
 /**
  * Create customer analysis chart
  */
 async function createCustomerChart() {
-    const ctx = document.getElementById('customerChart');
-    if (!ctx) return;
+    const canvas = document.getElementById('customerChart');
+    if (!canvas) return;
+    
+    destroyExistingChart('customer', 'customerChart');
+    const ctx = canvas.getContext('2d');
     
     // Calculate customer order frequency
     const customerCounts = {};
@@ -626,8 +731,11 @@ async function createCustomerChart() {
  * Create order status flow chart
  */
 async function createStatusChart() {
-    const ctx = document.getElementById('statusChart');
-    if (!ctx) return;
+    const canvas = document.getElementById('statusChart');
+    if (!canvas) return;
+    
+    destroyExistingChart('status', 'statusChart');
+    const ctx = canvas.getContext('2d');
     
     // Calculate status distribution
     const statusCounts = {};
@@ -669,8 +777,11 @@ async function createStatusChart() {
  * Create seasonal trends chart
  */
 async function createSeasonalChart() {
-    const ctx = document.getElementById('seasonalChart');
-    if (!ctx) return;
+    const canvas = document.getElementById('seasonalChart');
+    if (!canvas) return;
+    
+    destroyExistingChart('seasonal', 'seasonalChart');
+    const ctx = canvas.getContext('2d');
     
     // Calculate season popularity
     const seasonCounts = {};
@@ -713,8 +824,11 @@ async function createSeasonalChart() {
  * Create performance metrics chart
  */
 async function createMetricsChart() {
-    const ctx = document.getElementById('metricsChart');
-    if (!ctx) return;
+    const canvas = document.getElementById('metricsChart');
+    if (!canvas) return;
+    
+    destroyExistingChart('metrics', 'metricsChart');
+    const ctx = canvas.getContext('2d');
     
     // Calculate various metrics
     const totalOrders = filteredOrders.length;
@@ -773,8 +887,11 @@ async function createMetricsChart() {
  * Create daily patterns chart
  */
 async function createDailyChart() {
-    const ctx = document.getElementById('dailyChart');
-    if (!ctx) return;
+    const canvas = document.getElementById('dailyChart');
+    if (!canvas) return;
+    
+    destroyExistingChart('daily', 'dailyChart');
+    const ctx = canvas.getContext('2d');
     
     // Calculate daily order counts
     const dailyData = new Array(7).fill(0);
@@ -936,9 +1053,13 @@ function updateOverviewStats() {
         ordersWithPrepTime.reduce((sum, order) => sum + order.prepTime, 0) / ordersWithPrepTime.length : 0;
     
     // Update DOM elements
-    document.getElementById('todayOrders').textContent = todayOrders;
-    document.getElementById('todayRevenue').textContent = `$${todayRevenue.toFixed(0)}`;
-    document.getElementById('avgPrepTime').textContent = `${Math.round(avgPrepTime)}min`;
+    const todayOrdersEl = document.getElementById('todayOrders');
+    const todayRevenueEl = document.getElementById('todayRevenue');
+    const avgPrepTimeEl = document.getElementById('avgPrepTime');
+    
+    if (todayOrdersEl) todayOrdersEl.textContent = todayOrders;
+    if (todayRevenueEl) todayRevenueEl.textContent = `$${todayRevenue.toFixed(0)}`;
+    if (avgPrepTimeEl) avgPrepTimeEl.textContent = `${Math.round(avgPrepTime)}min`;
     
     // Update additional stats in charts
     const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.total, 0);
@@ -987,8 +1108,12 @@ function setupRealtimeUpdates() {
                 console.log('📊 Refreshing sales data...');
                 loadOrdersData().then(() => {
                     filterOrdersByTimePeriod(currentTimePeriod);
+                }).catch(error => {
+                    console.error('Error refreshing sales data:', error);
                 });
             }
+        }, (error) => {
+            console.error('Error in sales listener:', error);
         });
         
     } catch (error) {
@@ -1047,9 +1172,11 @@ function showError(message) {
 /**
  * Show empty chart when no data
  */
-function showEmptyChart(ctx, message) {
-    const container = ctx.parentElement;
-    container.innerHTML = `<div class="chart-loading">${message}</div>`;
+function showEmptyChart(canvas, message) {
+    const container = canvas.parentElement;
+    if (container) {
+        container.innerHTML = `<div class="chart-loading">${message}</div>`;
+    }
 }
 
 // ===================================
@@ -1194,6 +1321,9 @@ function goBackToAdmin() {
         console.log('📡 Stopped Firebase sales listener');
     }
     
+    // Clean up charts
+    destroyAllCharts();
+    
     // Navigate back to admin
     window.location.href = './admin.html';
 }
@@ -1213,7 +1343,11 @@ window.goBackToAdmin = goBackToAdmin;
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📊 Sales analytics page loaded');
-    initializeSalesDashboard();
+    
+    // Small delay to ensure DOM is fully ready
+    setTimeout(() => {
+        initializeSalesDashboard();
+    }, 100);
 });
 
 // Clean up on page unload
@@ -1221,6 +1355,7 @@ window.addEventListener('beforeunload', () => {
     if (salesListener) {
         salesListener();
     }
+    destroyAllCharts();
 });
 
 console.log('📊 Sales analytics script loaded successfully!');
