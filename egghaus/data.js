@@ -353,7 +353,8 @@ export function getSeasonInfo(seasonId) {
         id: seasonId,
         name: season.name,
         subtitle: season.description || `${season.emoji} ${season.name} Collection`,
-        description: season.description
+        description: season.description,
+        emoji: season.emoji
     };
 }
 
