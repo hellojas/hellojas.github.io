@@ -1221,3 +1221,17 @@ window.addEventListener('load', () => {
 });
 
 console.log('🍵 Egghaus Social script loaded successfully!');
+
+
+// Expose functions to global scope for HTML onclick handlers
+window.showScreen = showScreen;
+window.filterCategory = filterCategory;
+window.searchProducts = searchProducts;
+window.adjustQuantity = adjustQuantity;
+window.addToCart = addToCart;
+window.updateCartQuantity = updateCartQuantity;
+window.removeFromCart = removeFromCart;
+window.checkout = checkout;
+window.backToMenu = backToMenu;
+window.shareOrder = shareOrder;
+window.confirmPickup = confirmPickup;
