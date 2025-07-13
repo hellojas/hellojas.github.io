@@ -807,15 +807,14 @@ function showEmptyCharts() {
  * Show loading state
  */
 function showLoadingState(show) {
-    const loadingElements = document.querySelectorAll('.chart-container');
+    const chartContainers = document.querySelectorAll('.chart-container');
 
-    loadingElements.forEach(container => {
+    chartContainers.forEach(container => {
         const canvas = container.querySelector('canvas');
         const loading = container.querySelector('.chart-loading');
 
         if (show) {
             if (canvas) canvas.style.display = 'none';
-
             if (!loading) {
                 const div = document.createElement('div');
                 div.className = 'chart-loading';
@@ -823,7 +822,11 @@ function showLoadingState(show) {
                 container.appendChild(div);
             }
         } else {
-            if (canvas) canvas.style.display = 'block';
+            if (canvas) {
+                canvas.style.display = 'block';     // ✅ Make canvas visible again
+                canvas.removeAttribute('height');   // ✅ Allow auto-sizing
+                canvas.removeAttribute('width');
+            }
             if (loading) loading.remove();
         }
     });
