@@ -37,10 +37,14 @@ const firebaseConfig = {
 let app, db;
 
 try {
-    app = initializeApp(firebaseConfig);
-    db = getFirestore(app);
-    console.log('🔥 Firebase initialized successfully');
+    // app = initializeApp(firebaseConfig);
+    // db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    export const db = getFirestore(app);
+    
+    // 👇 Add this to expose to console:
     window.db = db;
+    console.log('🔥 Firebase initialized successfully');
 
 } catch (error) {
     console.warn('❌ Firebase initialization failed:', error.message);
