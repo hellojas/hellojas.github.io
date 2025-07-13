@@ -1552,7 +1552,7 @@ body {
 
 .floating-new-order-btn {
     position: fixed;
-    bottom: 20px;
+    bottom: 50px;
     right: 20px;
     background-color: #d4af37;
     color: white;
