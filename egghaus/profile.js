@@ -1,39 +1,35 @@
 // ===================================
-// EGGHAUS SOCIAL - PROFILE PAGE (FIREBASE INTEGRATION)
+// EGGHAUS SOCIAL - PROFILE PAGE (CHART + FIREBASE)
 // ===================================
-// ✅ ESM-safe Chart.js 3.9.1 + Luxon adapter setup for browser modules
-import Chart from 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.js';
+
+// ✅ Chart.js ESM + Luxon setup
+import {
+  Chart,
+  registerables
+} from 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.esm.js';
 import * as luxon from 'https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/es6/luxon.min.js';
-
-// ✅ Set global for adapter compatibility
-window.luxon = luxon;
-
-// ✅ Load adapter AFTER luxon is available
+window.luxon = luxon; // Required for adapter to work
 import 'https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.1.0/dist/chartjs-adapter-luxon.esm.js';
 
-// ✅ Register all Chart.js components
-Chart.register(...Chart.registerables);
+Chart.register(...registerables);
 
-// (Optional: Debug confirmation)
-console.log('📈 Chart.js + Luxon initialized');
-
-// Firebase imports
+// ✅ Firebase
 import {
-    collection,
-    query,
-    where,
-    orderBy,
-    getDocs,
-    onSnapshot
+  collection,
+  query,
+  where,
+  orderBy,
+  getDocs,
+  onSnapshot
 } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 import { db } from './firebase-config.js';
 
-// Data imports
+// ✅ Local data
 import {
-    products,
-    seasons,
-    appConfig,
-    getSeasonInfo
+  products,
+  seasons,
+  appConfig,
+  getSeasonInfo
 } from './data.js';
 
 // ===================================
