@@ -1509,16 +1509,15 @@ function startNewOrder() {
     window.location.href = 'order.html';
 }
 
-function toggleFloatingButtons() {
+function toggleFloatingLinks() {
   const onWelcomeScreen = document.getElementById("welcomeScreen")?.classList.contains("screen-active");
-  const hostBtn = document.getElementById("hostButton");
+  const hostLink = document.getElementById("hostLink");
 
-  if (onWelcomeScreen) {
-    hostBtn.style.display = "block";
-  } else {
-    hostBtn.style.display = "none";
-  }
+  hostLink.style.display = onWelcomeScreen ? "inline-block" : "none";
 }
+
+window.addEventListener("DOMContentLoaded", toggleFloatingLinks);
+
 function goToHosts() {
   window.location.href = 'admin.html';
 }
