@@ -7,6 +7,55 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="sales.css">
+    <style>
+        /* Additional styles for whimsical customer chart */
+        .customer-spenders-section {
+            background: linear-gradient(135deg, #fff8dc, #fffef7) !important;
+            border: 2px solid rgba(212, 175, 55, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .customer-spenders-section::before {
+            content: '🥚✨🌟⭐🥚✨🌟⭐🥚✨🌟⭐';
+            position: absolute;
+            top: -10px;
+            left: -50px;
+            right: -50px;
+            height: 30px;
+            font-size: 16px;
+            letter-spacing: 15px;
+            opacity: 0.1;
+            animation: sparkleFloat 20s infinite linear;
+            pointer-events: none;
+        }
+        
+        .customer-spenders-section .chart-title {
+            background: linear-gradient(135deg, #d4af37, #ffd700);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: none;
+        }
+        
+        .customer-spenders-section .chart-subtitle {
+            color: #8d6e63;
+            font-style: italic;
+        }
+        
+        @keyframes sparkleFloat {
+            0% { transform: translateX(-10%); }
+            100% { transform: translateX(10%); }
+        }
+        
+        /* Special styling for top spender stats */
+        .customer-spenders-section .stat-value {
+            background: linear-gradient(135deg, #d4af37, #ffd700);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
 </head>
 <body>
     <div class="sales-container">
@@ -156,6 +205,27 @@
                 </div>
                 <div class="chart-container">
                     <canvas id="customerChart"></canvas>
+                </div>
+            </div>
+
+            <!-- NEW: Top Spenders Chart -->
+            <div class="chart-section customer-spenders-section">
+                <div class="chart-header">
+                    <h3 class="chart-title">🥚 Top Customer Spenders</h3>
+                    <p class="chart-subtitle">Our most valued egg-cellent customers!</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="customerSpendersChart"></canvas>
+                </div>
+                <div class="chart-stats">
+                    <div class="stat-item">
+                        <span class="stat-value" id="topSpenderAmount">$0</span>
+                        <span class="stat-label">Top Spender</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="loyalCustomers">0</span>
+                        <span class="stat-label">Loyal Customers</span>
+                    </div>
                 </div>
             </div>
 
