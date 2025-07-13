@@ -46,53 +46,40 @@ async function fetchOrdersFromFirebase(userName) {
         return getLocalOrderHistory(userName);
     }
 
-    const normalizedName = userName.toLowerCase(); // 👈 lowercase user input
+    const normalizedName = userName.toLowerCase();
+    console.log(`🔍 Fetching orders from Firebase for: ${normalizedName}`);
 
     try {
-        console.log(`🔍 Fetching orders from Firebase for: ${normalizedName}`);
+        const collectionRef = collection(db, 'orders');
+        const querySnapshot = await getDocs(query(collectionRef, orderBy('createdAt', 'desc')));
+        
+        const allOrders = [];
 
-        const queries = [
-            query(
-                collection(db, 'orders'),
-                where('customer.nameLower', '==', normalizedName),
-                orderBy('createdAt', 'desc')
-            ),
-            query(
-                collection(db, 'orders'),
-                where('customerInfo.nameLower', '==', normalizedName),
-                orderBy('createdAt', 'desc')
-            )
-        ];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
 
+            const rawName = data?.customer?.name || data?.customerInfo?.name || '';
+            const rawLower = data?.customer?.nameLower || data?.customerInfo?.nameLower || rawName.toLowerCase();
 
-        let allOrders = [];
+            if (rawLower === normalizedName) {
+                const order = {
+                    id: doc.id,
+                    orderId: data.orderId || doc.id,
+                    date: data.createdAt?.toDate() || new Date(data.orderTime) || new Date(),
+                    season: 3, // will be inferred later
+                    items: data.items || [],
+                    total: data.pricing?.total || data.total || 0,
+                    status: data.status || 'completed',
+                    instructions: data.instructions || '',
+                    estimatedTime: data.estimatedTime || 15,
+                    customerName: rawName
+                };
 
-        for (const q of queries) {
-            try {
-                const querySnapshot = await getDocs(q);
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const order = {
-                        id: doc.id,
-                        orderId: data.orderId || doc.id,
-                        date: data.createdAt?.toDate() || new Date(data.orderTime) || new Date(),
-                        season: 3, // ✅ Placeholder; real season is inferred later
-                        items: data.items || [],
-                        total: data.pricing?.total || data.total || 0,
-                        status: data.status || 'completed',
-                        instructions: data.instructions || '',
-                        estimatedTime: data.estimatedTime || 15,
-                        customerName: data.customer?.name || data.customerInfo?.name || userName
-                    };
-
-                    if (!allOrders.find(existing => existing.id === order.id)) {
-                        allOrders.push(order);
-                    }
-                });
-            } catch (queryError) {
-                console.warn('Query failed, trying alternative:', queryError.message);
+                if (!allOrders.find(existing => existing.id === order.id)) {
+                    allOrders.push(order);
+                }
             }
-        }
+        });
 
         allOrders.sort((a, b) => new Date(b.date) - new Date(a.date));
         console.log(`✅ Found ${allOrders.length} orders in Firebase for ${userName}`);
@@ -104,6 +91,7 @@ async function fetchOrdersFromFirebase(userName) {
         return getLocalOrderHistory(userName);
     }
 }
+
 
 
 
