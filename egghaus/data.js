@@ -153,13 +153,13 @@ export const seasons = [
 export const guestList = [
     'jas',
     'martin',
-    'sam',
+    'samshimi',
     'eric',
     'jenni',
     'rachel',
     'marco',
     'tudi',
-    'alaric'
+    'alaric',
 ];
 
 // ===================================
