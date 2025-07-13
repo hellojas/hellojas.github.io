@@ -598,6 +598,16 @@ const searchProducts = debounce((query) => {
 function showProductDetail(product) {
     currentProduct = product;
     currentQuantity = 1;
+
+      // Special case: detailImage can be emoji or an image file
+    const detailImageEl = getElement('detailImage');
+    if (detailImageEl) {
+        if (typeof product.image === 'string' && product.image.match(/\.(png|jpg|jpeg|gif|webp)$/i)) {
+            detailImageEl.innerHTML = `<img src="${product.image}" alt="${product.name}" class="detail-img" />`;
+        } else {
+            detailImageEl.textContent = product.image;
+        }
+    }
     
     // Update product detail elements
     const updates = {
