@@ -186,7 +186,7 @@ function createOrderItem(order, index) {
     // Normalize name to lowercase and use first word
     const nameRaw = order.customerName || 'customer';
     const nameNormalized = nameRaw.split(' ')[0].toLowerCase();
-    const profileSrc = `egghaus/eggs/${nameNormalized}.png`;
+    const profileSrc = `eggs/${nameNormalized}.png`;
 
     item.innerHTML = `
         <div class="order-number">
