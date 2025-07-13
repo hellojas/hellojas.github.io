@@ -202,7 +202,21 @@ export const seasons = {
 };
 
 /**
- * Application configuration
+ * Guest list for exclusive event access
+ */
+export const guestList = [
+    'martin',
+    'sam',
+    'eric',
+    'jenni',
+    'rachel',
+    'marco',
+    'tudi',
+    'alaric'
+];
+
+/**
+ * Extended app configuration 
  */
 export const appConfig = {
     businessHours: {
@@ -213,6 +227,15 @@ export const appConfig = {
     currency: 'USD',
     currencySymbol: '$',
     businessName: 'Egghaus Social',
+    defaultSeason: 2, // Default to Season 2
+    maxNameLength: 20,
+    modalAnimationTime: 300,
+    loadingSimulationTime: 800,
+    notificationDuration: 3000,
+    searchDebounceTime: 300,
+    basePreparationTime: 8, // Base minutes
+    timePerItem: 2, // Additional minutes per item
+    profileImagePath: 'profiles', // Folder for profile images
     analytics: {
         retentionDays: 365,
         topCustomersCount: 10,
@@ -220,7 +243,7 @@ export const appConfig = {
         realtimeUpdateInterval: 30000 // 30 seconds
     },
     customerImages: {
-        basePath: './egg/',
+        basePath: './eggs/',
         fallbackEmoji: '🥚',
         supportedFormats: ['png', 'jpg', 'jpeg']
     },
