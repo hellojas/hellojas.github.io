@@ -1509,6 +1509,22 @@ function startNewOrder() {
     window.location.href = 'order.html';
 }
 
+function toggleFloatingButtons() {
+  const onWelcomeScreen = document.getElementById("welcomeScreen")?.classList.contains("screen-active");
+  const hostBtn = document.getElementById("hostButton");
+
+  if (onWelcomeScreen) {
+    hostBtn.style.display = "block";
+  } else {
+    hostBtn.style.display = "none";
+  }
+}
+
+// Run on load
+window.addEventListener('DOMContentLoaded', toggleFloatingButtons);
+
+// Also call this whenever you switch screens
+
 
 // ===================================
 // ERROR HANDLING
