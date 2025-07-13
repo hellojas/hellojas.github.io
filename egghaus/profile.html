@@ -9,8 +9,128 @@
     <link rel="stylesheet" href="profile.css">
     <!-- Chart.js for data visualization -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        /* Additional styles for Firebase integration */
+        .order-status-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.3rem;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status-preparing {
+            background: #ffedcc;
+            color: #b45309;
+            border: 1px solid #fed7aa;
+        }
+        
+        .status-ready {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .status-completed {
+            background: #e0e7ff;
+            color: #3730a3;
+            border: 1px solid #c7d2fe;
+        }
+        
+        .refresh-profile-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .refresh-profile-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        .data-source-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(212, 175, 55, 0.9);
+            color: #5d4037;
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .firebase-connected {
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(245, 242, 235, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+        }
+        
+        .loading-content {
+            background: #faf8f3;
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(93, 64, 55, 0.3);
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 1rem;
+            border: 4px solid rgba(212, 175, 55, 0.2);
+            border-left: 4px solid #d4af37;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p style="color: #5d4037; font-weight: 600;">Loading your Firebase data...</p>
+        </div>
+    </div>
+
     <div class="app-container">
         
         <!-- Profile Header -->
@@ -41,6 +161,9 @@
                     </div>
                 </div>
                 <div class="profile-actions">
+                    <button class="refresh-profile-btn" onclick="refreshFromFirebase()">
+                        🔄 Refresh
+                    </button>
                     <button class="export-btn" onclick="exportOrderHistory()">
                         📊 Export Data
                     </button>
@@ -76,8 +199,11 @@
             <!-- Empty State -->
             <div class="empty-orders" id="emptyOrders" style="display: none;">
                 <div class="empty-icon">📋</div>
-                <h3>No Orders Yet</h3>
-                <p>Start exploring the menu to see your order history here!</p>
+                <h3>No Orders Found</h3>
+                <p>No order history found in Firebase for this account.</p>
+                <p style="font-size: 0.9rem; color: #8d6e63; margin-top: 1rem;">
+                    Orders will appear here after you place them through the menu.
+                </p>
                 <button class="start-ordering-btn" onclick="goBackToMenu()">
                     🍵 Start Ordering
                 </button>
@@ -87,6 +213,9 @@
         <!-- Analytics Section -->
         <div class="analytics-section">
             <h2 class="section-title">Your Analytics</h2>
+            <p style="font-size: 0.9rem; color: #8d6e63; margin-bottom: 1.5rem; text-align: center;">
+                📊 All data sourced from Firebase • Real order history
+            </p>
             
             <div class="charts-grid">
                 
@@ -152,16 +281,53 @@
             <button class="action-btn primary" onclick="goBackToMenu()">
                 🏠 Back to Menu
             </button>
+            <button class="action-btn secondary" onclick="refreshFromFirebase()">
+                📡 Sync Firebase
+            </button>
             <button class="action-btn secondary" onclick="clearOrderHistory()">
-                🗑️ Clear History
+                🗑️ Clear Local Data
             </button>
         </div>
 
+    </div>
+
+    <!-- Data Source Indicator -->
+    <div class="data-source-indicator firebase-connected" id="dataSourceIndicator">
+        🔥 Firebase Connected
     </div>
 
     <!-- Data & Scripts -->
     <script type="module" src="firebase-config.js"></script>
     <script type="module" src="data.js"></script>
     <script type="module" src="profile.js"></script>
+
+    <script>
+        // Simple loading state management
+        function showGlobalLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.style.display = show ? 'flex' : 'none';
+            }
+        }
+
+        // Check Firebase connection status
+        function checkFirebaseStatus() {
+            const indicator = document.getElementById('dataSourceIndicator');
+            
+            // Test if Firebase is available
+            if (window.db) {
+                indicator.textContent = '🔥 Firebase Connected';
+                indicator.className = 'data-source-indicator firebase-connected';
+            } else {
+                indicator.textContent = '📱 Local Storage Only';
+                indicator.className = 'data-source-indicator';
+            }
+        }
+
+        // Check status on load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(checkFirebaseStatus, 1000);
+        });
+    </script>
 </body>
 </html>
