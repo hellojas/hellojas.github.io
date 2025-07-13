@@ -293,7 +293,12 @@
     <div class="data-source-indicator firebase-connected" id="dataSourceIndicator">
         ☁️ Egghaus Cloud Connected
     </div>
-    <!-- Data & Scripts -->
+    <!-- Chart.js (non-module) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.1.0/dist/chartjs-adapter-luxon.min.js"></script>
+    
+    <!-- Your app logic -->
     <script type="module" src="firebase-config.js"></script>
     <script type="module" src="data.js"></script>
     <script type="module" src="profile.js"></script>
