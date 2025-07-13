@@ -1,0 +1,411 @@
+/* ===================================
+   EGGHAUS SOCIAL - MODAL & PROFILE STYLES
+   =================================== */
+
+/* ===================================
+   NAME ENTRY MODAL STYLES
+   =================================== */
+
+.name-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.name-modal {
+    background: #faf8f3;
+    border-radius: 25px;
+    padding: 2.5rem;
+    max-width: 400px;
+    width: 90vw;
+    box-shadow: 0 20px 60px rgba(93, 64, 55, 0.3);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    text-align: center;
+    position: relative;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.name-modal-header {
+    margin-bottom: 2rem;
+}
+
+.name-modal-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #d4af37, #ffd700);
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+}
+
+.name-modal-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #3e2723;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.name-modal-subtitle {
+    color: #8d6e63;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0;
+}
+
+.name-modal-form {
+    margin-bottom: 1rem;
+}
+
+.name-modal-input {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    border: 2px solid rgba(212, 175, 55, 0.2);
+    border-radius: 15px;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    background: #f5f2eb;
+    color: #3e2723;
+    transition: all 0.3s ease;
+    text-align: center;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+}
+
+.name-modal-input:focus {
+    outline: none;
+    border-color: #d4af37;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+    transform: translateY(-1px);
+}
+
+.name-modal-input::placeholder {
+    color: #8d6e63;
+    font-style: italic;
+    font-weight: 400;
+}
+
+.name-modal-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.name-modal-cancel {
+    background: #f3f4f6;
+    color: #6b7280;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.name-modal-cancel:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.name-modal-submit {
+    background: linear-gradient(135deg, #d4af37, #ffd700);
+    color: #5d4037;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+    font-family: 'Inter', sans-serif;
+}
+
+.name-modal-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+}
+
+.name-modal-submit:disabled {
+    background: #d1d5db;
+    color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ===================================
+   PROFILE SECTION STYLES
+   =================================== */
+
+.profile-section {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-left: auto;
+}
+
+.menu-title-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.menu-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #3e2723;
+    margin: 0;
+}
+
+.season-selector {
+    display: flex;
+    align-items: center;
+}
+
+.season-dropdown {
+    background: linear-gradient(135deg, #f5f2eb, #fff);
+    border: 2px solid rgba(212, 175, 55, 0.3);
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #5d4037;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%235d4037' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+    min-width: 200px;
+}
+
+.season-dropdown:hover {
+    border-color: #d4af37;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+}
+
+.season-dropdown:focus {
+    border-color: #d4af37;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.season-dropdown option {
+    background: #faf8f3;
+    color: #5d4037;
+    padding: 0.5rem;
+    font-weight: 500;
+}
+
+.profile-pic {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5d4037, #8d6e63);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(93, 64, 55, 0.2);
+    border: 2px solid rgba(212, 175, 55, 0.3);
+}
+
+.profile-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #5d4037;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color 0.3s ease;
+}
+
+#profileImage {
+    transition: all 0.3s ease;
+}
+
+#profileImage.loaded {
+    display: block !important;
+}
+
+#profileFallback {
+    transition: all 0.3s ease;
+}
+
+#profileFallback.hidden {
+    display: none;
+}
+
+/* ===================================
+   RESPONSIVE DESIGN FOR MODAL
+   =================================== */
+
+@media (max-width: 768px) {
+    .name-modal {
+        padding: 2rem 1.5rem;
+        margin: 1rem;
+    }
+    
+    .name-modal-title {
+        font-size: 1.6rem;
+    }
+    
+    .name-modal-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 2.5rem;
+    }
+    
+    .profile-section {
+        flex-direction: column;
+        gap: 0.3rem;
+        text-align: center;
+    }
+    
+    .menu-title-section {
+        align-items: center;
+        text-align: center;
+    }
+    
+    .season-dropdown {
+        min-width: 180px;
+        font-size: 0.8rem;
+    }
+    
+    .profile-pic {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .profile-name {
+        font-size: 0.8rem;
+        max-width: none;
+    }
+    
+    .name-modal-buttons {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .name-modal {
+        padding: 1.5rem 1rem;
+    }
+    
+    .name-modal-title {
+        font-size: 1.4rem;
+    }
+}
+
+/* ===================================
+   ANIMATIONS
+   =================================== */
+
+.name-modal-overlay {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.name-modal-input:valid {
+    border-color: #10b981;
+    background: #f0fff4;
+}
+
+/* Profile image loading animation */
+.profile-pic {
+    position: relative;
+}
+
+.profile-pic::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+    pointer-events: none;
+}
+
+.profile-pic.loading::before {
+    transform: translateX(100%);
+}
+
+/* ===================================
+   GUEST LIST ERROR ANIMATIONS
+   =================================== */
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* Error state for inputs */
+.guest-list-error {
+    border-color: #ff4757 !important;
+    background: #fff5f5 !important;
+    box-shadow: 0 0 10px rgba(255, 71, 87, 0.3) !important;
+}
+
+/* ===================================
+   ADDITIONAL ANIMATIONS
+   =================================== */
+
+@keyframes slideInDown {
+    from { 
+        transform: translateX(-50%) translateY(-100%); 
+        opacity: 0; 
+    }
+    to { 
+        transform: translateX(-50%) translateY(0); 
+        opacity: 1; 
+    }
+}
