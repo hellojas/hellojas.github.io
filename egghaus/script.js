@@ -1,5 +1,5 @@
 // ===================================
-// FIREBASE IMPORTS
+// FIREBASE IMPORTS - FIXED FOR BROWSER
 // ===================================
 import { 
     collection, 
@@ -8,7 +8,7 @@ import {
     onSnapshot,
     updateDoc,
     serverTimestamp 
-} from 'firebase/firestore';
+} from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 import { db } from './firebase-config.js';
 
 // ===================================
@@ -191,6 +191,8 @@ function calculateEstimatedTime(itemCount) {
  * @param {string} screenName - Name of screen to show
  */
 function showScreen(screenName) {
+    console.log('📱 Navigating to:', screenName);
+    
     const screens = ['welcome', 'menu', 'productDetail', 'cart', 'queue'];
     
     screens.forEach(screen => {
@@ -255,6 +257,8 @@ function displayProducts(filteredProducts = products) {
  * @param {string} category - Category to filter by
  */
 function filterCategory(category) {
+    console.log('🔍 Filtering by category:', category);
+    
     // Update active category indicator
     document.querySelectorAll('.category-item').forEach(item => {
         item.classList.remove('active');
@@ -534,57 +538,12 @@ function updateCartSummary() {
  */
 async function saveOrderToFirebase(orderData) {
     try {
-        // Prepare order for Firebase
-        const firebaseOrder = {
-            // Order identification
-            orderId: orderData.orderId,
-            status: 'pending', // pending, preparing, ready, completed, cancelled
-            
-            // Customer information
-            customer: {
-                name: orderData.customerInfo.name,
-                email: orderData.customerInfo.email || null,
-                phone: orderData.customerInfo.phone || null
-            },
-            
-            // Order items
-            items: orderData.items.map(item => ({
-                name: item.name,
-                price: item.price,
-                quantity: item.quantity,
-                total: item.total,
-                category: item.category || 'unknown'
-            })),
-            
-            // Pricing
-            pricing: {
-                subtotal: orderData.subtotal,
-                tax: orderData.tax,
-                total: orderData.total,
-                taxRate: 0.085
-            },
-            
-            // Order details
-            instructions: orderData.instructions || '',
-            estimatedTime: orderData.estimatedTime || 15,
-            orderType: 'pickup', // pickup, delivery
-            
-            // Timestamps
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-            estimatedReadyTime: new Date(Date.now() + (orderData.estimatedTime * 60000)),
-            
-            // Metadata
-            source: 'web_app',
-            version: '1.0'
-        };
-        
-        // Add to Firebase collection
-        const docRef = await addDoc(collection(db, 'orders'), firebaseOrder);
-        
-        console.log('✅ Order saved to Firebase with ID:', docRef.id);
-        return docRef.id;
-        
+        // Use the function from firebase-config.js
+        if (window.saveOrderToDatabase) {
+            return await window.saveOrderToDatabase(orderData);
+        } else {
+            throw new Error('Firebase functions not available');
+        }
     } catch (error) {
         console.error('❌ Error saving order to Firebase:', error);
         throw error;
@@ -598,29 +557,10 @@ async function saveOrderToFirebase(orderData) {
  * @returns {Function} Unsubscribe function
  */
 function listenToOrderUpdates(orderId, callback) {
-    if (!db) {
-        console.warn('Firebase not available for real-time updates');
-        return () => {};
-    }
-
-    try {
-        const orderRef = doc(db, "orders", orderId);
-        
-        const unsubscribe = onSnapshot(orderRef, (doc) => {
-            if (doc.exists()) {
-                const orderData = { id: doc.id, ...doc.data() };
-                console.log('📡 Real-time order update:', orderData.status);
-                callback(orderData);
-            } else {
-                console.warn('Order document not found');
-            }
-        }, (error) => {
-            console.error('❌ Error in order listener:', error);
-        });
-        
-        return unsubscribe;
-    } catch (error) {
-        console.error('❌ Error setting up order listener:', error);
+    if (window.listenToOrderUpdates) {
+        return window.listenToOrderUpdates(orderId, callback);
+    } else {
+        console.warn('Firebase real-time updates not available');
         return () => {};
     }
 }
@@ -633,6 +573,8 @@ function listenToOrderUpdates(orderId, callback) {
  * Process checkout with Firebase integration
  */
 async function checkout() {
+    console.log('🛒 Starting checkout process...');
+    
     if (Object.keys(cart).length === 0) {
         alert('Your cart is empty!');
         return;
@@ -684,6 +626,8 @@ async function checkout() {
             estimatedTime: estimatedTime,
             orderTime: new Date()
         };
+        
+        console.log('📋 Order data prepared:', orderData);
         
         // Try to save to Firebase
         let firebaseOrderId = null;
@@ -1067,6 +1011,8 @@ function shareOrder() {
  * Initialize the application
  */
 function initializeApp() {
+    console.log('🚀 Initializing Egghaus Social app...');
+    
     // Add cart icon to menu header
     addCartIconToHeader();
     
@@ -1220,10 +1166,11 @@ window.addEventListener('load', () => {
     }
 });
 
-console.log('🍵 Egghaus Social script loaded successfully!');
+// ===================================
+// EXPOSE FUNCTIONS TO GLOBAL SCOPE FOR HTML ONCLICK HANDLERS
+// ===================================
 
-
-// Expose functions to global scope for HTML onclick handlers
+// Make functions available globally for onclick handlers
 window.showScreen = showScreen;
 window.filterCategory = filterCategory;
 window.searchProducts = searchProducts;
@@ -1235,3 +1182,5 @@ window.checkout = checkout;
 window.backToMenu = backToMenu;
 window.shareOrder = shareOrder;
 window.confirmPickup = confirmPickup;
+
+console.log('🍵 Egghaus Social script loaded successfully!');
