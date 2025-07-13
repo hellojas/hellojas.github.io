@@ -63,19 +63,30 @@ async function fetchOrdersFromFirebase(userName) {
         ];
 
         let allOrders = [];
+
+        // Determine dominant season from the products
+        const itemSeasons = processedItems.flatMap(i => i.season || []);
+        const seasonCounts = {};
+        itemSeasons.forEach(s => {
+            seasonCounts[s] = (seasonCounts[s] || 0) + 1;
+        });
+        const inferredSeason = Object.keys(seasonCounts).reduce((a, b) => 
+            seasonCounts[a] > seasonCounts[b] ? a : b, '3'
+        );
+        console.log('🧪 Inferred season from items:', itemSeasons, '→', inferredSeason);
+
         
         // Execute both queries to catch orders stored with either field structure
         for (const q of queries) {
             try {
-                const querySnapshot = await getDocs(q);
-                
+                const querySnapshot = await getDocs(q);   
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     const order = {
                         id: doc.id,
                         orderId: data.orderId || doc.id,
                         date: data.createdAt?.toDate() || new Date(data.orderTime) || new Date(),
-                        season: determineSeason(data),
+                        season: parseInt(inferredSeason), // use product season instead of date logic
                         items: data.items || [],
                         total: data.pricing?.total || data.total || 0,
                         status: data.status || 'completed',
@@ -109,31 +120,6 @@ async function fetchOrdersFromFirebase(userName) {
     }
 }
 
-/**
- * Determine season based on order data and date
- * @param {Object} orderData - Order data from Firebase
- * @returns {number} Season number
- */
-function determineSeason(orderData) {
-    // If season is stored in the order data, use it
-    if (orderData.season) {
-        return orderData.season;
-    }
-    
-    // Otherwise, determine based on order date
-    const orderDate = orderData.createdAt?.toDate() || new Date(orderData.orderTime) || new Date();
-    const year = orderDate.getFullYear();
-    const month = orderDate.getMonth() + 1; // 0-indexed
-    
-    // Season determination logic (adjust these dates based on your actual seasons)
-    if (year <= 2023 || (year === 2024 && month <= 3)) {
-        return 1; // Season 1
-    } else if (year === 2024 && month <= 9) {
-        return 2; // Season 2
-    } else {
-        return 3; // Season 3 (current)
-    }
-}
 
 /**
  * Get order history from localStorage as fallback
