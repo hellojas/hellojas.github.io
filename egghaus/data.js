@@ -171,35 +171,6 @@ export const products = [
     }
 ];
 
-/**
- * Season definitions for analytics
- */
-export const seasons = {
-    1: {
-        name: "Winter",
-        months: [12, 1, 2],
-        emoji: "❄️",
-        description: "Cozy season for hot drinks and comfort food"
-    },
-    2: {
-        name: "Spring", 
-        months: [3, 4, 5],
-        emoji: "🌸",
-        description: "Fresh and floral season with lighter flavors"
-    },
-    3: {
-        name: "Summer",
-        months: [6, 7, 8], 
-        emoji: "☀️",
-        description: "Refreshing iced drinks and cooling treats"
-    },
-    4: {
-        name: "Fall",
-        months: [9, 10, 11],
-        emoji: "🍂", 
-        description: "Warm spices and autumn-inspired flavors"
-    }
-};
 
 
 export const seasons = [
