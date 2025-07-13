@@ -139,36 +139,11 @@ export const products = [
         image: "🍞",
         rating: 4.5,
         description: "Fluffy bites of heaven.",
-        season: [1, 2, 3, 4], // All seasons
+        season: [1, 2], // All seasons
         caffeine: 0,
         popularity: 75
     },
-
-    // SEASONAL SPECIALS
-    {
-        id: 12,
-        name: "Pumpkin Spice Matcha",
-        price: 9.50,
-        category: "matcha",
-        image: "🎃",
-        rating: 4.6,
-        description: "Fall-inspired matcha latte with pumpkin spice blend. Cozy autumn flavors meet ceremonial matcha.",
-        season: [4], // Fall only
-        caffeine: 65,
-        popularity: 72
-    },
-    {
-        id: 13,
-        name: "Strawberry Matcha",
-        price: 9.00,
-        category: "matcha",
-        image: "🍓",
-        rating: 4.7,
-        description: "Fresh strawberry and matcha combination. Sweet, refreshing, and perfect for spring.",
-        season: [2], // Spring only
-        caffeine: 60,
-        popularity: 81
-    }
+    
 ];
 
 
