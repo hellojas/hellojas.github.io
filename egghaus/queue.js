@@ -194,11 +194,12 @@ function createOrderItem(order, index) {
         </div>
 
         <div class="order-info">
-            <img src="${profileSrc}" alt="${nameNormalized}" class="profile-icon" onerror="this.style.display='none';" />
-            <div class="customer-name">${order.customerName}</div>
+            <div class="customer-header">
+                <img src="${profileSrc}" alt="${nameNormalized}" class="profile-icon" onerror="this.style.display='none';" />
+                <div class="customer-name">${order.customerName}</div>
+            </div>
             <div class="order-time">Ordered at ${orderTime}</div>
         </div>
-
         <div class="order-status ${statusInfo.class}">
             ${statusInfo.icon} ${statusInfo.text}
         </div>
