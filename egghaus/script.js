@@ -332,7 +332,7 @@ function submitNameFromDialog() {
             
             // Close modal and proceed to menu
             closeNameDialog();
-            showScreen('menu');
+            window.location.href = `order.html?user=${encodeURIComponent(currentUserName.toLowerCase())}`;
         }, appConfig.loadingSimulationTime);
     } else {
         closeNameDialog();
