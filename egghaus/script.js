@@ -1398,21 +1398,33 @@ function addCartIconToHeader() {
     const profileSection = menuHeader.querySelector('.profile-section');
     if (!profileSection) return;
     
+    // Check if user is on guest list for cart access
+    const isVipGuest = currentUserName && isOnGuestList(currentUserName);
+    
     const cartIcon = createElement('div', {
         innerHTML: '🛒',
-        style: 'font-size: 1.5rem; cursor: pointer; margin-right: 1rem; padding: 0.5rem; border-radius: 50%; background: rgba(212, 175, 55, 0.1); transition: all 0.3s ease;',
-        onclick: () => showScreen('cart')
+        style: `font-size: 1.5rem; margin-right: 1rem; padding: 0.5rem; border-radius: 50%; transition: all 0.3s ease; ${
+            isVipGuest 
+                ? 'cursor: pointer; background: rgba(212, 175, 55, 0.1);' 
+                : 'cursor: not-allowed; background: rgba(139, 128, 104, 0.1); opacity: 0.5;'
+        }`,
+        onclick: isVipGuest ? () => showScreen('cart') : () => showGuestListWarning('cart')
     });
     
-    cartIcon.addEventListener('mouseenter', () => {
-        cartIcon.style.background = 'rgba(212, 175, 55, 0.2)';
-        cartIcon.style.transform = 'scale(1.1)';
-    });
-    
-    cartIcon.addEventListener('mouseleave', () => {
-        cartIcon.style.background = 'rgba(212, 175, 55, 0.1)';
-        cartIcon.style.transform = 'scale(1)';
-    });
+    if (isVipGuest) {
+        cartIcon.addEventListener('mouseenter', () => {
+            cartIcon.style.background = 'rgba(212, 175, 55, 0.2)';
+            cartIcon.style.transform = 'scale(1.1)';
+        });
+        
+        cartIcon.addEventListener('mouseleave', () => {
+            cartIcon.style.background = 'rgba(212, 175, 55, 0.1)';
+            cartIcon.style.transform = 'scale(1)';
+        });
+    } else {
+        // Add disabled styling for non-VIP guests
+        cartIcon.title = 'Cart access restricted to VIP guests';
+    }
     
     // Insert before profile section
     menuHeader.insertBefore(cartIcon, profileSection);
