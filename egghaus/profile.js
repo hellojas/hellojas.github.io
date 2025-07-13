@@ -336,7 +336,7 @@ function updateProfileStats() {
 /**
  * Display order history
  */
-function displayOrderHistory() {
+function displayOrderHistory(filtered = orderHistory) {
     const timeline = document.getElementById('ordersTimeline');
     const emptyState = document.getElementById('emptyOrders');
     
@@ -441,22 +441,40 @@ function createOrderElement(order) {
  */
 function filterOrdersBySeason(season) {
     currentSeasonFilter = season;
-    
-    // Update active tab
+
+    // Update active tab UI
     document.querySelectorAll('.season-tab').forEach(tab => {
         tab.classList.remove('active');
     });
-    
     const activeTab = document.querySelector(`[data-season="${season}"]`);
     if (activeTab) {
         activeTab.classList.add('active');
     }
-    
-    // Update display
-    displayOrderHistory();
-    
-    console.log(`🎭 Filtered orders by season: ${season}`);
+
+    // Filter orders based on products' season data
+    if (season === 'all') {
+        displayOrderHistory();
+        return;
+    }
+
+    const seasonInt = parseInt(season);
+
+    // Build a set of product names valid for the selected season
+    const validProductNames = new Set(
+        products
+            .filter(p => p.season?.includes(seasonInt))
+            .map(p => p.name)
+    );
+
+    // Filter orders containing at least one seasonal product
+    const filtered = orderHistory.filter(order =>
+        order.items.some(item => validProductNames.has(item.name))
+    );
+
+    displayOrderHistory(filtered);
+    console.log(`🎭 Filtered orders for season ${season} using product catalog`);
 }
+
 
 // ===================================
 // CHARTS AND ANALYTICS
