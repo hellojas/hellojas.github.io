@@ -228,15 +228,15 @@ async function loadOrderHistory() {
         // Process orders to add missing data
         orderHistory = orders.map(order => {
             // Ensure items have caffeine data
-            const processedItems = order.items.map(item => {
-                const productData = products.find(p => p.name === item.name);
-                return {
-                    ...item,
-                    productId: productData?.id || item.productId || 0,
-                    caffeine: productData?.caffeine || estimateCaffeine(item.name) || 0
-                };
-            });
-            
+        const processedItems = order.items.map(item => {
+            const productData = products.find(p => p.name === item.name);
+            return {
+                ...item,
+                productId: productData?.id || item.productId || 0,
+                caffeine: productData?.caffeine ?? estimateCaffeine(item.name) ?? 0,
+                season: productData?.season || []
+            };
+        });
             return {
                 ...order,
                 items: processedItems
