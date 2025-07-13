@@ -1,6 +1,17 @@
 // ===================================
-// EGGHAUS SOCIAL - PROFILE PAGE
+// EGGHAUS SOCIAL - PROFILE PAGE (FIREBASE INTEGRATION)
 // ===================================
+
+// Firebase imports
+import { 
+    collection, 
+    query,
+    where,
+    orderBy,
+    getDocs,
+    onSnapshot
+} from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+import { db } from './firebase-config.js';
 
 // Data imports
 import { 
@@ -17,120 +28,144 @@ let currentUser = null;
 let orderHistory = [];
 let currentSeasonFilter = 'all';
 let charts = {};
+let isLoading = false;
 
 // ===================================
-// MOCK ORDER HISTORY DATA
+// FIREBASE ORDER FETCHING
 // ===================================
 
-// Generate realistic order history for demonstration
-function generateMockOrderHistory(userName) {
-    const mockOrders = [
-        // Season 1 Orders
-        {
-            id: 'EH240115001',
-            date: new Date('2024-01-15T14:30:00'),
-            season: 1,
-            items: [
-                { productId: 1, name: 'Iced Matcha Latte', quantity: 2, price: 8.50, caffeine: 70 },
-                { productId: 5, name: 'Burnt Basque Cheesecake', quantity: 1, price: 8.00, caffeine: 0 }
-            ],
-            total: 25.00,
-            status: 'completed'
-        },
-        {
-            id: 'EH240220002',
-            date: new Date('2024-02-20T09:15:00'),
-            season: 1,
-            items: [
-                { productId: 4, name: 'Iced Coffee', quantity: 1, price: 6.50, caffeine: 120 },
-                { productId: 6, name: 'Ube Cheesecake', quantity: 1, price: 8.50, caffeine: 0 }
-            ],
-            total: 15.00,
-            status: 'completed'
-        },
-        {
-            id: 'EH240305003',
-            date: new Date('2024-03-05T16:45:00'),
-            season: 1,
-            items: [
-                { productId: 14, name: 'Matcha Tiramisu', quantity: 1, price: 9.25, caffeine: 45 }
-            ],
-            total: 9.25,
-            status: 'completed'
-        },
+/**
+ * Fetch orders from Firebase for the current user
+ * @param {string} userName - User name to fetch orders for
+ * @returns {Promise<Array>} Array of orders
+ */
+async function fetchOrdersFromFirebase(userName) {
+    if (!db) {
+        console.warn('Firebase not available, using local data only');
+        return getLocalOrderHistory(userName);
+    }
+
+    try {
+        console.log(`🔍 Fetching orders from Firebase for: ${userName}`);
         
-        // Season 2 Orders
-        {
-            id: 'EH240420004',
-            date: new Date('2024-04-20T11:30:00'),
-            season: 2,
-            items: [
-                { productId: 2, name: 'Iced Yuzu Matcha', quantity: 1, price: 9.00, caffeine: 65 },
-                { productId: 7, name: 'Chocolate Ganache Tart', quantity: 1, price: 7.50, caffeine: 15 }
-            ],
-            total: 16.50,
-            status: 'completed'
-        },
-        {
-            id: 'EH240515005',
-            date: new Date('2024-05-15T13:20:00'),
-            season: 2,
-            items: [
-                { productId: 8, name: 'Strawberry Matcha Parfait', quantity: 2, price: 9.50, caffeine: 35 },
-                { productId: 9, name: 'Bagels', quantity: 1, price: 5.50, caffeine: 0 }
-            ],
-            total: 24.50,
-            status: 'completed'
-        },
-        {
-            id: 'EH240618006',
-            date: new Date('2024-06-18T15:10:00'),
-            season: 2,
-            items: [
-                { productId: 1, name: 'Iced Matcha Latte', quantity: 1, price: 8.50, caffeine: 70 },
-                { productId: 15, name: 'Sparkling Yuzu Lemonade', quantity: 1, price: 6.75, caffeine: 0 }
-            ],
-            total: 15.25,
-            status: 'completed'
-        },
+        // Query orders by customer name (check both customer.name and customerInfo.name)
+        const queries = [
+            query(
+                collection(db, 'orders'),
+                where('customer.name', '==', userName),
+                orderBy('createdAt', 'desc')
+            ),
+            query(
+                collection(db, 'orders'),
+                where('customerInfo.name', '==', userName),
+                orderBy('createdAt', 'desc')
+            )
+        ];
+
+        let allOrders = [];
         
-        // Season 3 Orders (Recent)
-        {
-            id: 'EH240710007',
-            date: new Date('2024-07-10T10:45:00'),
-            season: 3,
-            items: [
-                { productId: 10, name: 'Cold Brew Matcha Float', quantity: 1, price: 10.00, caffeine: 85 },
-                { productId: 12, name: 'Milk Bread French Toast', quantity: 1, price: 12.00, caffeine: 20 }
-            ],
-            total: 22.00,
-            status: 'completed'
-        },
-        {
-            id: 'EH240803008',
-            date: new Date('2024-08-03T14:20:00'),
-            season: 3,
-            items: [
-                { productId: 11, name: 'Miso Caramel Latte', quantity: 2, price: 8.75, caffeine: 150 }
-            ],
-            total: 17.50,
-            status: 'completed'
-        },
-        {
-            id: 'EH241205009',
-            date: new Date('2024-12-05T12:30:00'),
-            season: 3,
-            items: [
-                { productId: 13, name: 'Seasonal Fruit Tart', quantity: 1, price: 9.00, caffeine: 0 },
-                { productId: 6, name: 'Ube Cheesecake', quantity: 1, price: 8.50, caffeine: 0 },
-                { productId: 4, name: 'Iced Coffee', quantity: 1, price: 6.50, caffeine: 120 }
-            ],
-            total: 24.00,
-            status: 'completed'
+        // Execute both queries to catch orders stored with either field structure
+        for (const q of queries) {
+            try {
+                const querySnapshot = await getDocs(q);
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const order = {
+                        id: doc.id,
+                        orderId: data.orderId || doc.id,
+                        date: data.createdAt?.toDate() || new Date(data.orderTime) || new Date(),
+                        season: determineSeason(data),
+                        items: data.items || [],
+                        total: data.pricing?.total || data.total || 0,
+                        status: data.status || 'completed',
+                        instructions: data.instructions || '',
+                        estimatedTime: data.estimatedTime || 15,
+                        customerName: data.customer?.name || data.customerInfo?.name || userName
+                    };
+                    
+                    // Avoid duplicates
+                    if (!allOrders.find(existing => existing.id === order.id)) {
+                        allOrders.push(order);
+                    }
+                });
+            } catch (queryError) {
+                console.warn('Query failed, trying alternative:', queryError.message);
+            }
         }
-    ];
+
+        // Sort by date (newest first)
+        allOrders.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        console.log(`✅ Found ${allOrders.length} orders in Firebase for ${userName}`);
+        return allOrders;
+        
+    } catch (error) {
+        console.error('❌ Error fetching orders from Firebase:', error);
+        
+        // Fallback to local data
+        console.log('📱 Falling back to local order history');
+        return getLocalOrderHistory(userName);
+    }
+}
+
+/**
+ * Determine season based on order data and date
+ * @param {Object} orderData - Order data from Firebase
+ * @returns {number} Season number
+ */
+function determineSeason(orderData) {
+    // If season is stored in the order data, use it
+    if (orderData.season) {
+        return orderData.season;
+    }
     
-    return mockOrders;
+    // Otherwise, determine based on order date
+    const orderDate = orderData.createdAt?.toDate() || new Date(orderData.orderTime) || new Date();
+    const year = orderDate.getFullYear();
+    const month = orderDate.getMonth() + 1; // 0-indexed
+    
+    // Season determination logic (adjust these dates based on your actual seasons)
+    if (year <= 2023 || (year === 2024 && month <= 3)) {
+        return 1; // Season 1
+    } else if (year === 2024 && month <= 9) {
+        return 2; // Season 2
+    } else {
+        return 3; // Season 3 (current)
+    }
+}
+
+/**
+ * Get order history from localStorage as fallback
+ * @param {string} userName - User name
+ * @returns {Array} Local order history
+ */
+function getLocalOrderHistory(userName) {
+    const historyKey = `orderHistory_${userName}`;
+    const localOrders = JSON.parse(localStorage.getItem(historyKey) || '[]');
+    
+    // Convert date strings back to Date objects
+    localOrders.forEach(order => {
+        order.date = new Date(order.date);
+    });
+    
+    console.log(`📱 Found ${localOrders.length} orders in localStorage for ${userName}`);
+    return localOrders;
+}
+
+/**
+ * Save order to localStorage (for future reference)
+ * @param {string} userName - User name
+ * @param {Array} orders - Orders to save
+ */
+function saveOrdersToLocal(userName, orders) {
+    try {
+        const historyKey = `orderHistory_${userName}`;
+        localStorage.setItem(historyKey, JSON.stringify(orders));
+        console.log(`💾 Saved ${orders.length} orders to localStorage for ${userName}`);
+    } catch (error) {
+        console.warn('Failed to save orders to localStorage:', error);
+    }
 }
 
 // ===================================
@@ -140,8 +175,11 @@ function generateMockOrderHistory(userName) {
 /**
  * Initialize profile page
  */
-function initializeProfile() {
+async function initializeProfile() {
     console.log('👤 Initializing profile page...');
+    
+    // Show loading state
+    showLoadingState(true);
     
     // Get user info from URL params or localStorage
     const urlParams = new URLSearchParams(window.location.search);
@@ -149,41 +187,103 @@ function initializeProfile() {
     
     currentUser = userName;
     
-    // Load user's order history
-    loadOrderHistory();
-    
     // Set up profile display
     setupProfileDisplay();
     
-    // Initialize charts
-    initializeCharts();
-    
-    console.log(`✅ Profile initialized for: ${currentUser}`);
+    try {
+        // Load user's order history from Firebase
+        await loadOrderHistory();
+        
+        // Initialize charts if we have data
+        if (orderHistory.length > 0) {
+            initializeCharts();
+        } else {
+            showEmptyState();
+        }
+        
+        console.log(`✅ Profile initialized for: ${currentUser}`);
+        
+    } catch (error) {
+        console.error('❌ Error initializing profile:', error);
+        showErrorState('Failed to load profile data');
+    } finally {
+        showLoadingState(false);
+    }
 }
 
 /**
- * Load order history (real + mock data for demo)
+ * Load order history from Firebase
  */
-function loadOrderHistory() {
-    // Load real orders from localStorage
-    const historyKey = `orderHistory_${currentUser}`;
-    const realOrders = JSON.parse(localStorage.getItem(historyKey) || '[]');
+async function loadOrderHistory() {
+    if (isLoading) return;
     
-    // Convert date strings back to Date objects
-    realOrders.forEach(order => {
-        order.date = new Date(order.date);
-    });
+    isLoading = true;
+    console.log(`📊 Loading order history for: ${currentUser}`);
     
-    // Generate mock data for demonstration (you can remove this in production)
-    const mockOrders = generateMockOrderHistory(currentUser);
+    try {
+        // Fetch orders from Firebase
+        const orders = await fetchOrdersFromFirebase(currentUser);
+        
+        // Process orders to add missing data
+        orderHistory = orders.map(order => {
+            // Ensure items have caffeine data
+            const processedItems = order.items.map(item => {
+                const productData = products.find(p => p.name === item.name);
+                return {
+                    ...item,
+                    productId: productData?.id || item.productId || 0,
+                    caffeine: productData?.caffeine || estimateCaffeine(item.name) || 0
+                };
+            });
+            
+            return {
+                ...order,
+                items: processedItems
+            };
+        });
+        
+        // Save to localStorage as backup
+        if (orderHistory.length > 0) {
+            saveOrdersToLocal(currentUser, orderHistory);
+        }
+        
+        // Display order history
+        displayOrderHistory();
+        
+        // Update profile stats
+        updateProfileStats();
+        
+        console.log(`📊 Loaded ${orderHistory.length} total orders for ${currentUser}`);
+        
+    } catch (error) {
+        console.error('❌ Error loading order history:', error);
+        
+        // Try loading from localStorage as final fallback
+        orderHistory = getLocalOrderHistory(currentUser);
+        if (orderHistory.length > 0) {
+            displayOrderHistory();
+            updateProfileStats();
+            console.log(`📱 Using ${orderHistory.length} local orders as fallback`);
+        }
+    } finally {
+        isLoading = false;
+    }
+}
+
+/**
+ * Estimate caffeine content based on item name
+ * @param {string} itemName - Name of the item
+ * @returns {number} Estimated caffeine in mg
+ */
+function estimateCaffeine(itemName) {
+    const lowerName = itemName.toLowerCase();
     
-    // Combine real and mock orders, prioritize real orders
-    orderHistory = [...realOrders, ...mockOrders];
+    if (lowerName.includes('coffee')) return 120;
+    if (lowerName.includes('matcha')) return 70;
+    if (lowerName.includes('hojicha')) return 30;
+    if (lowerName.includes('chocolate')) return 15;
     
-    console.log(`📊 Loaded ${realOrders.length} real orders and ${mockOrders.length} demo orders for ${currentUser}`);
-    
-    // Display order history
-    displayOrderHistory();
+    return 0; // Default for food items
 }
 
 /**
@@ -215,10 +315,11 @@ function setupProfileDisplay() {
         };
         
         profileAvatarImage.src = imagePath;
+    } else {
+        if (profileAvatarFallback) {
+            profileAvatarFallback.textContent = currentUser.charAt(0).toUpperCase();
+        }
     }
-    
-    // Update profile stats
-    updateProfileStats();
 }
 
 /**
@@ -226,7 +327,9 @@ function setupProfileDisplay() {
  */
 function updateProfileStats() {
     const totalOrders = orderHistory.length;
-    const totalSpent = orderHistory.reduce((sum, order) => sum + order.total, 0);
+    const totalSpent = orderHistory
+        .filter(order => order.status === 'completed')
+        .reduce((sum, order) => sum + order.total, 0);
     
     // Calculate favorite season
     const seasonCounts = {};
@@ -235,13 +338,17 @@ function updateProfileStats() {
     });
     
     const favoriteSeason = Object.keys(seasonCounts).reduce((a, b) => 
-        seasonCounts[a] > seasonCounts[b] ? a : b, '1'
+        seasonCounts[a] > seasonCounts[b] ? a : b, '2'
     );
     
     // Update UI
-    document.getElementById('totalOrders').textContent = totalOrders;
-    document.getElementById('totalSpent').textContent = `$${totalSpent.toFixed(0)}`;
-    document.getElementById('favoriteSeason').textContent = `S${favoriteSeason}`;
+    const totalOrdersEl = document.getElementById('totalOrders');
+    const totalSpentEl = document.getElementById('totalSpent');
+    const favoriteSeasonEl = document.getElementById('favoriteSeason');
+    
+    if (totalOrdersEl) totalOrdersEl.textContent = totalOrders;
+    if (totalSpentEl) totalSpentEl.textContent = `$${totalSpent.toFixed(0)}`;
+    if (favoriteSeasonEl) favoriteSeasonEl.textContent = `S${favoriteSeason}`;
 }
 
 // ===================================
@@ -280,6 +387,8 @@ function displayOrderHistory() {
         const orderElement = createOrderElement(order);
         timeline.appendChild(orderElement);
     });
+    
+    console.log(`📋 Displayed ${filteredOrders.length} orders for season filter: ${currentSeasonFilter}`);
 }
 
 /**
@@ -315,11 +424,19 @@ function createOrderElement(order) {
         </div>
     `).join('');
     
+    // Status badge
+    const statusBadge = order.status ? `
+        <span class="order-status-badge status-${order.status}">
+            ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+        </span>
+    ` : '';
+    
     orderDiv.innerHTML = `
         <div class="order-header">
             <div>
-                <div class="order-id">${order.id}</div>
+                <div class="order-id">${order.orderId}</div>
                 <div class="order-date">${dateStr} at ${timeStr}</div>
+                ${statusBadge}
             </div>
             <div class="order-season">${seasonInfo ? seasonInfo.name : `Season ${order.season}`}</div>
         </div>
@@ -373,6 +490,8 @@ function initializeCharts() {
         return;
     }
     
+    console.log('📊 Initializing charts with Firebase data...');
+    
     createCategoryChart();
     createTimeChart();
     createCaffeineChart();
@@ -386,17 +505,31 @@ function createCategoryChart() {
     const ctx = document.getElementById('categoryChart');
     if (!ctx) return;
     
-    // Calculate category data
+    // Calculate category data from real orders
     const categoryData = {};
     orderHistory.forEach(order => {
         order.items.forEach(item => {
-            const product = products.find(p => p.id === item.productId);
+            const product = products.find(p => p.name === item.name);
+            let category = 'other';
+            
             if (product) {
-                const category = product.category === 'coffee' ? 'beverages' : product.category;
-                categoryData[category] = (categoryData[category] || 0) + item.quantity;
+                category = product.category;
+            } else {
+                // Guess category from item name
+                const itemName = item.name.toLowerCase();
+                if (itemName.includes('coffee')) category = 'coffee';
+                else if (itemName.includes('matcha') || itemName.includes('hojicha')) category = 'matcha';
+                else if (itemName.includes('cake') || itemName.includes('tart') || itemName.includes('bread') || itemName.includes('bagel')) category = 'noms';
             }
+            
+            categoryData[category] = (categoryData[category] || 0) + item.quantity;
         });
     });
+    
+    if (Object.keys(categoryData).length === 0) {
+        showEmptyChart(ctx, 'No category data available');
+        return;
+    }
     
     const labels = Object.keys(categoryData).map(cat => 
         cat.charAt(0).toUpperCase() + cat.slice(1)
@@ -445,7 +578,7 @@ function createTimeChart() {
     const ctx = document.getElementById('timeChart');
     if (!ctx) return;
     
-    // Calculate hourly data
+    // Calculate hourly data from real orders
     const hourlyData = new Array(24).fill(0);
     orderHistory.forEach(order => {
         const hour = order.date.getHours();
@@ -503,19 +636,19 @@ function createCaffeineChart() {
     const ctx = document.getElementById('caffeineChart');
     if (!ctx) return;
     
-    // Calculate monthly caffeine data
+    // Calculate monthly caffeine data from real orders
     const monthlyData = {};
     let totalCaffeine = 0;
     let totalOrders = 0;
     
     orderHistory.forEach(order => {
-        const monthKey = `${order.date.getFullYear()}-${order.date.getMonth() + 1}`;
+        const monthKey = `${order.date.getFullYear()}-${String(order.date.getMonth() + 1).padStart(2, '0')}`;
         if (!monthlyData[monthKey]) {
             monthlyData[monthKey] = 0;
         }
         
         order.items.forEach(item => {
-            const caffeine = item.caffeine * item.quantity;
+            const caffeine = (item.caffeine || 0) * item.quantity;
             monthlyData[monthKey] += caffeine;
             totalCaffeine += caffeine;
         });
@@ -529,6 +662,15 @@ function createCaffeineChart() {
         return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
     });
     const data = sortedMonths.map(month => monthlyData[month]);
+    
+    if (labels.length === 0 || data.every(d => d === 0)) {
+        showEmptyChart(ctx, 'No caffeine data available');
+        
+        // Still update stats with zeros
+        document.getElementById('avgCaffeine').textContent = '0mg';
+        document.getElementById('totalCaffeine').textContent = '0mg';
+        return;
+    }
     
     charts.caffeine = new Chart(ctx, {
         type: 'line',
@@ -576,7 +718,14 @@ function createSpendingChart() {
     if (!ctx) return;
     
     // Sort orders by date and create cumulative spending
-    const sortedOrders = [...orderHistory].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const sortedOrders = [...orderHistory]
+        .filter(order => order.status === 'completed' || !order.status) // Include completed orders
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    if (sortedOrders.length === 0) {
+        showEmptyChart(ctx, 'No spending data available');
+        return;
+    }
     
     let cumulativeSpending = 0;
     const spendingData = sortedOrders.map(order => {
@@ -634,12 +783,79 @@ function createSpendingChart() {
 }
 
 /**
+ * Show empty chart when no data
+ */
+function showEmptyChart(ctx, message) {
+    const container = ctx.parentElement;
+    container.innerHTML = `<div class="chart-loading">${message}</div>`;
+}
+
+/**
  * Show empty charts when no data
  */
 function showEmptyCharts() {
     const chartContainers = document.querySelectorAll('.chart-container');
     chartContainers.forEach(container => {
         container.innerHTML = '<div class="chart-loading">No data available yet</div>';
+    });
+    
+    // Update caffeine stats to zero
+    const avgCaffeineEl = document.getElementById('avgCaffeine');
+    const totalCaffeineEl = document.getElementById('totalCaffeine');
+    if (avgCaffeineEl) avgCaffeineEl.textContent = '0mg';
+    if (totalCaffeineEl) totalCaffeineEl.textContent = '0mg';
+}
+
+// ===================================
+// UI STATES
+// ===================================
+
+/**
+ * Show loading state
+ */
+function showLoadingState(show) {
+    const loadingElements = document.querySelectorAll('.chart-container, #ordersTimeline');
+    
+    loadingElements.forEach(element => {
+        if (show) {
+            element.innerHTML = '<div class="chart-loading">Loading your data...</div>';
+        }
+    });
+    
+    // Show spinner in profile stats
+    if (show) {
+        const statsElements = ['totalOrders', 'totalSpent', 'favoriteSeason'];
+        statsElements.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = '...';
+        });
+    }
+}
+
+/**
+ * Show empty state when no orders
+ */
+function showEmptyState() {
+    console.log('📭 Showing empty state - no orders found');
+    
+    showEmptyCharts();
+    
+    const timeline = document.getElementById('ordersTimeline');
+    const emptyState = document.getElementById('emptyOrders');
+    
+    if (timeline) timeline.style.display = 'none';
+    if (emptyState) emptyState.style.display = 'block';
+}
+
+/**
+ * Show error state
+ */
+function showErrorState(message) {
+    console.error('❌ Showing error state:', message);
+    
+    const containers = document.querySelectorAll('.chart-container');
+    containers.forEach(container => {
+        container.innerHTML = `<div class="chart-loading">Error: ${message}</div>`;
     });
 }
 
@@ -651,24 +867,43 @@ function showEmptyCharts() {
  * Go back to menu
  */
 function goBackToMenu() {
-    window.location.href = 'order.html';
+    // Pass the current user back to the main app
+    if (currentUser && currentUser !== 'Guest') {
+        localStorage.setItem('currentUserName', currentUser);
+        window.location.href = `order.html?user=${encodeURIComponent(currentUser)}`;
+    } else {
+        window.location.href = 'order.html';
+    }
 }
 
 /**
- * Export order history
+ * Export order history from Firebase
  */
 function exportOrderHistory() {
+    if (orderHistory.length === 0) {
+        alert('No order history to export!');
+        return;
+    }
+    
     const exportData = {
         user: currentUser,
         exportDate: new Date().toISOString(),
+        source: 'firebase',
         orderHistory: orderHistory,
         statistics: {
             totalOrders: orderHistory.length,
-            totalSpent: orderHistory.reduce((sum, order) => sum + order.total, 0),
-            avgOrderValue: orderHistory.length > 0 ? orderHistory.reduce((sum, order) => sum + order.total, 0) / orderHistory.length : 0,
+            completedOrders: orderHistory.filter(o => o.status === 'completed').length,
+            totalSpent: orderHistory
+                .filter(order => order.status === 'completed' || !order.status)
+                .reduce((sum, order) => sum + order.total, 0),
+            avgOrderValue: orderHistory.length > 0 ? 
+                orderHistory.reduce((sum, order) => sum + order.total, 0) / orderHistory.length : 0,
             totalCaffeine: orderHistory.reduce((sum, order) => 
-                sum + order.items.reduce((itemSum, item) => itemSum + (item.caffeine * item.quantity), 0), 0
-            )
+                sum + order.items.reduce((itemSum, item) => 
+                    itemSum + ((item.caffeine || 0) * item.quantity), 0), 0),
+            favoriteCategory: calculateFavoriteCategory(),
+            ordersByStatus: calculateOrdersByStatus(),
+            seasonBreakdown: calculateSeasonBreakdown()
         }
     };
     
@@ -680,17 +915,62 @@ function exportOrderHistory() {
     link.download = `egghaus-${currentUser.toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     
-    console.log('📤 Order history exported');
+    console.log('📤 Firebase order history exported');
 }
 
 /**
- * Clear order history
+ * Calculate favorite category for export
+ */
+function calculateFavoriteCategory() {
+    const categoryCount = {};
+    orderHistory.forEach(order => {
+        order.items.forEach(item => {
+            const product = products.find(p => p.name === item.name);
+            const category = product?.category || 'other';
+            categoryCount[category] = (categoryCount[category] || 0) + item.quantity;
+        });
+    });
+    
+    return Object.keys(categoryCount).reduce((a, b) => 
+        categoryCount[a] > categoryCount[b] ? a : b, 'none'
+    );
+}
+
+/**
+ * Calculate orders by status for export
+ */
+function calculateOrdersByStatus() {
+    const statusCount = {};
+    orderHistory.forEach(order => {
+        const status = order.status || 'completed';
+        statusCount[status] = (statusCount[status] || 0) + 1;
+    });
+    return statusCount;
+}
+
+/**
+ * Calculate season breakdown for export
+ */
+function calculateSeasonBreakdown() {
+    const seasonCount = {};
+    orderHistory.forEach(order => {
+        seasonCount[order.season] = (seasonCount[order.season] || 0) + 1;
+    });
+    return seasonCount;
+}
+
+/**
+ * Clear order history (Firebase + localStorage)
  */
 function clearOrderHistory() {
-    if (confirm('Are you sure you want to clear your order history? This cannot be undone.')) {
-        // Clear both localStorage and current session
+    const confirmMessage = `Are you sure you want to clear all order history for ${currentUser}?\n\nThis will:\n- Clear local storage data\n- Reset all charts and statistics\n\nNote: Firebase orders will remain in the database but won't be shown here.\n\nThis cannot be undone.`;
+    
+    if (confirm(confirmMessage)) {
+        // Clear localStorage
         const historyKey = `orderHistory_${currentUser}`;
         localStorage.removeItem(historyKey);
+        
+        // Clear current session
         orderHistory = [];
         
         // Refresh displays
@@ -698,13 +978,70 @@ function clearOrderHistory() {
         updateProfileStats();
         
         // Destroy existing charts
-        Object.values(charts).forEach(chart => chart.destroy());
+        Object.values(charts).forEach(chart => {
+            if (chart && typeof chart.destroy === 'function') {
+                chart.destroy();
+            }
+        });
         charts = {};
         
-        // Show empty charts
-        showEmptyCharts();
+        // Show empty state
+        showEmptyState();
         
         console.log('🗑️ Order history cleared from localStorage and session');
+        alert('Order history has been cleared from this device.');
+    }
+}
+
+/**
+ * Refresh data from Firebase
+ */
+async function refreshFromFirebase() {
+    console.log('🔄 Refreshing data from Firebase...');
+    
+    showLoadingState(true);
+    
+    try {
+        await loadOrderHistory();
+        
+        // Destroy and recreate charts
+        Object.values(charts).forEach(chart => {
+            if (chart && typeof chart.destroy === 'function') {
+                chart.destroy();
+            }
+        });
+        charts = {};
+        
+        if (orderHistory.length > 0) {
+            initializeCharts();
+        } else {
+            showEmptyState();
+        }
+        
+        // Show success message
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 15px;
+            font-weight: 600;
+            z-index: 1001;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        `;
+        notification.textContent = '✅ Data refreshed from Firebase!';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => notification.remove(), 3000);
+        
+    } catch (error) {
+        console.error('❌ Error refreshing from Firebase:', error);
+        alert('Failed to refresh data from Firebase. Please try again.');
+    } finally {
+        showLoadingState(false);
     }
 }
 
@@ -716,6 +1053,7 @@ window.filterOrdersBySeason = filterOrdersBySeason;
 window.goBackToMenu = goBackToMenu;
 window.exportOrderHistory = exportOrderHistory;
 window.clearOrderHistory = clearOrderHistory;
+window.refreshFromFirebase = refreshFromFirebase;
 
 // ===================================
 // INITIALIZATION ON LOAD
@@ -726,4 +1064,57 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeProfile();
 });
 
-console.log('👤 Profile script loaded successfully!');
+// ===================================
+// REAL-TIME UPDATES (OPTIONAL)
+// ===================================
+
+/**
+ * Set up real-time Firebase listener for new orders
+ */
+function setupRealtimeUpdates() {
+    if (!db || !currentUser) return;
+    
+    console.log('📡 Setting up real-time updates for profile...');
+    
+    try {
+        const q = query(
+            collection(db, 'orders'),
+            where('customer.name', '==', currentUser)
+        );
+        
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            console.log('🔄 Real-time update received');
+            
+            // Only refresh if there are actual changes
+            if (!snapshot.empty) {
+                loadOrderHistory().then(() => {
+                    if (orderHistory.length > 0) {
+                        // Update charts without full reload
+                        Object.values(charts).forEach(chart => {
+                            if (chart && typeof chart.destroy === 'function') {
+                                chart.destroy();
+                            }
+                        });
+                        charts = {};
+                        initializeCharts();
+                    }
+                });
+            }
+        });
+        
+        // Store unsubscribe function for cleanup
+        window.profileRealtimeUnsubscribe = unsubscribe;
+        
+    } catch (error) {
+        console.warn('Could not set up real-time updates:', error);
+    }
+}
+
+// Clean up real-time listener on page unload
+window.addEventListener('beforeunload', () => {
+    if (window.profileRealtimeUnsubscribe) {
+        window.profileRealtimeUnsubscribe();
+    }
+});
+
+console.log('👤 Profile script loaded successfully with Firebase integration!');
