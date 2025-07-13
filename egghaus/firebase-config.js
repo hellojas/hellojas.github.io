@@ -30,7 +30,11 @@ const firebaseConfig = {
   appId: "1:36412340657:web:35adc14508d825752fe590",
   measurementId: "G-2LSC0NJ0E0"
 };
+const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app);
 
+// 👇 Add this to expose to console:
+window.db = db;
 // ===================================
 // FIREBASE INITIALIZATION
 // ===================================
@@ -41,6 +45,8 @@ try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     console.log('🔥 Firebase initialized successfully');
+    window.db = db;
+
 } catch (error) {
     console.warn('❌ Firebase initialization failed:', error.message);
     console.warn('📱 App will work without database functionality');
