@@ -236,7 +236,7 @@ export const appConfig = {
     searchDebounceTime: 300,
     basePreparationTime: 8, // Base minutes
     timePerItem: 2, // Additional minutes per item
-    profileImagePath: 'profiles', // Folder for profile images
+    profileImagePath: 'eggs', // Folder for profile images
     analytics: {
         retentionDays: 365,
         topCustomersCount: 10,
