@@ -157,8 +157,13 @@ const debounce = (func, delay) => {
  * Show specific screen and hide others
  * @param {string} screenName - Name of screen to show
  */
+
+/**
+ * Show specific screen and hide others
+ * @param {string} screenName - Name of screen to show
+ */
 function showScreen(screenName) {
-    const screens = ['welcome', 'menu', 'productDetail', 'cart', 'queue']; // Added 'queue'
+    const screens = ['welcome', 'menu', 'productDetail', 'cart', 'queue'];
     
     screens.forEach(screen => {
         const element = getElement(`${screen}Screen`);
@@ -183,11 +188,12 @@ function showScreen(screenName) {
             displayCart();
             break;
         case 'queue':
-            initializeQueue();
+            if (typeof initializeQueue === 'function') {
+                initializeQueue();
+            }
             break;
     }
 }
-
 
 // ===================================
 // PRODUCT DISPLAY FUNCTIONS
@@ -494,9 +500,8 @@ function updateCartSummary() {
 // ===================================
 // CHECKOUT FUNCTIONS
 // ===================================
-
 /**
- * Process checkout - Updated to go to queue page
+ * Process checkout - Updated to validate name and go to queue page
  */
 function checkout() {
     if (Object.keys(cart).length === 0) {
@@ -504,12 +509,39 @@ function checkout() {
         return;
     }
     
-    let orderData;
-    try {
-        orderData = prepareOrderData();
-    } catch (error) {
+    // Get customer name and validate
+    const nameInput = document.querySelector('.customer-name-input');
+    const customerName = nameInput ? nameInput.value.trim() : '';
+    
+    if (!customerName) {
+        alert('Please enter your name to continue with the order.');
+        if (nameInput) {
+            nameInput.focus();
+            nameInput.style.borderColor = '#ff4757';
+            nameInput.style.background = '#fff5f5';
+        }
         return;
     }
+    
+    // Prepare order data
+    const orderData = {
+        items: Object.values(cart).map(item => ({
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            total: item.price * item.quantity
+        })),
+        subtotal: calculateSubtotal(),
+        tax: calculateTax(),
+        total: calculateTotal(),
+        customerInfo: {
+            name: customerName,
+            phone: "",
+            email: ""
+        },
+        instructions: document.querySelector('.instructions-input')?.value.trim() || "",
+        timestamp: new Date().toISOString()
+    };
     
     // Generate order ID
     const orderId = generateOrderId();
@@ -533,6 +565,60 @@ function checkout() {
     // Navigate to queue page
     showScreen('queue');
 }
+
+/**
+ * Generate a simple order ID
+ * @returns {string}
+ */
+function generateOrderId() {
+    const timestamp = Date.now().toString().slice(-6);
+    const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+    return `EH${timestamp}${random}`;
+}
+
+/**
+ * Calculate estimated preparation time
+ * @param {number} itemCount - Number of items in order
+ * @returns {number} - Estimated time in minutes
+ */
+function calculateEstimatedTime(itemCount) {
+    const baseTime = 8; // Base time in minutes
+    const timePerItem = 2; // Additional minutes per item
+    const randomVariation = Math.floor(Math.random() * 4) - 2; // ±2 minutes
+    return Math.max(5, baseTime + (itemCount * timePerItem) + randomVariation);
+}
+
+// ===================================
+// ADD VISUAL FEEDBACK FOR NAME INPUT
+// ===================================
+
+/**
+ * Add event listeners for name input validation
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.querySelector('.customer-name-input');
+    if (nameInput) {
+        // Reset styling when user starts typing
+        nameInput.addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.style.borderColor = '#10b981';
+                this.style.background = '#f0fff4';
+            } else {
+                this.style.borderColor = '';
+                this.style.background = '';
+            }
+        });
+        
+        // Validate on blur
+        nameInput.addEventListener('blur', function() {
+            if (!this.value.trim()) {
+                this.style.borderColor = '#ff4757';
+                this.style.background = '#fff5f5';
+            }
+        });
+    }
+});
+
 
 /**
  * Prepare order data object - Updated to collect customer info
