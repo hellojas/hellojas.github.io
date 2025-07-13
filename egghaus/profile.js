@@ -239,7 +239,8 @@ async function loadOrderHistory() {
         });
             return {
                 ...order,
-                items: processedItems
+                items: processedItems,
+                itemSeasons: processedItems.flatMap(i => i.season)
             };
         });
         
@@ -368,7 +369,11 @@ function displayOrderHistory() {
     // Filter orders by current season filter
     let filteredOrders = orderHistory;
     if (currentSeasonFilter !== 'all') {
-        filteredOrders = orderHistory.filter(order => order.season === parseInt(currentSeasonFilter));
+        filteredOrders = orderHistory.filter(order =>
+            order.items.some(item =>
+                item.season?.includes(parseInt(currentSeasonFilter))
+            )
+        );
     }
     
     // Sort by date (newest first)
