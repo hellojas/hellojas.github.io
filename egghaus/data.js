@@ -207,7 +207,7 @@ export const seasons = {
 export const guestList = [
     'jas',
     'martin',
-    'sam',
+    'samshimi',
     'eric',
     'jenni',
     'rachel',
