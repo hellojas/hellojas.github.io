@@ -427,7 +427,6 @@ function prefillCustomerInfo() {
 // ===================================
 // SCREEN NAVIGATION
 // ===================================
-
 /**
  * Show specific screen and hide others
  * @param {string} screenName - Name of screen to show
@@ -451,6 +450,9 @@ function showScreen(screenName) {
         targetScreen.classList.add('screen-active');
     }
     
+    // 🔧 ADD THIS LINE: Toggle floating links visibility based on current screen
+    toggleFloatingLinks();
+    
     // Initialize screen-specific data
     switch (screenName) {
         case 'menu':
@@ -470,7 +472,6 @@ function showScreen(screenName) {
             break;
     }
 }
-
 /**
  * Initialize name entry screen
  */
@@ -1514,10 +1515,14 @@ function startNewOrder() {
 }
 
 function toggleFloatingLinks() {
-  const onWelcomeScreen = document.getElementById("welcomeScreen")?.classList.contains("screen-active");
-  const hostLink = document.getElementById("hostLink");
-
-  hostLink.style.display = onWelcomeScreen ? "inline-block" : "none";
+    const welcomeScreen = document.getElementById("welcomeScreen");
+    const onWelcomeScreen = welcomeScreen?.classList.contains("screen-active");
+    const hostLink = document.getElementById("hostLink");
+    
+    if (hostLink) {
+        hostLink.style.display = onWelcomeScreen ? "inline-block" : "none";
+        console.log(`🔗 Host link ${onWelcomeScreen ? 'shown' : 'hidden'} (welcome screen: ${onWelcomeScreen})`);
+    }
 }
 
 window.addEventListener("DOMContentLoaded", toggleFloatingLinks);
