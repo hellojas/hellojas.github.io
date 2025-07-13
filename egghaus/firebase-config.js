@@ -1,8 +1,8 @@
 // ===================================
-// FIREBASE CONFIGURATION - UPDATED FOR QUEUE SYSTEM
+// FIREBASE CONFIGURATION - FIXED FOR BROWSER
 // ===================================
 
-// Firebase imports
+// Firebase imports using CDN URLs
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
 import { 
     getFirestore, 
@@ -389,6 +389,14 @@ window.testFirebaseConnection = async function() {
         return true;
     } catch (error) {
         console.error('❌ Firebase connection failed:', error);
+        
+        // Show helpful error message
+        if (error.code === 'permission-denied') {
+            console.error('🔒 Fix: Update Firestore Security Rules to allow read/write access');
+            console.error('📝 Go to Firebase Console > Firestore Database > Rules');
+            console.error('📝 Update rules to: allow read, write: if true;');
+        }
+        
         return false;
     }
 };
@@ -475,6 +483,9 @@ function handleFirebaseError(error) {
 
 // Export error handler for use in other modules
 window.handleFirebaseError = handleFirebaseError;
+
+// Export db for use in other modules
+export { db };
 
 // ===================================
 // INITIALIZATION
