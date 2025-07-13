@@ -409,7 +409,7 @@ function displayCartItems() {
     if (Object.keys(cart).length === 0) {
         cartItems.innerHTML = `
             <div class="empty-cart">
-                <div class="empty-cart-icon">💖</div>
+                <div class="empty-cart-icon">🛒</div>
                 <p><strong>Your cart is empty</strong></p>
                 <p>Add some delicious matcha items!</p>
             </div>
@@ -1037,7 +1037,7 @@ function addCartIconToHeader() {
     if (!menuHeader) return;
     
     const cartIcon = createElement('div', {
-        innerHTML: '💖',
+        innerHTML: '🛒',
         style: 'font-size: 1.5rem; cursor: pointer; margin-left: auto;',
         onclick: () => showScreen('cart')
     });
