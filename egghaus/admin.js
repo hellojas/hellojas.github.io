@@ -320,7 +320,7 @@ function showDataLoadedNotification(count) {
         animation: slideInUp 0.3s ease-out;
         font-size: 0.9rem;
     `;
-    notification.innerHTML = `📊 ${count} orders loaded from Firebase`;
+    notification.innerHTML = `📊 ${count} orders loaded from EggHaus Cloud Servers ☁️`;
     
     document.body.appendChild(notification);
     
