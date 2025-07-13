@@ -201,6 +201,28 @@ export const seasons = {
     }
 };
 
+
+export const seasons = [
+    {
+        id: 1,
+        name: "Season 1",
+        subtitle: "Origins",
+        description: "Where it all began - classic matcha and signature desserts"
+    },
+    {
+        id: 2,
+        name: "Season 2", 
+        subtitle: "Evolution",
+        description: "Expanded offerings with seasonal favorites and artisan breads"
+    },
+    {
+        id: 3,
+        name: "Season 3",
+        subtitle: "Innovation", 
+        description: "Bold new flavors and creative fusion creations"
+    }
+];
+
 /**
  * Guest list for exclusive event access
  */
