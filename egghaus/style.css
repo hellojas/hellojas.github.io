@@ -1095,12 +1095,22 @@ body {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
+.detail-img:hover {
+    transform: rotate(-1deg) scale(1.02);
+}
+
 .thumbnail-img {
     width: 48px;
     height: 48px;
     object-fit: cover;
     border-radius: 0.5rem;
     margin-bottom: 0.5rem;
+}
+
+
+.thumbnail-img:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 
