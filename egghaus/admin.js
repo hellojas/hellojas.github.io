@@ -26,7 +26,7 @@ let selectedOrder = null;
 let isLoggedIn = false;
 
 // Admin password (in production, this should be handled more securely)
-const ADMIN_PASSWORD = 'egghaus2024';
+const ADMIN_PASSWORD = 'eggecutives';
 
 // ===================================
 // LOGIN FUNCTIONS
