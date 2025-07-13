@@ -98,45 +98,52 @@
         </div>
 
         <!-- Cart Screen -->
-        <div class="cart-screen" id="cartScreen">
-            <div class="cart-header">
-                <button class="back-btn" onclick="showScreen('menu')" style="position: static; background: #4a5c3a; margin-right: 1rem;">←</button>
-                <h1 class="cart-title">Cart</h1>
-                <div class="cart-count-badge" id="cartCountBadge">0 items</div>
-            </div>
-            <div class="cart-content">
-                <div id="cartItems">
-                    <!-- Cart items will be populated by JavaScript -->
-                </div>
-                
-                <div class="order-instructions">
-                    <div class="instructions-label">Order Instructions</div>
-                    <textarea class="instructions-input" placeholder="Add any special instructions for your order..."></textarea>
-                </div>
-
-                <div class="cart-summary">
-                    <div class="summary-row">
-                        <span>Subtotal:</span>
-                        <span id="subtotal">$0.00</span>
-                    </div>
-                    <div class="summary-row">
-                        <span>Tax (8.5%):</span>
-                        <span id="tax">$0.00</span>
-                    </div>
-                    <div class="summary-row">
-                        <span>Total:</span>
-                        <span id="totalAmount">$0.00</span>
-                    </div>
-                </div>
-
-            
-            <button class="checkout-btn" onclick="checkout()">
-              🍵 Get Caffeinated
-            </button>
-            </div>
-        </div>
+      
+<div class="cart-screen" id="cartScreen">
+  <div class="cart-header">
+    <button class="back-btn" onclick="showScreen('menu')">←</button>
+    <h1 class="cart-title">Cart</h1>
+    <div class="cart-count-badge" id="cartCountBadge">0 items</div>
+  </div>
+  <div class="cart-content">
+    <div id="cartItems">
+      <!-- Cart items will be populated by JavaScript -->
+    </div>
+    
+    <!-- ADD CUSTOMER INFO SECTION HERE -->
+    <div class="customer-info-section">
+      <div class="customer-info-title">
+        👤 Your Information
+      </div>
+      <div class="customer-input-group">
+        <label class="customer-input-label" for="customerName">
+          Name <span class="required-asterisk">*</span>
+        </label>
+        <input 
+          type="text" 
+          id="customerName" 
+          class="customer-input customer-name-input" 
+          placeholder="Enter your name"
+          required
+          autocomplete="name"
+        >
+      </div>
+    </div>
+    
+    <div class="order-instructions">
+      <div class="instructions-label">Order Instructions</div>
+      <textarea class="instructions-input" placeholder="Add any special instructions for your order..."></textarea>
     </div>
 
+    <div class="cart-summary">
+      <!-- existing cart summary -->
+    </div>
+
+    <button class="checkout-btn" onclick="checkout()">
+      🍵 Get Caffeinated
+    </button>
+  </div>
+</div>
     
 <div class="queue-screen screen-hidden" id="queueScreen">
   <!-- Queue Header -->
