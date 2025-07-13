@@ -75,6 +75,32 @@ body {
   overflow: hidden;
 }
 
+.welcome-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 4.5rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 0.9;
+  text-transform: uppercase;
+  margin-bottom: 0;
+  z-index: 3;
+}
+
+.egghaus-text {
+  color: #5d4037;
+  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.social-text {
+  background: linear-gradient(135deg, #d4af37, #ffd700, #b8860b);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1));
+}
+
 @keyframes float {
   0% { transform: translateX(-15%) rotate(0deg); }
   100% { transform: translateX(15%) rotate(360deg); }
