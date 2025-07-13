@@ -757,6 +757,7 @@ function displayCartItems() {
     
         cartItems.appendChild(cartItem);
     });
+}
 
 
 /**
