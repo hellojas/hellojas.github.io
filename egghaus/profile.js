@@ -46,21 +46,24 @@ async function fetchOrdersFromFirebase(userName) {
         return getLocalOrderHistory(userName);
     }
 
+    const normalizedName = userName.toLowerCase(); // 👈 lowercase user input
+
     try {
-        console.log(`🔍 Fetching orders from Firebase for: ${userName}`);
+        console.log(`🔍 Fetching orders from Firebase for: ${normalizedName}`);
 
         const queries = [
             query(
                 collection(db, 'orders'),
-                where('customer.name', '==', userName),
+                where('customer.nameLower', '==', normalizedName),
                 orderBy('createdAt', 'desc')
             ),
             query(
                 collection(db, 'orders'),
-                where('customerInfo.name', '==', userName),
+                where('customerInfo.nameLower', '==', normalizedName),
                 orderBy('createdAt', 'desc')
             )
         ];
+
 
         let allOrders = [];
 
