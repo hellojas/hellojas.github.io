@@ -193,7 +193,8 @@ async function initializeProfile() {
     try {
         // Load user's order history from Firebase
         await loadOrderHistory();
-        
+        updateProfileStats();
+
         // Initialize charts if we have data
         if (orderHistory.length > 0) {
             initializeCharts();
