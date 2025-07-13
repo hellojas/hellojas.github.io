@@ -399,6 +399,12 @@ body {
   color: #3e2723;
 }
 
+.logo-img {
+  height: 36px;
+  width: auto;
+  display: block;
+}
+
 /* ===================================
    RESPONSIVE DESIGN
    =================================== */
