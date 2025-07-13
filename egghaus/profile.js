@@ -892,7 +892,6 @@ function exportOrderHistory() {
                     itemSum + ((item.caffeine || 0) * item.quantity), 0), 0),
             favoriteCategory: calculateFavoriteCategory(),
             ordersByStatus: calculateOrdersByStatus(),
-            seasonBreakdown: calculateSeasonBreakdown()
         }
     };
     
