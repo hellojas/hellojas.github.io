@@ -169,7 +169,6 @@
 .profile-section {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
     margin-left: auto;
 }
 
@@ -244,17 +243,14 @@
     overflow: hidden;
     box-shadow: 0 4px 15px rgba(93, 64, 55, 0.2);
     border: 2px solid rgba(212, 175, 55, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-.profile-name {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #5d4037;
-    max-width: 100px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    transition: color 0.3s ease;
+.profile-pic:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(93, 64, 55, 0.3);
+    border-color: #d4af37;
 }
 
 #profileImage {
