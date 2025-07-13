@@ -292,13 +292,6 @@ export const chartColors = {
  * Helper function to get current season
  */
 export function getCurrentSeason() {
-    const month = new Date().getMonth() + 1; // getMonth() returns 0-11
-    
-    for (const [seasonId, season] of Object.entries(seasons)) {
-        if (season.months.includes(month)) {
-            return parseInt(seasonId);
-        }
-    }
     return 2; // Default to spring
 }
 
@@ -357,8 +350,6 @@ export function getSeasonInfo(seasonId) {
         id: seasonId,
         name: season.name,
         subtitle: season.description || `${season.emoji} ${season.name} Collection`,
-        emoji: season.emoji,
-        months: season.months,
         description: season.description
     };
 }
