@@ -1504,6 +1504,12 @@ function handleKeyboardNavigation(event) {
     }
 }
 
+function startNewOrder() {
+    localStorage.removeItem('currentUserName');
+    window.location.href = 'order.html';
+}
+
+
 // ===================================
 // ERROR HANDLING
 // ===================================
