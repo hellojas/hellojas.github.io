@@ -509,6 +509,7 @@ function initializeCharts() {
  */
 function createCategoryChart() {
     const ctx = document.getElementById('categoryChart');
+    console.log('🧪 categoryChart canvas:', ctx); // must not be null
     if (!ctx) return;
     
     // Calculate category data from real orders
@@ -820,22 +821,26 @@ function showEmptyCharts() {
  * Show loading state
  */
 function showLoadingState(show) {
-    const loadingElements = document.querySelectorAll('.chart-container, #ordersTimeline');
-    
-    loadingElements.forEach(element => {
+    const loadingElements = document.querySelectorAll('.chart-container');
+
+    loadingElements.forEach(container => {
+        const canvas = container.querySelector('canvas');
+        const loading = container.querySelector('.chart-loading');
+
         if (show) {
-            element.innerHTML = '<div class="chart-loading">Loading your data...</div>';
+            if (canvas) canvas.style.display = 'none';
+
+            if (!loading) {
+                const div = document.createElement('div');
+                div.className = 'chart-loading';
+                div.textContent = '📊 Loading your data...';
+                container.appendChild(div);
+            }
+        } else {
+            if (canvas) canvas.style.display = 'block';
+            if (loading) loading.remove();
         }
     });
-    
-    // Show spinner in profile stats
-    if (show) {
-        const statsElements = ['totalOrders', 'totalSpent', 'favoriteSeason'];
-        statsElements.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = '...';
-        });
-    }
 }
 
 /**
