@@ -1611,7 +1611,7 @@ body {
 }
 
 .host-link {
-  bottom: 7.2rem; /* appears above New Order */
+  bottom: 7.6rem; /* appears above New Order */
   background-color: #5d4037;
   color: white;
 }
