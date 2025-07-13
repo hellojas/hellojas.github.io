@@ -42,7 +42,7 @@ export const products = [
         image: "☕",
         rating: 4.5,
         description: "Classic japanese drip iced coffee, smooth and bold. Perfect for coffee lovers seeking a refreshing caffeine kick. Today's selection is a honey aponte columbian coffee from St. Kilda. Tasting notes: grapefruit, guava, white peach.",
-        season: [1, 2, 3] // Coffee is eternal
+        season: [1, 2] // Coffee is eternal
     },
     
     // SEASON 1 ORIGINALS
@@ -88,8 +88,6 @@ export const products = [
         description: "Freshly baked artisanal bagels. Choose from various flavors and enjoy with your favorite toppings.",
         season: [1,2] // Available from season 2 onwards
     },
-    
-
     {
         id: 12,
         name: "Milk Bread French Toast",
@@ -99,6 +97,17 @@ export const products = [
         rating: 4.7,
         description: "Fluffy Japanese milk bread transformed into decadent French toast. Served with matcha butter and maple syrup.",
         season: [2] // Season 3 exclusive
+    },
+    
+    {
+        id: 13,
+        name: "Friendship",
+        price: 0.0,
+        category: "",
+        image: "🫰",
+        rating: 5.0,
+        description: "If we're in town.",
+        season: [3] // Season 3 exclusive
     },
 ];
 
