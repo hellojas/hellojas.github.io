@@ -1087,6 +1087,13 @@ body {
   animation: statusPulse 2s ease-in-out infinite;
 }
 
+.detail-img {
+    width: 64px;
+    height: 64px;
+    border-radius: 0.75rem;
+    object-fit: cover;
+}
+
 @keyframes statusPulse {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
