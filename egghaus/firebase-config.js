@@ -1,5 +1,5 @@
 // ===================================
-// FIREBASE CONFIGURATION
+// FIREBASE CONFIGURATION - UPDATED FOR QUEUE SYSTEM
 // ===================================
 
 // Firebase imports
@@ -14,13 +14,13 @@ import {
     where,
     doc,
     updateDoc,
+    onSnapshot,
     serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
 // ===================================
 // FIREBASE CONFIG
 // ===================================
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyBazsH8MbHnuFmGKlwGkVghZHMHXkNhuJA",
   authDomain: "egghaus-2dbf0.firebaseapp.com",
@@ -47,11 +47,11 @@ try {
 }
 
 // ===================================
-// ORDER MANAGEMENT FUNCTIONS
+// ENHANCED ORDER MANAGEMENT FOR QUEUE SYSTEM
 // ===================================
 
 /**
- * Save order to Firestore database
+ * Save order to Firestore database (Enhanced for queue system)
  * @param {Object} orderData - Order data object
  * @returns {Promise<string>} Order ID
  */
@@ -61,12 +61,49 @@ window.saveOrderToDatabase = async function(orderData) {
     }
 
     try {
+        // Enhanced order structure for queue system
         const orderWithMetadata = {
-            ...orderData,
-            timestamp: serverTimestamp(),
-            status: "pending",
+            // Order identification
+            orderId: orderData.orderId,
             orderNumber: generateOrderNumber(),
-            createdAt: new Date().toISOString(),
+            status: "pending", // pending, preparing, ready, completed, cancelled
+            
+            // Customer information
+            customer: {
+                name: orderData.customerInfo.name,
+                email: orderData.customerInfo.email || null,
+                phone: orderData.customerInfo.phone || null
+            },
+            
+            // Order items
+            items: orderData.items.map(item => ({
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+                total: item.total,
+                category: item.category || 'unknown'
+            })),
+            
+            // Pricing
+            pricing: {
+                subtotal: orderData.subtotal,
+                tax: orderData.tax,
+                total: orderData.total,
+                taxRate: 0.085
+            },
+            
+            // Order details
+            instructions: orderData.instructions || '',
+            estimatedTime: orderData.estimatedTime || 15,
+            orderType: 'pickup',
+            
+            // Timestamps
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            estimatedReadyTime: new Date(Date.now() + ((orderData.estimatedTime || 15) * 60000)),
+            
+            // Metadata
+            source: 'web_app',
             version: "1.0"
         };
 
@@ -84,44 +121,41 @@ window.saveOrderToDatabase = async function(orderData) {
 };
 
 /**
- * Get all orders (for admin/staff use)
- * @param {number} limit - Number of orders to fetch
- * @returns {Promise<Array>} Array of orders
+ * Listen to real-time order updates
+ * @param {string} orderId - Firebase document ID
+ * @param {Function} callback - Callback function for updates
+ * @returns {Function} Unsubscribe function
  */
-window.getAllOrders = async function(limit = 50) {
+window.listenToOrderUpdates = function(orderId, callback) {
     if (!db) {
-        throw new Error('Firebase not initialized');
+        console.warn('Firebase not available for real-time updates');
+        return () => {};
     }
 
     try {
-        const q = query(
-            collection(db, "orders"), 
-            orderBy("timestamp", "desc"),
-            // limit(limit) // Uncomment if you want to limit results
-        );
+        const orderRef = doc(db, "orders", orderId);
         
-        const querySnapshot = await getDocs(q);
-        const orders = [];
-        
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            orders.push({ 
-                id: doc.id, 
-                ...data,
-                timestamp: data.timestamp?.toDate() || new Date(data.createdAt)
-            });
+        const unsubscribe = onSnapshot(orderRef, (doc) => {
+            if (doc.exists()) {
+                const orderData = { id: doc.id, ...doc.data() };
+                console.log('📡 Real-time order update:', orderData.status);
+                callback(orderData);
+            } else {
+                console.warn('Order document not found');
+            }
+        }, (error) => {
+            console.error('❌ Error in order listener:', error);
         });
         
-        console.log(`📊 Retrieved ${orders.length} orders`);
-        return orders;
+        return unsubscribe;
     } catch (error) {
-        console.error("❌ Error getting orders:", error);
-        throw error;
+        console.error('❌ Error setting up order listener:', error);
+        return () => {};
     }
 };
 
 /**
- * Update order status
+ * Update order status with enhanced tracking
  * @param {string} orderId - Order document ID
  * @param {string} newStatus - New status value
  * @returns {Promise<boolean>} Success status
@@ -138,11 +172,23 @@ window.updateOrderStatus = async function(orderId, newStatus) {
 
     try {
         const orderRef = doc(db, "orders", orderId);
-        await updateDoc(orderRef, {
+        const updateData = {
             status: newStatus,
             updatedAt: serverTimestamp(),
             lastModified: new Date().toISOString()
-        });
+        };
+
+        // Add completion timestamp if order is completed
+        if (newStatus === 'completed') {
+            updateData.completedAt = serverTimestamp();
+        }
+
+        // Add ready timestamp if order is ready
+        if (newStatus === 'ready') {
+            updateData.readyAt = serverTimestamp();
+        }
+
+        await updateDoc(orderRef, updateData);
         
         console.log(`✅ Order ${orderId} status updated to: ${newStatus}`);
         
@@ -152,6 +198,43 @@ window.updateOrderStatus = async function(orderId, newStatus) {
         return true;
     } catch (error) {
         console.error("❌ Error updating order status:", error);
+        throw error;
+    }
+};
+
+/**
+ * Get all orders (for admin/staff use)
+ * @param {number} limit - Number of orders to fetch
+ * @returns {Promise<Array>} Array of orders
+ */
+window.getAllOrders = async function(limit = 50) {
+    if (!db) {
+        throw new Error('Firebase not initialized');
+    }
+
+    try {
+        const q = query(
+            collection(db, "orders"), 
+            orderBy("createdAt", "desc")
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const orders = [];
+        
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            orders.push({ 
+                id: doc.id, 
+                ...data,
+                createdAt: data.createdAt?.toDate() || new Date(),
+                updatedAt: data.updatedAt?.toDate() || new Date()
+            });
+        });
+        
+        console.log(`📊 Retrieved ${orders.length} orders`);
+        return orders;
+    } catch (error) {
+        console.error("❌ Error getting orders:", error);
         throw error;
     }
 };
@@ -170,7 +253,7 @@ window.getOrdersByStatus = async function(status) {
         const q = query(
             collection(db, "orders"), 
             where("status", "==", status),
-            orderBy("timestamp", "asc")
+            orderBy("createdAt", "asc")
         );
         
         const querySnapshot = await getDocs(q);
@@ -181,7 +264,8 @@ window.getOrdersByStatus = async function(status) {
             orders.push({ 
                 id: doc.id, 
                 ...data,
-                timestamp: data.timestamp?.toDate() || new Date(data.createdAt)
+                createdAt: data.createdAt?.toDate() || new Date(),
+                updatedAt: data.updatedAt?.toDate() || new Date()
             });
         });
         
@@ -189,6 +273,45 @@ window.getOrdersByStatus = async function(status) {
         return orders;
     } catch (error) {
         console.error("❌ Error getting orders by status:", error);
+        throw error;
+    }
+};
+
+/**
+ * Get today's orders for analytics
+ * @returns {Promise<Array>} Today's orders
+ */
+window.getTodaysOrders = async function() {
+    if (!db) {
+        throw new Error('Firebase not initialized');
+    }
+
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const q = query(
+            collection(db, "orders"),
+            where("createdAt", ">=", today),
+            orderBy("createdAt", "desc")
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const orders = [];
+        
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            orders.push({ 
+                id: doc.id, 
+                ...data,
+                createdAt: data.createdAt?.toDate() || new Date()
+            });
+        });
+        
+        console.log(`📅 Found ${orders.length} orders today`);
+        return orders;
+    } catch (error) {
+        console.error("❌ Error getting today's orders:", error);
         throw error;
     }
 };
@@ -203,23 +326,27 @@ window.getOrderStats = async function() {
     }
 
     try {
-        const allOrders = await getAllOrders();
+        const todaysOrders = await getTodaysOrders();
         
         const stats = {
-            total: allOrders.length,
-            pending: allOrders.filter(order => order.status === 'pending').length,
-            preparing: allOrders.filter(order => order.status === 'preparing').length,
-            ready: allOrders.filter(order => order.status === 'ready').length,
-            completed: allOrders.filter(order => order.status === 'completed').length,
-            cancelled: allOrders.filter(order => order.status === 'cancelled').length,
-            totalRevenue: allOrders
-                .filter(order => order.status === 'completed')
-                .reduce((sum, order) => sum + (order.total || 0), 0),
-            averageOrderValue: 0
+            today: {
+                total: todaysOrders.length,
+                pending: todaysOrders.filter(order => order.status === 'pending').length,
+                preparing: todaysOrders.filter(order => order.status === 'preparing').length,
+                ready: todaysOrders.filter(order => order.status === 'ready').length,
+                completed: todaysOrders.filter(order => order.status === 'completed').length,
+                cancelled: todaysOrders.filter(order => order.status === 'cancelled').length
+            },
+            revenue: {
+                today: todaysOrders
+                    .filter(order => order.status === 'completed')
+                    .reduce((sum, order) => sum + (order.pricing?.total || 0), 0),
+                averageOrder: 0
+            }
         };
         
-        if (stats.completed > 0) {
-            stats.averageOrderValue = stats.totalRevenue / stats.completed;
+        if (stats.today.completed > 0) {
+            stats.revenue.averageOrder = stats.revenue.today / stats.today.completed;
         }
         
         console.log('📊 Order statistics:', stats);
@@ -241,7 +368,7 @@ window.getOrderStats = async function() {
 function generateOrderNumber() {
     const timestamp = Date.now().toString();
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `M${timestamp.slice(-6)}${random}`;
+    return `EH${timestamp.slice(-6)}${random}`;
 }
 
 /**
@@ -266,40 +393,6 @@ window.testFirebaseConnection = async function() {
     }
 };
 
-/**
- * Clear all test orders (development only)
- * @returns {Promise<number>} Number of orders deleted
- */
-window.clearTestOrders = async function() {
-    if (!db) {
-        throw new Error('Firebase not initialized');
-    }
-
-    if (window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1')) {
-        throw new Error('This function can only be used in development');
-    }
-
-    try {
-        const orders = await getAllOrders();
-        let deletedCount = 0;
-        
-        // Note: This is a simplified version. In production, you'd use batch operations
-        for (const order of orders) {
-            if (order.customerInfo?.name === 'Guest Customer') {
-                // In a real implementation, you'd delete the document
-                console.log(`Would delete test order: ${order.id}`);
-                deletedCount++;
-            }
-        }
-        
-        console.log(`🗑️ Cleared ${deletedCount} test orders`);
-        return deletedCount;
-    } catch (error) {
-        console.error("❌ Error clearing test orders:", error);
-        throw error;
-    }
-};
-
 // ===================================
 // ANALYTICS FUNCTIONS
 // ===================================
@@ -317,7 +410,7 @@ function trackOrderEvent(eventName, eventData) {
         gtag('event', eventName, {
             event_category: 'orders',
             event_label: eventData.orderId || 'unknown',
-            value: eventData.total || 0
+            value: eventData.pricing?.total || eventData.total || 0
         });
     }
 }
@@ -348,22 +441,6 @@ window.trackAddToCart = function(product, quantity) {
         value: product.price * quantity
     });
 };
-
-// ===================================
-// INITIALIZATION
-// ===================================
-
-/**
- * Initialize Firebase connection test
- */
-document.addEventListener('DOMContentLoaded', function() {
-    // Test connection after a short delay
-    setTimeout(() => {
-        if (window.testFirebaseConnection) {
-            window.testFirebaseConnection();
-        }
-    }, 1000);
-});
 
 // ===================================
 // ERROR HANDLING
@@ -399,5 +476,22 @@ function handleFirebaseError(error) {
 // Export error handler for use in other modules
 window.handleFirebaseError = handleFirebaseError;
 
+// ===================================
+// INITIALIZATION
+// ===================================
+
+/**
+ * Initialize Firebase connection test
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // Test connection after a short delay
+    setTimeout(() => {
+        if (window.testFirebaseConnection) {
+            window.testFirebaseConnection();
+        }
+    }, 1000);
+});
+
 console.log('🔥 Firebase configuration loaded successfully!');
-console.log('📝 Remember to replace the config with your actual Firebase keys');
+console.log('🛒 Queue system integration ready!');
+console.log('📊 Real-time order tracking enabled!');
