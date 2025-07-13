@@ -238,16 +238,12 @@ export const appConfig = {
  */
 export const customerAvatars = {
     // Example mappings - these would be actual customer names
-    "john_doe": "john_doe.png",
-    "jane_smith": "jane_smith.png", 
-    "alex_chen": "alex_chen.png",
-    "sarah_wilson": "sarah_wilson.png",
-    "mike_johnson": "mike_johnson.png",
-    "emily_brown": "emily_brown.png",
-    "david_lee": "david_lee.png",
-    "lisa_garcia": "lisa_garcia.png",
-    "ryan_martinez": "ryan_martinez.png",
-    "amanda_taylor": "amanda_taylor.png"
+    "marco": "marco.png",
+    "jenni": "jenni.png", 
+    "jas": "jas.png",
+    "martin": "martin.png",
+    "eric": "eric.png",
+    "rachel": "rachel.png",
 };
 
 /**
@@ -315,6 +311,140 @@ export function getProductMetrics() {
         expectedOrders: Math.round(product.popularity / 10), // Rough estimate
         seasonalBoost: product.season.includes(getCurrentSeason()) ? 1.2 : 1.0
     }));
+}
+
+
+/**
+ * Get products filtered by season
+ * @param {number} seasonId - Season ID to filter by
+ * @returns {Array} Products available in the specified season
+ */
+export function getProductsBySeason(seasonId) {
+    if (!seasonId) return products;
+    
+    return products.filter(product => 
+        product.season && product.season.includes(seasonId)
+    );
+}
+
+/**
+ * Get season information by ID
+ * @param {number} seasonId - Season ID
+ * @returns {Object|null} Season information object
+ */
+export function getSeasonInfo(seasonId) {
+    const season = seasons[seasonId];
+    if (!season) return null;
+    
+    return {
+        id: seasonId,
+        name: season.name,
+        subtitle: season.description || `${season.emoji} ${season.name} Collection`,
+        emoji: season.emoji,
+        months: season.months,
+        description: season.description
+    };
+}
+
+/**
+ * Check if a name is on the guest list
+ * @param {string} name - Name to check
+ * @returns {boolean} True if on guest list
+ */
+export function isOnGuestList(name) {
+    if (!name || typeof name !== 'string') return false;
+    
+    const normalizedName = name.trim();
+    return guestList.some(guestName => 
+        guestName.toLowerCase() === normalizedName.toLowerCase()
+    );
+}
+
+/**
+ * Get the complete guest list
+ * @returns {Array} Array of guest names
+ */
+export function getGuestList() {
+    return [...guestList]; // Return a copy to prevent mutation
+}
+
+/**
+ * Get products by category within a specific season
+ * @param {string} category - Category to filter by ('all', 'matcha', 'coffee', 'noms')
+ * @param {number} seasonId - Season ID to filter by
+ * @returns {Array} Filtered products
+ */
+export function getProductsByCategory(category, seasonId = null) {
+    let filteredProducts = seasonId ? getProductsBySeason(seasonId) : products;
+    
+    if (category === 'all' || !category) {
+        return filteredProducts;
+    }
+    
+    return filteredProducts.filter(product => product.category === category);
+}
+
+/**
+ * Search products by name or description within a season
+ * @param {string} query - Search query
+ * @param {number} seasonId - Season ID to search within
+ * @returns {Array} Matching products
+ */
+export function searchProductsInSeason(query, seasonId = null) {
+    if (!query || !query.trim()) {
+        return seasonId ? getProductsBySeason(seasonId) : products;
+    }
+    
+    const searchTerm = query.toLowerCase().trim();
+    let searchableProducts = seasonId ? getProductsBySeason(seasonId) : products;
+    
+    return searchableProducts.filter(product => 
+        product.name.toLowerCase().includes(searchTerm) ||
+        product.description.toLowerCase().includes(searchTerm) ||
+        product.category.toLowerCase().includes(searchTerm)
+    );
+}
+
+/**
+ * Add a guest to the guest list (admin function)
+ * @param {string} name - Name to add
+ * @returns {boolean} Success status
+ */
+export function addToGuestList(name) {
+    if (!name || typeof name !== 'string') return false;
+    
+    const normalizedName = name.trim();
+    if (isOnGuestList(normalizedName)) {
+        console.log(`${normalizedName} is already on the guest list`);
+        return false;
+    }
+    
+    guestList.push(normalizedName);
+    console.log(`✅ Added ${normalizedName} to guest list`);
+    return true;
+}
+
+/**
+ * Remove a guest from the guest list (admin function)
+ * @param {string} name - Name to remove
+ * @returns {boolean} Success status
+ */
+export function removeFromGuestList(name) {
+    if (!name || typeof name !== 'string') return false;
+    
+    const normalizedName = name.trim();
+    const index = guestList.findIndex(guestName => 
+        guestName.toLowerCase() === normalizedName.toLowerCase()
+    );
+    
+    if (index === -1) {
+        console.log(`${normalizedName} is not on the guest list`);
+        return false;
+    }
+    
+    guestList.splice(index, 1);
+    console.log(`❌ Removed ${normalizedName} from guest list`);
+    return true;
 }
 
 console.log('📊 Data configuration loaded successfully!');
