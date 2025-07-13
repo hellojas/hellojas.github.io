@@ -1,17 +1,12 @@
 // ===================================
 // EGGHAUS SOCIAL - PROFILE PAGE (FIREBASE INTEGRATION)
 // ===================================
-// ✅ Chart.js 3.9.1 + Luxon adapter setup (ESM-safe)
-import * as Chart from 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.esm.js';
-import { DateTime } from 'https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/es6/luxon.min.js';
-
-// ✅ Attach to window BEFORE adapter is loaded
-window.luxon = { DateTime };
-
-// ✅ Then import the Luxon adapter AFTER DateTime is available
+// Chart.js + Luxon setup (ESM-safe)
+import Chart from 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.js';
+import * as luxon from 'https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/es6/luxon.min.js';
+window.luxon = luxon;
 import 'https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.1.0/dist/chartjs-adapter-luxon.esm.js';
 
-// ✅ Register all chart components
 Chart.register(...Chart.registerables);
 
 // (optional, but useful for debugging)
