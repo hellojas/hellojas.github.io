@@ -1,3 +1,10 @@
+import { 
+  collection, 
+  addDoc, 
+  serverTimestamp 
+} from 'firebase/firestore';
+import { db } from './firebase-config.js';
+
 // ===================================
 // GLOBAL VARIABLES
 // ===================================
@@ -500,10 +507,11 @@ function updateCartSummary() {
 // ===================================
 // CHECKOUT FUNCTIONS
 // ===================================
+
 /**
- * Process checkout - Updated to validate name and go to queue page
+ * Process checkout with Firebase
  */
-function checkout() {
+async function checkout() {
     if (Object.keys(cart).length === 0) {
         alert('Your cart is empty!');
         return;
@@ -523,8 +531,283 @@ function checkout() {
         return;
     }
     
-    // Prepare order data
-    const orderData = {
+    // Show loading state
+    const checkoutBtn = document.querySelector('.checkout-btn');
+    const originalText = checkoutBtn.textContent;
+    checkoutBtn.textContent = '⏳ Submitting Order...';
+    checkoutBtn.disabled = true;
+    
+    try {
+        // Prepare order data
+        const orderId = generateOrderId();
+        const orderData = {
+            // Basic order info
+            orderId: orderId,
+            status: 'pending',
+            
+            // Customer info
+            customer: {
+                name: customerName
+            },
+            
+            // Items
+            items: Object.values(cart).map(item => ({
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+                total: item.price * item.quantity
+            })),
+            
+            // Pricing
+            pricing: {
+                subtotal: calculateSubtotal(),
+                tax: calculateTax(), 
+                total: calculateTotal()
+            },
+            
+            // Details
+            instructions: document.querySelector('.instructions-input')?.value.trim() || '',
+            estimatedTime: calculateEstimatedTime(Object.keys(cart).length),
+            
+            // Timestamps
+            createdAt: serverTimestamp(),
+            source: 'web_app'
+        };
+        
+        // 🔥 SAVE TO FIREBASE
+        const docRef = await addDoc(collection(db, 'orders'), orderData);
+        console.log('✅ Order saved to Firebase:', docRef.id);
+        
+        // Store for queue page
+        window.currentOrder = {
+            ...orderData,
+            firebaseId: docRef.id,
+            orderTime: new Date()
+        };
+        
+        // Success!
+        alert(`🎉 Order #${orderId} submitted successfully!\n\nFirebase ID: ${docRef.id.substring(0, 8)}...`);
+        
+        // Clear cart and go to queue
+        cart = {};
+        showScreen('queue');
+        
+    } catch (error) {
+        console.error('❌ Firebase error:', error);
+        alert('⚠️ Order could not be submitted to the kitchen system. Please try again or contact staff.');
+        
+    } finally {
+        // Reset button
+        checkoutBtn.textContent = originalText;
+        checkoutBtn.disabled = false;
+    }
+}
+
+
+// ===================================
+// FIREBASE ORDER SUBMISSION SYSTEM
+// ===================================
+
+// Import Firebase functions (add to your firebase-config.js or main script)
+import { doc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from './firebase-config.js';
+
+/**
+ * Save order to Firebase Firestore
+ * @param {Object} orderData - Order data object
+ * @returns {Promise<string>} - Returns Firebase document ID
+ */
+async function saveOrderToFirebase(orderData) {
+    try {
+        // Prepare order for Firebase
+        const firebaseOrder = {
+            // Order identification
+            orderId: orderData.orderId,
+            status: 'pending', // pending, preparing, ready, completed, cancelled
+            
+            // Customer information
+            customer: {
+                name: orderData.customerInfo.name,
+                email: orderData.customerInfo.email || null,
+                phone: orderData.customerInfo.phone || null
+            },
+            
+            // Order items
+            items: orderData.items.map(item => ({
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+                total: item.total,
+                category: item.category || 'unknown'
+            })),
+            
+            // Pricing
+            pricing: {
+                subtotal: orderData.subtotal,
+                tax: orderData.tax,
+                total: orderData.total,
+                taxRate: 0.085
+            },
+            
+            // Order details
+            instructions: orderData.instructions || '',
+            estimatedTime: orderData.estimatedTime || 15,
+            orderType: 'pickup', // pickup, delivery
+            
+            // Timestamps
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            estimatedReadyTime: new Date(Date.now() + (orderData.estimatedTime * 60000)),
+            
+            // Metadata
+            source: 'web_app',
+            version: '1.0'
+        };
+        
+        // Add to Firebase collection
+        const docRef = await addDoc(collection(db, 'orders'), firebaseOrder);
+        
+        console.log('Order saved to Firebase with ID:', docRef.id);
+        return docRef.id;
+        
+    } catch (error) {
+        console.error('Error saving order to Firebase:', error);
+        throw error;
+    }
+}
+
+/**
+ * Update order status in Firebase
+ * @param {string} firebaseOrderId - Firebase document ID
+ * @param {string} newStatus - New order status
+ * @returns {Promise}
+ */
+async function updateOrderStatus(firebaseOrderId, newStatus) {
+    try {
+        const orderRef = doc(db, 'orders', firebaseOrderId);
+        await updateDoc(orderRef, {
+            status: newStatus,
+            updatedAt: serverTimestamp()
+        });
+        
+        console.log('Order status updated to:', newStatus);
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        throw error;
+    }
+}
+
+// ===================================
+// UPDATED CHECKOUT FUNCTION WITH FIREBASE
+// ===================================
+
+/**
+ * Process checkout with Firebase integration
+ */
+async function checkout() {
+    if (Object.keys(cart).length === 0) {
+        alert('Your cart is empty!');
+        return;
+    }
+    
+    // Get customer name and validate
+    const nameInput = document.querySelector('.customer-name-input');
+    const customerName = nameInput ? nameInput.value.trim() : '';
+    
+    if (!customerName) {
+        alert('Please enter your name to continue with the order.');
+        if (nameInput) {
+            nameInput.focus();
+            nameInput.style.borderColor = '#ff4757';
+            nameInput.style.background = '#fff5f5';
+        }
+        return;
+    }
+    
+    // Show loading state
+    const checkoutBtn = document.querySelector('.checkout-btn');
+    const originalText = checkoutBtn.textContent;
+    checkoutBtn.textContent = '⏳ Processing Order...';
+    checkoutBtn.disabled = true;
+    
+    try {
+        // Prepare order data
+        const orderData = {
+            items: Object.values(cart).map(item => ({
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+                total: item.price * item.quantity,
+                category: item.category || 'unknown'
+            })),
+            subtotal: calculateSubtotal(),
+            tax: calculateTax(),
+            total: calculateTotal(),
+            customerInfo: {
+                name: customerName,
+                phone: document.querySelector('.customer-phone-input')?.value.trim() || "",
+                email: document.querySelector('.customer-email-input')?.value.trim() || ""
+            },
+            instructions: document.querySelector('.instructions-input')?.value.trim() || "",
+            timestamp: new Date().toISOString()
+        };
+        
+        // Generate order ID
+        const orderId = generateOrderId();
+        orderData.orderId = orderId;
+        orderData.orderTime = new Date();
+        
+        // Calculate estimated time
+        const estimatedTime = calculateEstimatedTime(orderData.items.length);
+        orderData.estimatedTime = estimatedTime;
+        
+        // Save to Firebase
+        const firebaseOrderId = await saveOrderToFirebase(orderData);
+        
+        // Store order data for queue page (include Firebase ID)
+        window.currentOrder = {
+            ...orderData,
+            firebaseOrderId: firebaseOrderId,
+            status: 'pending'
+        };
+        
+        // Show success message
+        showOrderSubmissionSuccess(orderId, firebaseOrderId);
+        
+        // Clear cart
+        cart = {};
+        
+        // Navigate to queue page
+        showScreen('queue');
+        
+    } catch (error) {
+        console.error('Checkout error:', error);
+        
+        // Show error message but still proceed to queue (graceful degradation)
+        alert('⚠️ Order submitted locally, but may not have reached the kitchen system. Please check with staff.');
+        
+        // Create order without Firebase
+        const orderData = createLocalOrder();
+        window.currentOrder = orderData;
+        cart = {};
+        showScreen('queue');
+        
+    } finally {
+        // Reset button state
+        checkoutBtn.textContent = originalText;
+        checkoutBtn.disabled = false;
+    }
+}
+
+/**
+ * Create local order as fallback
+ * @returns {Object}
+ */
+function createLocalOrder() {
+    const nameInput = document.querySelector('.customer-name-input');
+    const customerName = nameInput ? nameInput.value.trim() : 'Guest';
+    
+    return {
         items: Object.values(cart).map(item => ({
             name: item.name,
             price: item.price,
@@ -540,32 +823,215 @@ function checkout() {
             email: ""
         },
         instructions: document.querySelector('.instructions-input')?.value.trim() || "",
-        timestamp: new Date().toISOString()
-    };
-    
-    // Generate order ID
-    const orderId = generateOrderId();
-    orderData.orderId = orderId;
-    orderData.orderTime = new Date();
-    
-    // Calculate estimated time based on items
-    const estimatedTime = calculateEstimatedTime(orderData.items.length);
-    
-    // Store order data for queue page
-    window.currentOrder = {
-        ...orderData,
-        estimatedTime: estimatedTime,
+        orderId: generateOrderId(),
         orderTime: new Date(),
-        status: 'confirmed'
+        estimatedTime: calculateEstimatedTime(Object.keys(cart).length),
+        status: 'pending'
     };
-    
-    // Clear cart
-    cart = {};
-    
-    // Navigate to queue page
-    showScreen('queue');
 }
 
+/**
+ * Show order submission success message
+ * @param {string} orderId - Local order ID
+ * @param {string} firebaseOrderId - Firebase document ID
+ */
+function showOrderSubmissionSuccess(orderId, firebaseOrderId) {
+    const message = `🎉 Order submitted successfully!
+
+Order #: ${orderId}
+Database ID: ${firebaseOrderId.substring(0, 8)}...
+
+Your order has been sent to the kitchen!`;
+    
+    // Create custom success popup (optional)
+    setTimeout(() => {
+        alert(message);
+    }, 500);
+}
+
+// ===================================
+// FIREBASE ORDER MANAGEMENT FUNCTIONS
+// ===================================
+
+/**
+ * Get order from Firebase by ID
+ * @param {string} firebaseOrderId - Firebase document ID
+ * @returns {Promise<Object>}
+ */
+async function getOrderFromFirebase(firebaseOrderId) {
+    try {
+        const docRef = doc(db, 'orders', firebaseOrderId);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+            return { id: docSnap.id, ...docSnap.data() };
+        } else {
+            throw new Error('Order not found');
+        }
+    } catch (error) {
+        console.error('Error getting order:', error);
+        throw error;
+    }
+}
+
+/**
+ * Listen to order status changes (real-time updates)
+ * @param {string} firebaseOrderId - Firebase document ID
+ * @param {Function} callback - Callback function for status updates
+ */
+function listenToOrderUpdates(firebaseOrderId, callback) {
+    try {
+        const orderRef = doc(db, 'orders', firebaseOrderId);
+        
+        const unsubscribe = onSnapshot(orderRef, (doc) => {
+            if (doc.exists()) {
+                const orderData = { id: doc.id, ...doc.data() };
+                callback(orderData);
+            }
+        });
+        
+        // Store unsubscribe function for cleanup
+        window.orderListener = unsubscribe;
+        
+    } catch (error) {
+        console.error('Error setting up order listener:', error);
+    }
+}
+
+/**
+ * Stop listening to order updates
+ */
+function stopOrderListener() {
+    if (window.orderListener) {
+        window.orderListener();
+        window.orderListener = null;
+    }
+}
+
+// ===================================
+// ENHANCED QUEUE PAGE WITH FIREBASE
+// ===================================
+
+/**
+ * Initialize queue with Firebase real-time updates
+ */
+function initializeQueue() {
+    if (!window.currentOrder) return;
+    
+    const order = window.currentOrder;
+    
+    // Update order information
+    updateQueueOrderInfo(order);
+    
+    // Display order summary
+    displayQueueOrderSummary(order);
+    
+    // Start countdown timer
+    startQueueTimer(order.estimatedTime);
+    
+    // Start queue position simulation
+    startQueuePosition();
+    
+    // Update order status
+    updateOrderStatus('preparing');
+    
+    // Listen for real-time Firebase updates (if Firebase ID exists)
+    if (order.firebaseOrderId) {
+        listenToOrderUpdates(order.firebaseOrderId, (updatedOrder) => {
+            console.log('Order status updated from Firebase:', updatedOrder.status);
+            
+            // Update local order data
+            window.currentOrder.status = updatedOrder.status;
+            
+            // Update UI based on Firebase status
+            updateQueueFromFirebase(updatedOrder);
+        });
+    }
+}
+
+/**
+ * Update queue UI from Firebase order data
+ * @param {Object} firebaseOrder - Order data from Firebase
+ */
+function updateQueueFromFirebase(firebaseOrder) {
+    const statusMapping = {
+        'pending': 'confirmed',
+        'preparing': 'preparing', 
+        'ready': 'ready',
+        'completed': 'completed'
+    };
+    
+    const uiStatus = statusMapping[firebaseOrder.status] || firebaseOrder.status;
+    updateOrderStatus(uiStatus);
+    
+    if (firebaseOrder.status === 'ready') {
+        showOrderReady();
+    }
+}
+
+/**
+ * Clean up Firebase listeners when leaving queue
+ */
+function backToMenu() {
+    // Stop Firebase listener
+    stopOrderListener();
+    
+    // Clear any running timer
+    if (window.queueTimer) {
+        clearInterval(window.queueTimer);
+        window.queueTimer = null;
+    }
+    
+    // Clear current order
+    window.currentOrder = null;
+    
+    // Navigate to menu
+    showScreen('menu');
+}
+
+// ===================================
+// FIREBASE ADMIN FUNCTIONS (Optional)
+// ===================================
+
+/**
+ * Get all orders for admin dashboard
+ * @returns {Promise<Array>}
+ */
+async function getAllOrders() {
+    try {
+        const ordersCollection = collection(db, 'orders');
+        const orderSnapshot = await getDocs(ordersCollection);
+        
+        return orderSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+    } catch (error) {
+        console.error('Error getting orders:', error);
+        throw error;
+    }
+}
+
+/**
+ * Get orders by status
+ * @param {string} status - Order status to filter by
+ * @returns {Promise<Array>}
+ */
+async function getOrdersByStatus(status) {
+    try {
+        const ordersCollection = collection(db, 'orders');
+        const q = query(ordersCollection, where('status', '==', status));
+        const querySnapshot = await getDocs(q);
+        
+        return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+    } catch (error) {
+        console.error('Error getting orders by status:', error);
+        throw error;
+    }
+}
 /**
  * Generate a simple order ID
  * @returns {string}
@@ -1154,6 +1620,121 @@ function handleKeyboardNavigation(event) {
                     break;
             }
         }
+    }
+}
+
+
+// ===================================
+// FIREBASE ORDER SUBMISSION SYSTEM
+// ===================================
+
+// Import Firebase functions (add to your firebase-config.js or main script)
+// import { doc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+// import { db } from './firebase-config.js';
+
+/**
+ * Save order to Firebase Firestore
+ * @param {Object} orderData - Order data object
+ * @returns {Promise<string>} - Returns Firebase document ID
+ */
+async function saveOrderToFirebase(orderData) {
+    try {
+        // Prepare order for Firebase
+        const firebaseOrder = {
+            // Order identification
+            orderId: orderData.orderId,
+            status: 'pending', // pending, preparing, ready, completed, cancelled
+            
+            // Customer information
+            customer: {
+                name: orderData.customerInfo.name,
+                email: orderData.customerInfo.email || null,
+                phone: orderData.customerInfo.phone || null
+            },
+            
+            // Order items
+            items: orderData.items.map(item => ({
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+                total: item.total,
+                category: item.category || 'unknown'
+            })),
+            
+            // Pricing
+            pricing: {
+                subtotal: orderData.subtotal,
+                tax: orderData.tax,
+                total: orderData.total,
+                taxRate: 0.085
+            },
+            
+            // Order details
+            instructions: orderData.instructions || '',
+            estimatedTime: orderData.estimatedTime || 15,
+            orderType: 'pickup', // pickup, delivery
+            
+            // Timestamps
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            estimatedReadyTime: new Date(Date.now() + (orderData.estimatedTime * 60000)),
+            
+            // Metadata
+            source: 'web_app',
+            version: '1.0'
+        };
+        
+        // Add to Firebase collection
+        const docRef = await addDoc(collection(db, 'orders'), firebaseOrder);
+        
+        console.log('Order saved to Firebase with ID:', docRef.id);
+        return docRef.id;
+        
+    } catch (error) {
+        console.error('Error saving order to Firebase:', error);
+        throw error;
+    }
+}
+
+/**
+ * Update order status in Firebase
+ * @param {string} firebaseOrderId - Firebase document ID
+ * @param {string} newStatus - New order status
+ * @returns {Promise}
+ */
+async function updateOrderStatus(firebaseOrderId, newStatus) {
+    try {
+        const orderRef = doc(db, 'orders', firebaseOrderId);
+        await updateDoc(orderRef, {
+            status: newStatus,
+            updatedAt: serverTimestamp()
+        });
+        
+        console.log('Order status updated to:', newStatus);
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        throw error;
+    }
+}
+
+/**
+ * Test function to verify Firebase is working
+ */
+async function testFirebaseConnection() {
+    try {
+        const testOrder = {
+            test: true,
+            message: 'Firebase connection test',
+            timestamp: serverTimestamp()
+        };
+        
+        const docRef = await addDoc(collection(db, 'test'), testOrder);
+        console.log('✅ Firebase test successful! Document ID:', docRef.id);
+        alert('🔥 Firebase is connected and working!');
+        
+    } catch (error) {
+        console.error('❌ Firebase test failed:', error);
+        alert('⚠️ Firebase connection failed: ' + error.message);
     }
 }
 
