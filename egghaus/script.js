@@ -741,7 +741,9 @@ function displayCartItems() {
         const cartItem = createElement('div', {
             className: 'cart-item'
         }, `
-            <div class="cart-item-image">${item.image}</div>
+            <div class="cart-item-image">
+              <img src="path/to/image.jpg" alt="Cart item" />
+            </div>
             <div class="cart-item-info">
                 <div class="cart-item-name">${item.name}</div>
                 <div class="cart-item-price">${formatPrice(item.price * item.quantity)}</div>
