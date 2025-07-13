@@ -842,6 +842,9 @@ body {
     height: 50px !important;
     font-size: 1.5rem !important;
   }
+
+  .egghaus-text { font-size: 2.4rem; }
+  .social-text { font-size: 2.8rem; }
 }
 
 /* ===================================
