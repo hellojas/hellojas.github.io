@@ -21,6 +21,12 @@ import {
     getSeasonInfo
 } from './data.js';
 
+import 'https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.1.0';
+
+import Chart from 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js';
+
+// ✅ Add this if it’s missing:
+Chart.register(...Chart.registerables);
 // ===================================
 // GLOBAL VARIABLES
 // ===================================
