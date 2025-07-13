@@ -158,7 +158,7 @@ const debounce = (func, delay) => {
  * @param {string} screenName - Name of screen to show
  */
 function showScreen(screenName) {
-    const screens = ['welcome', 'menu', 'productDetail', 'cart'];
+    const screens = ['welcome', 'menu', 'productDetail', 'cart', 'queue']; // Added 'queue'
     
     screens.forEach(screen => {
         const element = getElement(`${screen}Screen`);
@@ -182,8 +182,12 @@ function showScreen(screenName) {
         case 'cart':
             displayCart();
             break;
+        case 'queue':
+            initializeQueue();
+            break;
     }
 }
+
 
 // ===================================
 // PRODUCT DISPLAY FUNCTIONS
@@ -492,7 +496,7 @@ function updateCartSummary() {
 // ===================================
 
 /**
- * Process checkout
+ * Process checkout - Updated to go to queue page
  */
 function checkout() {
     if (Object.keys(cart).length === 0) {
@@ -500,33 +504,53 @@ function checkout() {
         return;
     }
     
-    const orderData = prepareOrderData();
-    
-    // Try to save to database if Firebase is available
-    if (window.saveOrderToDatabase) {
-        saveOrderToDatabase(orderData)
-            .then(orderId => {
-                if (orderId) {
-                    showOrderConfirmation(orderData, orderId);
-                } else {
-                    showBasicOrderConfirmation(orderData);
-                }
-            })
-            .catch(error => {
-                console.error('Error saving order:', error);
-                showBasicOrderConfirmation(orderData);
-            });
-    } else {
-        showBasicOrderConfirmation(orderData);
+    let orderData;
+    try {
+        orderData = prepareOrderData();
+    } catch (error) {
+        return;
     }
+    
+    // Generate order ID
+    const orderId = generateOrderId();
+    orderData.orderId = orderId;
+    orderData.orderTime = new Date();
+    
+    // Calculate estimated time based on items
+    const estimatedTime = calculateEstimatedTime(orderData.items.length);
+    
+    // Store order data for queue page
+    window.currentOrder = {
+        ...orderData,
+        estimatedTime: estimatedTime,
+        orderTime: new Date(),
+        status: 'confirmed'
+    };
+    
+    // Clear cart
+    cart = {};
+    
+    // Navigate to queue page
+    showScreen('queue');
 }
 
 /**
- * Prepare order data object
+ * Prepare order data object - Updated to collect customer info
  * @returns {Object}
  */
 function prepareOrderData() {
+    const nameInput = document.querySelector('.customer-name-input');
+    const emailInput = document.querySelector('.customer-email-input');
+    const phoneInput = document.querySelector('.customer-phone-input');
     const instructionsInput = document.querySelector('.instructions-input');
+    
+    // Ensure customer name is provided
+    const customerName = nameInput ? nameInput.value.trim() : '';
+    if (!customerName) {
+        alert('Please enter your name to continue with the order.');
+        if (nameInput) nameInput.focus();
+        throw new Error('Customer name is required');
+    }
     
     return {
         items: Object.values(cart).map(item => ({
@@ -539,14 +563,15 @@ function prepareOrderData() {
         tax: calculateTax(),
         total: calculateTotal(),
         customerInfo: {
-            name: "Guest Customer",
-            phone: "",
-            email: ""
+            name: customerName,
+            phone: phoneInput ? phoneInput.value.trim() : "",
+            email: emailInput ? emailInput.value.trim() : ""
         },
-        instructions: instructionsInput ? instructionsInput.value || "" : "",
+        instructions: instructionsInput ? instructionsInput.value.trim() : "",
         timestamp: new Date().toISOString()
     };
 }
+
 
 /**
  * Show order confirmation with order ID
@@ -584,6 +609,30 @@ function clearCartAndReturnToMenu() {
     cart = {};
     showScreen('menu');
 }
+
+
+/**
+ * Generate a simple order ID
+ * @returns {string}
+ */
+function generateOrderId() {
+    const timestamp = Date.now().toString().slice(-6);
+    const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+    return `EH${timestamp}${random}`;
+}
+
+/**
+ * Calculate estimated preparation time
+ * @param {number} itemCount - Number of items in order
+ * @returns {number} - Estimated time in minutes
+ */
+function calculateEstimatedTime(itemCount) {
+    const baseTime = 8; // Base time in minutes
+    const timePerItem = 2; // Additional minutes per item
+    const randomVariation = Math.floor(Math.random() * 4) - 2; // ±2 minutes
+    return Math.max(5, baseTime + (itemCount * timePerItem) + randomVariation);
+}
+
 
 // ===================================
 // INITIALIZATION
@@ -723,3 +772,302 @@ window.addEventListener('load', () => {
         console.log(`🚀 App loaded in ${loadTime}ms`);
     }
 });
+
+
+// ===================================
+// QUEUE PAGE FUNCTIONS
+// ===================================
+
+/**
+ * Initialize the queue page
+ */
+function initializeQueue() {
+    if (!window.currentOrder) return;
+    
+    const order = window.currentOrder;
+    
+    // Update order information
+    updateQueueOrderInfo(order);
+    
+    // Display order summary
+    displayQueueOrderSummary(order);
+    
+    // Start countdown timer
+    startQueueTimer(order.estimatedTime);
+    
+    // Start queue position simulation
+    startQueuePosition();
+    
+    // Update order status
+    updateOrderStatus('preparing');
+}
+
+/**
+ * Update order information display
+ * @param {Object} order - Order data
+ */
+function updateQueueOrderInfo(order) {
+    const elements = {
+        queueOrderId: `Order #${order.orderId}`,
+        queueCustomerName: order.customerInfo.name,
+        queueEstimatedTime: `${order.estimatedTime} min`,
+        queueOrderTime: order.orderTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+    };
+    
+    Object.entries(elements).forEach(([id, text]) => {
+        const element = getElement(id);
+        if (element) element.textContent = text;
+    });
+}
+
+/**
+ * Display order summary in queue page
+ * @param {Object} order - Order data
+ */
+function displayQueueOrderSummary(order) {
+    const summaryElement = getElement('queueOrderSummary');
+    if (!summaryElement) return;
+    
+    const itemsList = order.items.map(item => `
+        <div class="queue-order-item">
+            <span class="queue-item-quantity">${item.quantity}x</span>
+            <span class="queue-item-name">${item.name}</span>
+            <span class="queue-item-price">${formatPrice(item.total)}</span>
+        </div>
+    `).join('');
+    
+    summaryElement.innerHTML = `
+        <div class="queue-items-list">
+            ${itemsList}
+        </div>
+        <div class="queue-order-total">
+            <strong>Total: ${formatPrice(order.total)}</strong>
+        </div>
+    `;
+}
+
+/**
+ * Start countdown timer for queue
+ * @param {number} minutes - Initial minutes
+ */
+function startQueueTimer(minutes) {
+    let timeLeft = minutes * 60; // Convert to seconds
+    
+    const timerElement = getElement('queueTimer');
+    if (!timerElement) return;
+    
+    const updateTimer = () => {
+        const mins = Math.floor(timeLeft / 60);
+        const secs = timeLeft % 60;
+        
+        timerElement.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        
+        if (timeLeft > 0) {
+            timeLeft--;
+            
+            // Update status at certain intervals
+            const totalTime = minutes * 60;
+            const progress = (totalTime - timeLeft) / totalTime;
+            
+            if (progress > 0.3 && progress < 0.7) {
+                updateOrderStatus('preparing');
+            } else if (progress > 0.7 && progress < 0.95) {
+                updateOrderStatus('almost-ready');
+            } else if (timeLeft === 0) {
+                updateOrderStatus('ready');
+                showOrderReady();
+                return;
+            }
+        }
+    };
+    
+    // Update immediately
+    updateTimer();
+    
+    // Update every second
+    window.queueTimer = setInterval(updateTimer, 1000);
+}
+
+/**
+ * Start queue position simulation
+ */
+function startQueuePosition() {
+    const positionElement = getElement('queuePosition');
+    if (!positionElement) return;
+    
+    // Start with 2-4 people ahead
+    let currentPosition = Math.floor(Math.random() * 3) + 2;
+    
+    const updatePosition = () => {
+        positionElement.textContent = currentPosition;
+        
+        if (currentPosition > 0) {
+            setTimeout(() => {
+                currentPosition--;
+                updatePosition();
+            }, 45000 + Math.random() * 30000); // 45-75 seconds between updates
+        }
+    };
+    
+    updatePosition();
+}
+
+/**
+ * Update order status
+ * @param {string} status - New status
+ */
+function updateOrderStatus(status) {
+    const statusElement = getElement('queueStatus');
+    if (!statusElement) return;
+    
+    const statusConfig = {
+        'confirmed': {
+            text: 'Order Confirmed',
+            color: '#d4af37',
+            icon: '✅'
+        },
+        'preparing': {
+            text: 'Preparing Your Order',
+            color: '#ff6b35',
+            icon: '👩‍🍳'
+        },
+        'almost-ready': {
+            text: 'Almost Ready!',
+            color: '#ffa500',
+            icon: '⏰'
+        },
+        'ready': {
+            text: 'Order Ready!',
+            color: '#10b981',
+            icon: '🎉'
+        }
+    };
+    
+    const config = statusConfig[status];
+    if (config) {
+        statusElement.textContent = `${config.icon} ${config.text}`;
+        statusElement.style.background = config.color;
+    }
+}
+
+/**
+ * Show order ready notification
+ */
+function showOrderReady() {
+    if (window.queueTimer) {
+        clearInterval(window.queueTimer);
+    }
+    
+    const timerElement = getElement('queueTimer');
+    if (timerElement) {
+        timerElement.textContent = 'Ready!';
+        timerElement.style.color = '#10b981';
+        timerElement.style.fontWeight = 'bold';
+    }
+    
+    // Show notification
+    setTimeout(() => {
+        alert('🎉 Your order is ready for pickup!\n\nPlease come to the counter to collect your delicious Egghaus Social order!');
+    }, 1000);
+    
+    // Add pickup button
+    addPickupButton();
+}
+
+/**
+ * Add pickup confirmation button
+ */
+function addPickupButton() {
+    const actionsElement = getElement('queueActions');
+    if (!actionsElement) return;
+    
+    const pickupBtn = document.createElement('button');
+    pickupBtn.className = 'queue-pickup-btn';
+    pickupBtn.textContent = '✅ Confirm Pickup';
+    pickupBtn.onclick = confirmPickup;
+    
+    actionsElement.appendChild(pickupBtn);
+}
+
+/**
+ * Confirm order pickup
+ */
+function confirmPickup() {
+    alert('Thank you for choosing Egghaus Social! 🍵\n\nEnjoy your order and have a great day!');
+    backToMenu();
+}
+
+/**
+ * Go back to menu from queue
+ */
+function backToMenu() {
+    // Clear any running timer
+    if (window.queueTimer) {
+        clearInterval(window.queueTimer);
+        window.queueTimer = null;
+    }
+    
+    // Clear current order
+    window.currentOrder = null;
+    
+    // Navigate to menu
+    showScreen('menu');
+}
+
+/**
+ * Share order details
+ */
+function shareOrder() {
+    if (!window.currentOrder) return;
+    
+    const order = window.currentOrder;
+    const shareText = `My Egghaus Social order #${order.orderId} is being prepared! 🍵\n\nItems: ${order.items.map(item => `${item.quantity}x ${item.name}`).join(', ')}\n\nEstimated time: ${order.estimatedTime} minutes`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'My Egghaus Social Order',
+            text: shareText
+        });
+    } else {
+        // Fallback for browsers without native sharing
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(shareText).then(() => {
+                alert('Order details copied to clipboard!');
+            });
+        } else {
+            alert(shareText);
+        }
+    }
+}
+
+
+// ===================================
+// UPDATED KEYBOARD NAVIGATION
+// ===================================
+
+/**
+ * Handle keyboard navigation - Updated to include queue page
+ * @param {KeyboardEvent} event - Keyboard event
+ */
+function handleKeyboardNavigation(event) {
+    // Escape key to go back
+    if (event.key === 'Escape') {
+        const currentScreen = document.querySelector('.screen-active');
+        if (currentScreen) {
+            const screenId = currentScreen.id;
+            switch (screenId) {
+                case 'productDetailScreen':
+                case 'cartScreen':
+                    showScreen('menu');
+                    break;
+                case 'queueScreen':
+                    // Don't allow escape from queue - they need to wait or go back via button
+                    break;
+                case 'menuScreen':
+                    showScreen('welcome');
+                    break;
+            }
+        }
+    }
+}
+
