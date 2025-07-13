@@ -20,6 +20,49 @@ import { db } from './firebase-config.js';
 let cart = {};
 let currentProduct = {};
 let currentQuantity = 1;
+let currentUserName = '';
+let userProfileImage = '';
+
+// ===================================
+// GUEST LIST CONFIGURATION
+// ===================================
+const guestList = [
+    'jas',
+    'alex',
+    'sarah',
+    'john',
+    'emily',
+    'mike',
+    'jessica',
+    'david',
+    'amanda',
+    'chris'
+    // Add more approved guests here
+];
+
+// Helper function to check if user is on guest list
+function isOnGuestList(name) {
+    return guestList.includes(name.toLowerCase().trim());
+}
+
+// Admin function to check guest list (for debugging)
+window.checkGuestList = function() {
+    console.log('🎫 Current Guest List:', guestList);
+    console.log('📊 Total VIP guests:', guestList.length);
+    return guestList;
+};
+
+// Admin function to add guest (for debugging)
+window.addToGuestList = function(name) {
+    const cleanName = name.toLowerCase().trim();
+    if (!guestList.includes(cleanName)) {
+        guestList.push(cleanName);
+        console.log(`✅ Added ${cleanName} to guest list`);
+    } else {
+        console.log(`⚠️ ${cleanName} is already on the guest list`);
+    }
+    return guestList;
+};
 
 // ===================================
 // PRODUCT DATA
@@ -186,6 +229,197 @@ function calculateEstimatedTime(itemCount) {
 }
 
 // ===================================
+// NAME ENTRY MODAL FUNCTIONS
+// ===================================
+
+/**
+ * Show name entry dialog
+ */
+function showNameDialog() {
+    const modal = getElement('nameModalOverlay');
+    const input = getElement('nameModalInput');
+    
+    if (modal && input) {
+        modal.style.display = 'flex';
+        
+        // Focus on input after animation
+        setTimeout(() => {
+            input.focus();
+            input.value = '';
+        }, 300);
+        
+        // Add Enter key listener
+        input.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                submitNameFromDialog();
+            }
+        });
+        
+        // Add input validation
+        input.addEventListener('input', function() {
+            const submitBtn = document.querySelector('.name-modal-submit');
+            if (submitBtn) {
+                submitBtn.disabled = !this.value.trim();
+            }
+        });
+        
+        // Click outside to close
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                closeNameDialog();
+            }
+        });
+        
+        // Disable submit button initially
+        const submitBtn = document.querySelector('.name-modal-submit');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+        }
+    }
+}
+
+/**
+ * Close name entry dialog
+ */
+function closeNameDialog() {
+    const modal = getElement('nameModalOverlay');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
+ * Submit user name from dialog and proceed to menu
+ */
+function submitNameFromDialog() {
+    const nameInput = getElement('nameModalInput');
+    if (!nameInput) return;
+    
+    const name = nameInput.value.trim();
+    if (!name) {
+        // Shake the input if empty
+        nameInput.style.animation = 'shake 0.5s ease-in-out';
+        nameInput.focus();
+        setTimeout(() => {
+            nameInput.style.animation = '';
+        }, 500);
+        return;
+    }
+    
+    // 🎫 Early guest list check
+    if (!isOnGuestList(name)) {
+        // Show early warning but allow them to continue
+        const warningMessage = `⚠️ Guest List Notice\n\nHi ${name}! We don't see you on our VIP guest list.\n\nYou can browse the menu, but you'll need to be on the guest list to place an order.\n\nContact the organizers if you believe this is an error.`;
+        
+        setTimeout(() => alert(warningMessage), 500);
+        
+        // Add visual indicator but don't block
+        nameInput.style.borderColor = '#ffa500';
+        nameInput.style.background = '#fff8e1';
+        
+        console.log(`⚠️ Early guest list warning for: ${name}`);
+    } else {
+        console.log(`✅ VIP guest confirmed: ${name}`);
+        
+        // Green indicator for VIP guests
+        nameInput.style.borderColor = '#10b981';
+        nameInput.style.background = '#f0fff4';
+    }
+    
+    // Store the user's name
+    currentUserName = name;
+    console.log('👤 User name set:', currentUserName);
+    
+    // Set up profile image path
+    userProfileImage = `vips/${name.toLowerCase()}.png`;
+    
+    // Show loading state on button
+    const submitBtn = document.querySelector('.name-modal-submit');
+    if (submitBtn) {
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Loading...';
+        submitBtn.disabled = true;
+        
+        // Simulate brief loading
+        setTimeout(() => {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+            
+            // Close modal and proceed to menu
+            closeNameDialog();
+            showScreen('menu');
+        }, 800);
+    } else {
+        closeNameDialog();
+        showScreen('menu');
+    }
+}
+
+/**
+ * Set up profile display in menu
+ */
+function setupProfile() {
+    const profileName = getElement('profileName');
+    const profileImage = getElement('profileImage');
+    const profileFallback = getElement('profileFallback');
+    const profilePic = getElement('profilePic');
+    
+    if (profileName) {
+        // Add VIP status indicator
+        const vipStatus = isOnGuestList(currentUserName) ? ' 🌟' : ' ⚠️';
+        profileName.textContent = (currentUserName || 'Guest') + vipStatus;
+        
+        // Color coding
+        if (isOnGuestList(currentUserName)) {
+            profileName.style.color = '#10b981'; // Green for VIP
+        } else {
+            profileName.style.color = '#ffa500'; // Orange for non-VIP
+        }
+    }
+    
+    if (currentUserName && profileImage && profileFallback && profilePic) {
+        // Add loading class
+        profilePic.classList.add('loading');
+        
+        // Try to load user's profile image
+        profileImage.onload = function() {
+            console.log('✅ Profile image loaded successfully:', userProfileImage);
+            profileImage.classList.add('loaded');
+            profileFallback.classList.add('hidden');
+            profilePic.classList.remove('loading');
+        };
+        
+        profileImage.onerror = function() {
+            console.log('⚠️ Profile image not found in /vips/ directory, using fallback:', userProfileImage);
+            profileImage.style.display = 'none';
+            profileFallback.style.display = 'flex';
+            profilePic.classList.remove('loading');
+            
+            // Use first letter of name as fallback
+            profileFallback.textContent = currentUserName.charAt(0).toUpperCase();
+        };
+        
+        // Set the image source
+        profileImage.src = userProfileImage;
+        profileImage.alt = `${currentUserName}'s profile picture`;
+    }
+}
+
+/**
+ * Pre-fill customer name in cart
+ */
+function prefillCustomerInfo() {
+    const customerNameInput = getElement('customerName');
+    if (customerNameInput && currentUserName) {
+        customerNameInput.value = currentUserName;
+        // Make it readonly since they already entered it
+        customerNameInput.readOnly = true;
+        customerNameInput.style.background = '#f0f0f0';
+        customerNameInput.style.color = '#666';
+    }
+}
+
+// ===================================
 // SCREEN NAVIGATION
 // ===================================
 
@@ -216,13 +450,47 @@ function showScreen(screenName) {
     switch (screenName) {
         case 'menu':
             displayProducts();
+            setupProfile();
             break;
         case 'cart':
             displayCart();
+            prefillCustomerInfo();
             break;
         case 'queue':
             initializeQueue();
             break;
+    }
+}
+
+/**
+ * Initialize name entry screen
+ */
+function initializeNameEntry() {
+    const nameInput = getElement('userNameInput');
+    if (nameInput) {
+        nameInput.focus();
+        nameInput.value = '';
+        
+        // Add Enter key listener
+        nameInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                submitName();
+            }
+        });
+        
+        // Add input validation
+        nameInput.addEventListener('input', function() {
+            const continueBtn = document.querySelector('.continue-btn');
+            if (continueBtn) {
+                continueBtn.disabled = !this.value.trim();
+            }
+        });
+    }
+    
+    // Disable continue button initially
+    const continueBtn = document.querySelector('.continue-btn');
+    if (continueBtn) {
+        continueBtn.disabled = true;
     }
 }
 
@@ -583,9 +851,9 @@ async function checkout() {
         return;
     }
     
-    // Get customer name and validate
+    // Get customer name (should be pre-filled from name entry)
     const nameInput = document.querySelector('.customer-name-input');
-    const customerName = nameInput ? nameInput.value.trim() : '';
+    const customerName = nameInput ? nameInput.value.trim() : currentUserName;
     
     if (!customerName) {
         alert('Please enter your name to continue with the order.');
@@ -596,6 +864,30 @@ async function checkout() {
         }
         return;
     }
+    
+    // 🎫 GUEST LIST CHECK
+    if (!isOnGuestList(customerName)) {
+        // Show exclusive error message
+        const errorMessage = `🚫 Access Denied\n\nSorry ${customerName}, you're not on the guest list for this exclusive Egghaus Social event.\n\nPlease contact the organizers if you believe this is an error.`;
+        
+        alert(errorMessage);
+        
+        // Add visual feedback to name input
+        if (nameInput) {
+            nameInput.style.borderColor = '#ff4757';
+            nameInput.style.background = '#fff5f5';
+            nameInput.style.animation = 'shake 0.5s ease-in-out';
+            
+            setTimeout(() => {
+                nameInput.style.animation = '';
+            }, 500);
+        }
+        
+        console.log(`🚫 Guest list check failed for: ${customerName}`);
+        return; // Stop checkout process
+    }
+    
+    console.log(`✅ Guest list check passed for: ${customerName}`);
     
     // Show loading state
     const checkoutBtn = document.querySelector('.checkout-btn');
@@ -1026,6 +1318,7 @@ function shareOrder() {
  */
 function initializeApp() {
     console.log('🚀 Initializing Egghaus Social app...');
+    console.log(`🎫 Guest list loaded with ${guestList.length} VIP members`);
     
     // Add cart icon to menu header
     addCartIconToHeader();
@@ -1050,13 +1343,27 @@ function addCartIconToHeader() {
     const menuHeader = document.querySelector('.menu-header');
     if (!menuHeader) return;
     
+    const profileSection = menuHeader.querySelector('.profile-section');
+    if (!profileSection) return;
+    
     const cartIcon = createElement('div', {
         innerHTML: '🛒',
-        style: 'font-size: 1.5rem; cursor: pointer; margin-left: auto;',
+        style: 'font-size: 1.5rem; cursor: pointer; margin-right: 1rem; padding: 0.5rem; border-radius: 50%; background: rgba(212, 175, 55, 0.1); transition: all 0.3s ease;',
         onclick: () => showScreen('cart')
     });
     
-    menuHeader.appendChild(cartIcon);
+    cartIcon.addEventListener('mouseenter', () => {
+        cartIcon.style.background = 'rgba(212, 175, 55, 0.2)';
+        cartIcon.style.transform = 'scale(1.1)';
+    });
+    
+    cartIcon.addEventListener('mouseleave', () => {
+        cartIcon.style.background = 'rgba(212, 175, 55, 0.1)';
+        cartIcon.style.transform = 'scale(1)';
+    });
+    
+    // Insert before profile section
+    menuHeader.insertBefore(cartIcon, profileSection);
 }
 
 /**
@@ -1074,7 +1381,7 @@ function addEventListeners() {
     
     // Name input validation
     const nameInput = document.querySelector('.customer-name-input');
-    if (nameInput) {
+    if (nameInput && !nameInput.readOnly) {
         // Reset styling when user starts typing
         nameInput.addEventListener('input', function() {
             if (this.value.trim()) {
@@ -1101,8 +1408,16 @@ function addEventListeners() {
  * @param {KeyboardEvent} event - Keyboard event
  */
 function handleKeyboardNavigation(event) {
-    // Escape key to go back
+    // Escape key to go back or close modal
     if (event.key === 'Escape') {
+        // Check if name modal is open
+        const nameModal = getElement('nameModalOverlay');
+        if (nameModal && nameModal.style.display === 'flex') {
+            closeNameDialog();
+            return;
+        }
+        
+        // Handle screen navigation
         const currentScreen = document.querySelector('.screen-active');
         if (currentScreen) {
             const screenId = currentScreen.id;
@@ -1115,7 +1430,13 @@ function handleKeyboardNavigation(event) {
                     // Don't allow escape from queue - they need to wait or go back via button
                     break;
                 case 'menuScreen':
-                    showScreen('welcome');
+                    // Reset to welcome if user wants to change name
+                    if (event.shiftKey) {
+                        currentUserName = '';
+                        showNameDialog();
+                    } else {
+                        showScreen('welcome');
+                    }
                     break;
             }
         }
@@ -1186,6 +1507,9 @@ window.addEventListener('load', () => {
 
 // Make functions available globally for onclick handlers
 window.showScreen = showScreen;
+window.showNameDialog = showNameDialog;
+window.closeNameDialog = closeNameDialog;
+window.submitNameFromDialog = submitNameFromDialog;
 window.filterCategory = filterCategory;
 window.searchProducts = searchProducts;
 window.adjustQuantity = adjustQuantity;
@@ -1197,4 +1521,4 @@ window.backToMenu = backToMenu;
 window.shareOrder = shareOrder;
 window.confirmPickup = confirmPickup;
 
-console.log('🍵 Egghaus Social script loaded successfully!');
+console.log('🍵 Egghaus Social script loaded successfully with VIP modal and guest list system!');
