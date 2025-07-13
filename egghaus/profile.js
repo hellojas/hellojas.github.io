@@ -63,18 +63,6 @@ async function fetchOrdersFromFirebase(userName) {
         ];
 
         let allOrders = [];
-
-        // Determine dominant season from the products
-        const itemSeasons = processedItems.flatMap(i => i.season || []);
-        const seasonCounts = {};
-        itemSeasons.forEach(s => {
-            seasonCounts[s] = (seasonCounts[s] || 0) + 1;
-        });
-        const inferredSeason = Object.keys(seasonCounts).reduce((a, b) => 
-            seasonCounts[a] > seasonCounts[b] ? a : b, '3'
-        );
-        console.log('🧪 Inferred season from items:', itemSeasons, '→', inferredSeason);
-
         
         // Execute both queries to catch orders stored with either field structure
         for (const q of queries) {
@@ -211,22 +199,34 @@ async function loadOrderHistory() {
         // Fetch orders from Firebase
         const orders = await fetchOrdersFromFirebase(currentUser);
         
-        // Process orders to add missing data
+        // Process each order to add item data and infer season
         orderHistory = orders.map(order => {
-            // Ensure items have caffeine data
-        const processedItems = order.items.map(item => {
-            const productData = products.find(p => p.name === item.name);
-            return {
-                ...item,
-                productId: productData?.id || item.productId || 0,
-                caffeine: productData?.caffeine ?? estimateCaffeine(item.name) ?? 0,
-                season: productData?.season || []
-            };
-        });
+            // Map item details with caffeine + season
+            const processedItems = order.items.map(item => {
+                const productData = products.find(p => p.name === item.name);
+                return {
+                    ...item,
+                    productId: productData?.id || item.productId || 0,
+                    caffeine: productData?.caffeine ?? estimateCaffeine(item.name) ?? 0,
+                    season: productData?.season || []
+                };
+            });
+
+            // Infer dominant season from item seasons
+            const itemSeasons = processedItems.flatMap(i => i.season || []);
+            const seasonCounts = {};
+            itemSeasons.forEach(s => {
+                seasonCounts[s] = (seasonCounts[s] || 0) + 1;
+            });
+            const inferredSeason = Object.keys(seasonCounts).reduce((a, b) =>
+                seasonCounts[a] > seasonCounts[b] ? a : b, '3'
+            );
+
             return {
                 ...order,
                 items: processedItems,
-                itemSeasons: processedItems.flatMap(i => i.season)
+                itemSeasons,
+                season: parseInt(inferredSeason)
             };
         });
         
@@ -246,7 +246,7 @@ async function loadOrderHistory() {
     } catch (error) {
         console.error('❌ Error loading order history:', error);
         
-        // Try loading from localStorage as final fallback
+        // Try fallback
         orderHistory = getLocalOrderHistory(currentUser);
         if (orderHistory.length > 0) {
             displayOrderHistory();
@@ -257,6 +257,7 @@ async function loadOrderHistory() {
         isLoading = false;
     }
 }
+
 
 /**
  * Estimate caffeine content based on item name
