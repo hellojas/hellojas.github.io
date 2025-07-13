@@ -6,6 +6,333 @@
     <title>egghaus</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* ===================================
+           NAME ENTRY MODAL STYLES
+           =================================== */
+
+        .name-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .name-modal {
+            background: #faf8f3;
+            border-radius: 25px;
+            padding: 2.5rem;
+            max-width: 400px;
+            width: 90vw;
+            box-shadow: 0 20px 60px rgba(93, 64, 55, 0.3);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            text-align: center;
+            position: relative;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .name-modal-header {
+            margin-bottom: 2rem;
+        }
+
+        .name-modal-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #d4af37, #ffd700);
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+        }
+
+        .name-modal-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #3e2723;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .name-modal-subtitle {
+            color: #8d6e63;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0;
+        }
+
+        .name-modal-form {
+            margin-bottom: 1rem;
+        }
+
+        .name-modal-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 2px solid rgba(212, 175, 55, 0.2);
+            border-radius: 15px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            background: #f5f2eb;
+            color: #3e2723;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+        }
+
+        .name-modal-input:focus {
+            outline: none;
+            border-color: #d4af37;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .name-modal-input::placeholder {
+            color: #8d6e63;
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        .name-modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .name-modal-cancel {
+            background: #f3f4f6;
+            color: #6b7280;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .name-modal-cancel:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+
+        .name-modal-submit {
+            background: linear-gradient(135deg, #d4af37, #ffd700);
+            color: #5d4037;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .name-modal-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .name-modal-submit:disabled {
+            background: #d1d5db;
+            color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ===================================
+           PROFILE SECTION STYLES
+           =================================== */
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-left: auto;
+        }
+
+        .profile-pic {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #5d4037, #8d6e63);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(93, 64, 55, 0.2);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .profile-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #5d4037;
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: color 0.3s ease;
+        }
+
+        #profileImage {
+            transition: all 0.3s ease;
+        }
+
+        #profileImage.loaded {
+            display: block !important;
+        }
+
+        #profileFallback {
+            transition: all 0.3s ease;
+        }
+
+        #profileFallback.hidden {
+            display: none;
+        }
+
+        /* ===================================
+           RESPONSIVE DESIGN FOR MODAL
+           =================================== */
+
+        @media (max-width: 768px) {
+            .name-modal {
+                padding: 2rem 1.5rem;
+                margin: 1rem;
+            }
+            
+            .name-modal-title {
+                font-size: 1.6rem;
+            }
+            
+            .name-modal-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 2.5rem;
+            }
+            
+            .profile-section {
+                flex-direction: column;
+                gap: 0.3rem;
+                text-align: center;
+            }
+            
+            .profile-pic {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .profile-name {
+                font-size: 0.8rem;
+                max-width: none;
+            }
+            
+            .name-modal-buttons {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .name-modal {
+                padding: 1.5rem 1rem;
+            }
+            
+            .name-modal-title {
+                font-size: 1.4rem;
+            }
+        }
+
+        /* ===================================
+           ANIMATIONS
+           =================================== */
+
+        .name-modal-overlay {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .name-modal-input:valid {
+            border-color: #10b981;
+            background: #f0fff4;
+        }
+
+        /* Profile image loading animation */
+        .profile-pic {
+            position: relative;
+        }
+
+        .profile-pic::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+            pointer-events: none;
+        }
+
+        .profile-pic.loading::before {
+            transform: translateX(100%);
+        }
+
+        /* ===================================
+           GUEST LIST ERROR ANIMATIONS
+           =================================== */
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        /* Error state for inputs */
+        .guest-list-error {
+            border-color: #ff4757 !important;
+            background: #fff5f5 !important;
+            box-shadow: 0 0 10px rgba(255, 71, 87, 0.3) !important;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -14,16 +341,48 @@
             <div class="matcha-illustration">🍵</div>
             <h1 class="welcome-title"></h1>
             <h2 class="welcome-subtitle">your eggecutives present: <br>season 2</h2>
-            <button class="start-btn" onclick="showScreen('menu')">sip things. say too much.</button>
+            <button class="start-btn" onclick="showNameDialog()">sip things. say too much.</button>
+        </div>
+
+        <!-- Name Entry Modal -->
+        <div class="name-modal-overlay" id="nameModalOverlay" style="display: none;">
+            <div class="name-modal">
+                <div class="name-modal-header">
+                    <div class="name-modal-icon">👋</div>
+                    <h2 class="name-modal-title">What's your name?</h2>
+                    <p class="name-modal-subtitle">Exclusive VIP event • Guest list required</p>
+                </div>
+                
+                <div class="name-modal-form">
+                    <input 
+                        type="text" 
+                        id="nameModalInput" 
+                        class="name-modal-input" 
+                        placeholder="Enter your name"
+                        autocomplete="given-name"
+                        maxlength="20"
+                    >
+                    <div class="name-modal-buttons">
+                        <button class="name-modal-cancel" onclick="closeNameDialog()">Cancel</button>
+                        <button class="name-modal-submit" onclick="submitNameFromDialog()">Continue</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Menu Screen -->
-        <div class="menu-screen" id="menuScreen">
+        <div class="menu-screen screen-hidden" id="menuScreen">
             <div class="menu-header">
                 <div class="header-left">
                     <h1 class="menu-title">Today's Selection</h1>
                 </div>
-                <div class="profile-pic">🐣</div>
+                <div class="profile-section">
+                    <div class="profile-pic" id="profilePic">
+                        <img id="profileImage" src="" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none;">
+                        <span id="profileFallback">🐣</span>
+                    </div>
+                    <span class="profile-name" id="profileName">Guest</span>
+                </div>
             </div>
 
             <div class="search-container">
@@ -69,7 +428,7 @@
         </div>
 
         <!-- Product Detail Screen -->
-        <div class="product-detail-screen" id="productDetailScreen">
+        <div class="product-detail-screen screen-hidden" id="productDetailScreen">
             <div class="product-detail-header">
                 <button class="back-btn" onclick="showScreen('menu')">←</button>
                 <div class="product-detail-image" id="detailImage">🍵</div>
@@ -98,7 +457,7 @@
         </div>
 
         <!-- Cart Screen -->
-        <div class="cart-screen" id="cartScreen">
+        <div class="cart-screen screen-hidden" id="cartScreen">
             <div class="cart-header">
                 <button class="back-btn" onclick="showScreen('menu')">←</button>
                 <h1 class="cart-title">Cart</h1>
@@ -109,7 +468,7 @@
                     <!-- Cart items will be populated by JavaScript -->
                 </div>
                 
-                <!-- Customer Info Section -->
+                <!-- Customer Info Section (pre-filled with entered name) -->
                 <div class="customer-info-section">
                     <div class="customer-info-title">
                         👤 Your Information
@@ -125,6 +484,7 @@
                             placeholder="Enter your name"
                             required
                             autocomplete="name"
+                            readonly
                         >
                     </div>
                 </div>
@@ -238,7 +598,7 @@
 
     <!-- Firebase SDK -->
     <script type="module" src="firebase-config.js"></script>
-    <!-- Main App JavaScript - CHANGED TO MODULE -->
+    <!-- Main App JavaScript -->
     <script type="module" src="script.js"></script>
 </body>
 </html>
