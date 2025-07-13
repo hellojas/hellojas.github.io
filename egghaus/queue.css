@@ -267,11 +267,11 @@ body {
   gap: 0.5rem;
 }
 
-.customer-name::before {
+/* .customer-name::before {
   content: "👤";
   font-size: 1rem;
 }
-
+ */
 .order-time {
   font-size: 0.85rem;
   color: #8d6e63;
