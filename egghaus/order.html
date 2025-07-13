@@ -129,10 +129,94 @@
                     </div>
                 </div>
 
-                <button class="checkout-btn" onclick="checkout()">get caffeinated</button>
+            
+            <button class="checkout-btn" onclick="checkout()">
+              🍵 Get Caffeinated
+            </button>
             </div>
         </div>
     </div>
+
+    
+<div class="queue-screen screen-hidden" id="queueScreen">
+  <!-- Queue Header -->
+  <div class="queue-header">
+    <button class="queue-back-btn" onclick="backToMenu()">←</button>
+    <div class="queue-header-title">Order Status</div>
+    <button class="queue-share-btn" onclick="shareOrder()">📤</button>
+  </div>
+
+  <!-- Queue Content -->
+  <div class="queue-content">
+    
+    <!-- Order Status Card -->
+    <div class="queue-status-card">
+      <div class="queue-order-id" id="queueOrderId">Order #EH123456</div>
+      <div class="queue-customer-name" id="queueCustomerName">John Doe</div>
+      <div class="queue-status" id="queueStatus">✅ Order Confirmed</div>
+    </div>
+
+    <!-- Timer Section -->
+    <div class="queue-timer-section">
+      <div class="queue-timer-label">Estimated Time</div>
+      <div class="queue-timer" id="queueTimer">12:00</div>
+      <div class="queue-estimated-time">
+        Originally estimated: <span id="queueEstimatedTime">12 min</span>
+      </div>
+    </div>
+
+    <!-- Queue Position -->
+    <div class="queue-position-section">
+      <div class="queue-position-label">Your Position</div>
+      <div class="queue-position" id="queuePosition">3</div>
+      <div class="queue-position-text">orders ahead of you</div>
+    </div>
+
+    <!-- Order Info -->
+    <div class="queue-order-info">
+      <div class="queue-info-item">
+        <div class="queue-info-label">Order Time</div>
+        <div class="queue-info-value" id="queueOrderTime">2:30 PM</div>
+      </div>
+      <div class="queue-info-item">
+        <div class="queue-info-label">Order Type</div>
+        <div class="queue-info-value">Pickup</div>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="queue-order-summary">
+      <div class="queue-summary-title">Order Summary</div>
+      <div id="queueOrderSummary">
+        <!-- Order items will be populated here -->
+        <div class="queue-items-list">
+          <div class="queue-order-item">
+            <span class="queue-item-quantity">2x</span>
+            <span class="queue-item-name">Iced Matcha Latte</span>
+            <span class="queue-item-price">$17.00</span>
+          </div>
+          <div class="queue-order-item">
+            <span class="queue-item-quantity">1x</span>
+            <span class="queue-item-name">Burnt Basque Cheesecake</span>
+            <span class="queue-item-price">$8.00</span>
+          </div>
+        </div>
+        <div class="queue-order-total">
+          <strong>Total: $25.00</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Queue Actions -->
+    <div class="queue-actions" id="queueActions">
+      <button class="queue-action-btn" onclick="backToMenu()">
+        🏠 Back to Menu
+      </button>
+    </div>
+
+  </div>
+</div>
+
 
     <!-- Firebase SDK (Optional) -->
     <script type="module" src="firebase-config.js"></script>
