@@ -829,6 +829,29 @@ body {
   transform: translateY(-1px);
 }
 
+.admin-subtitle {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  color: #6b4c3b;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-role {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+
 /* ===================================
    ANIMATIONS
    =================================== */
