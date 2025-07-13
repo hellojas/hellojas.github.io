@@ -1518,12 +1518,6 @@ function toggleFloatingLinks() {
 
 window.addEventListener("DOMContentLoaded", toggleFloatingLinks);
 
-function goToHosts() {
-  window.location.href = 'admin.html';
-}
-// Run on load
-window.addEventListener('DOMContentLoaded', toggleFloatingButtons);
-
 // Also call this whenever you switch screens
 
 
