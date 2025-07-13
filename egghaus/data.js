@@ -1,5 +1,5 @@
 // ===================================
-// EGGHAUS SOCIAL - PRODUCTS DATA
+// EGGHAUS SOCIAL - PRODUCTS DATA (Updated with Caffeine Info)
 // ===================================
 
 export const products = [
@@ -12,7 +12,8 @@ export const products = [
         image: "🍵",
         rating: 4.8,
         description: "Creamy iced matcha latte with premium ceremonial grade matcha and your choice of milk. Perfectly balanced and refreshing. Sourced from Agoshima, Japan",
-        season: [1, 2] // Available in seasons 1 and 2
+        season: [1, 2],
+        caffeine: 70 // mg per serving
     },
     {
         id: 2,
@@ -22,7 +23,8 @@ export const products = [
         image: "🍋",
         rating: 4.7,
         description: "Unique fusion of earthy matcha and bright yuzu citrus served over ice. A refreshing twist on traditional matcha.",
-        season: [2] // Available in all seasons
+        season: [2],
+        caffeine: 65
     },
     {
         id: 3,
@@ -32,7 +34,8 @@ export const products = [
         image: "🍂",
         rating: 4.6,
         description: "Smooth roasted green tea with a nutty, caramel-like flavor served cold. Less caffeine, more comfort.",
-        season: [1, 2] // Classic offering
+        season: [1, 2],
+        caffeine: 30
     },
     {
         id: 4,
@@ -42,7 +45,8 @@ export const products = [
         image: "☕",
         rating: 4.5,
         description: "Classic japanese drip iced coffee, smooth and bold. Perfect for coffee lovers seeking a refreshing caffeine kick. Today's selection is a honey aponte columbian coffee from St. Kilda. Tasting notes: grapefruit, guava, white peach.",
-        season: [1, 2] // Coffee is eternal
+        season: [1, 2],
+        caffeine: 120
     },
     
     // SEASON 1 ORIGINALS
@@ -54,7 +58,8 @@ export const products = [
         image: "🍰",
         rating: 4.9,
         description: "Rich, creamy cheesecake with a signature burnt top. Our most popular dessert with a perfectly caramelized exterior.",
-        season: [2]
+        season: [2],
+        caffeine: 0
     },
     {
         id: 6,
@@ -64,7 +69,8 @@ export const products = [
         image: "💜",
         rating: 4.8,
         description: "Vibrant purple yam cheesecake with a smooth, velvety texture. A Filipino-inspired treat that's Instagram-worthy and delicious.",
-        season: [2]
+        season: [2],
+        caffeine: 0
     },
     
     // SEASON 2 SPECIALS
@@ -76,7 +82,8 @@ export const products = [
         image: "🍫",
         rating: 4.7,
         description: "Decadent chocolate tart with silky smooth ganache filling. Rich, indulgent, and perfect for chocolate lovers.",
-        season: [2] // Season 2 exclusive
+        season: [2],
+        caffeine: 15 // Small amount from chocolate
     },
     {
         id: 9,
@@ -86,7 +93,8 @@ export const products = [
         image: "🥯",
         rating: 4.4,
         description: "Freshly baked artisanal bagels. Choose from various flavors and enjoy with your favorite toppings.",
-        season: [1,2] // Available from season 2 onwards
+        season: [1,2],
+        caffeine: 0
     },
     {
         id: 12,
@@ -96,7 +104,8 @@ export const products = [
         image: "🍞",
         rating: 4.7,
         description: "Fluffy Japanese milk bread transformed into decadent French toast. Served with matcha butter and maple syrup.",
-        season: [2] // Season 3 exclusive
+        season: [2],
+        caffeine: 20 // From matcha butter
     },
     
     {
@@ -107,7 +116,8 @@ export const products = [
         image: "🫰",
         rating: 5.0,
         description: "If we're in town.",
-        season: [3] // Season 3 exclusive
+        season: [3],
+        caffeine: 0
     },
 ];
 
