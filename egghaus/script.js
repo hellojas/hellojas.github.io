@@ -599,19 +599,26 @@ function showProductDetail(product) {
     currentProduct = product;
     currentQuantity = 1;
 
-      // Special case: detailImage can be emoji or an image file
     const detailImageEl = getElement('detailImage');
     if (detailImageEl) {
-        if (typeof product.image === 'string' && product.image.match(/\.(png|jpg|jpeg|gif|webp)$/i)) {
-            detailImageEl.innerHTML = `<img src="${product.image}" alt="${product.name}" class="detail-img" />`;
+        // Clear old content
+        detailImageEl.innerHTML = '';
+    
+        if (typeof product.image === 'string' && product.image.match(/\.(png|jpg|jpeg|webp|gif)$/i)) {
+            // It's a file path, use <img>
+            const img = document.createElement('img');
+            img.src = product.image;
+            img.alt = product.name;
+            img.className = 'detail-img';
+            detailImageEl.appendChild(img);
         } else {
+            // It's an emoji or text
             detailImageEl.textContent = product.image;
         }
     }
     
     // Update product detail elements
     const updates = {
-        detailImage: product.image,
         detailRating: product.rating,
         detailPrice: formatPrice(product.price),
         detailTitle: product.name,
