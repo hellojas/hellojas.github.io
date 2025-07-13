@@ -80,6 +80,7 @@ function destroyAllCharts() {
         { key: 'category', canvasId: 'categoryChart' },
         { key: 'prepTime', canvasId: 'prepTimeChart' },
         { key: 'customer', canvasId: 'customerChart' },
+        { key: 'customerSpenders', canvasId: 'customerSpendersChart' },
         { key: 'status', canvasId: 'statusChart' },
         { key: 'seasonal', canvasId: 'seasonalChart' },
         { key: 'metrics', canvasId: 'metricsChart' },
@@ -352,6 +353,7 @@ async function initializeAllCharts() {
             { name: 'Category', fn: createCategoryChart },
             { name: 'Prep Time', fn: createPrepTimeChart },
             { name: 'Customer', fn: createCustomerChart },
+            { name: 'Customer Spenders', fn: createCustomerSpendersChart },
             { name: 'Status', fn: createStatusChart },
             { name: 'Seasonal', fn: createSeasonalChart },
             { name: 'Metrics', fn: createMetricsChart },
@@ -725,6 +727,850 @@ async function createCustomerChart() {
             }
         }
     });
+}
+
+/**
+ * Create whimsical customer spenders chart with egg avatars
+ */
+async function createCustomerSpendersChart() {
+    const canvas = document.getElementById('customerSpendersChart');
+    if (!canvas) return;
+    
+    destroyExistingChart('customerSpenders', 'customerSpendersChart');
+    const ctx = canvas.getContext('2d');
+    
+    // Calculate customer spending
+    const customerSpending = {};
+    filteredOrders.forEach(order => {
+        if (!customerSpending[order.customerName]) {
+            customerSpending[order.customerName] = {
+                total: 0,
+                orders: 0
+            };
+        }
+        customerSpending[order.customerName].total += order.total;
+        customerSpending[order.customerName].orders++;
+    });
+    
+    // Get top 10 spenders
+    const topSpenders = Object.entries(customerSpending)
+        .sort(([,a], [,b]) => b.total - a.total)
+        .slice(0, 10);
+    
+    if (topSpenders.length === 0) {
+        showEmptyChart(canvas, 'No customer data available');
+        return;
+    }
+    
+    const labels = topSpenders.map(([name]) => name);
+    const data = topSpenders.map(([,metrics]) => metrics.total);
+    
+    // Load customer egg images
+    const customerImages = {};
+    const imagePromises = labels.map(async (customerName) => {
+        try {
+            const imagePath = `egg/${customerName.toLowerCase().replace(/\s+/g, '_')}.png`;
+            const img = new Image();
+            return new Promise((resolve) => {
+                img.onload = () => {
+                    customerImages[customerName] = img;
+                    resolve();
+                };
+                img.onerror = () => {
+                    // Use default egg emoji if image not found
+                    resolve();
+                };
+                img.src = imagePath;
+            });
+        } catch (error) {
+            return Promise.resolve();
+        }
+    });
+    
+    // Wait for all images to load (or fail)
+    await Promise.all(imagePromises);
+    
+    // Create whimsical gradient colors
+    const whimsicalColors = [
+        '#FFD700', '#FF6B9D', '#4ECDC4', '#45B7D1', '#96CEB4',
+        '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE'
+    ];
+    
+    charts.customerSpenders = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Total Spent',
+                data: data,
+                backgroundColor: data.map((_, index) => whimsicalColors[index % whimsicalColors.length]),
+                borderColor: '#5d4037',
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const customerName = context.label;
+                            const amount = context.parsed.y;
+                            const orders = customerSpending[customerName]?.orders || 0;
+                            return [
+                                `💰 Total Spent: ${amount.toFixed(2)}`,
+                                `📦 Orders: ${orders}`,
+                                `📊 Avg Order: ${(amount / orders).toFixed(2)}`
+                            ];
+                        },
+                        title: function(context) {
+                            return `🥚 ${context[0].label}`;
+                        }
+                    },
+                    backgroundColor: 'rgba(93, 64, 55, 0.9)',
+                    titleColor: '#FFD700',
+                    bodyColor: '#FFF',
+                    borderColor: '#D4AF37',
+                    borderWidth: 2,
+                    cornerRadius: 12,
+                    displayColors: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '
+
+/**
+ * Create order status flow chart
+ */
+async function createStatusChart() {
+    const canvas = document.getElementById('statusChart');
+    if (!canvas) return;
+    
+    destroyExistingChart('status', 'statusChart');
+    const ctx = canvas.getContext('2d');
+    
+    // Calculate status distribution
+    const statusCounts = {};
+    filteredOrders.forEach(order => {
+        const status = order.status || 'completed';
+        statusCounts[status] = (statusCounts[status] || 0) + 1;
+    });
+    
+    const statusLabels = Object.keys(statusCounts).map(status => 
+        status.charAt(0).toUpperCase() + status.slice(1)
+    );
+    
+    charts.status = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: statusLabels,
+            datasets: [{
+                data: Object.values(statusCounts),
+                backgroundColor: [
+                    '#ffd700', '#ff6b35', '#10b981', '#6366f1', '#ef4444'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { font: { family: 'Inter', size: 11 } }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Create seasonal trends chart
+ */
+async function createSeasonalChart() {
+    const canvas = document.getElementById('seasonalChart');
+    if (!canvas) return;
+    
+    destroyExistingChart('seasonal', 'seasonalChart');
+    const ctx = canvas.getContext('2d');
+    
+    // Calculate season popularity
+    const seasonCounts = {};
+    filteredOrders.forEach(order => {
+        seasonCounts[order.season] = (seasonCounts[order.season] || 0) + 1;
+    });
+    
+    const labels = Object.keys(seasonCounts).map(s => `Season ${s}`);
+    const data = Object.values(seasonCounts);
+    
+    charts.seasonal = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Orders',
+                data: data,
+                borderColor: '#d4af37',
+                backgroundColor: 'rgba(212, 175, 55, 0.2)',
+                pointBackgroundColor: '#d4af37',
+                pointBorderColor: '#5d4037',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Create performance metrics chart
+ */
+async function createMetricsChart() {
+    const canvas = document.getElementById('metricsChart');
+    if (!canvas) return;
+    
+    destroyExistingChart('metrics', 'metricsChart');
+    const ctx = canvas.getContext('2d');
+    
+    // Calculate various metrics
+    const totalOrders = filteredOrders.length;
+    const completedOrders = filteredOrders.filter(o => o.status === 'completed').length;
+    const avgOrderValue = totalOrders > 0 ? 
+        filteredOrders.reduce((sum, o) => sum + o.total, 0) / totalOrders : 0;
+    const avgPrepTime = filteredOrders.filter(o => o.prepTime !== null).length > 0 ?
+        filteredOrders.filter(o => o.prepTime !== null).reduce((sum, o) => sum + o.prepTime, 0) / 
+        filteredOrders.filter(o => o.prepTime !== null).length : 0;
+    
+    const metrics = [
+        { label: 'Total Orders', value: totalOrders, max: Math.max(100, totalOrders) },
+        { label: 'Completed Orders', value: completedOrders, max: Math.max(100, totalOrders) },
+        { label: 'Avg Order Value', value: avgOrderValue, max: 50 },
+        { label: 'Avg Prep Time', value: avgPrepTime, max: 30 }
+    ];
+    
+    charts.metrics = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: metrics.map(m => m.label),
+            datasets: [{
+                data: metrics.map(m => (m.value / m.max) * 100), // Normalize to percentage
+                backgroundColor: [
+                    'rgba(212, 175, 55, 0.7)',
+                    'rgba(16, 185, 129, 0.7)',
+                    'rgba(99, 102, 241, 0.7)',
+                    'rgba(93, 64, 55, 0.7)'
+                ],
+                borderColor: ['#d4af37', '#10b981', '#6366f1', '#5d4037'],
+                borderWidth: 2,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                },
+                x: { ticks: { maxRotation: 45 } }
+            }
+        }
+    });
+}
+
+/**
+ * Create daily patterns chart
+ */
+async function createDailyChart() {
+    const canvas = document.getElementById('dailyChart');
+    if (!canvas) return;
+    
+    destroyExistingChart('daily', 'dailyChart');
+    const ctx = canvas.getContext('2d');
+    
+    // Calculate daily order counts
+    const dailyData = new Array(7).fill(0);
+    filteredOrders.forEach(order => {
+        dailyData[order.orderDay]++;
+    });
+    
+    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    
+    charts.daily = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dayLabels,
+            datasets: [{
+                label: 'Orders by Day',
+                data: dailyData,
+                borderColor: '#5d4037',
+                backgroundColor: 'rgba(93, 64, 55, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#5d4037',
+                pointBorderColor: '#d4af37',
+                pointBorderWidth: 2,
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+}
+
+// ===================================
+// TABLE GENERATION
+// ===================================
+
+/**
+ * Generate detailed data tables
+ */
+function generateDetailedTables() {
+    generateTopProductsTable();
+    generateCustomerInsightsTable();
+}
+
+/**
+ * Generate top products table
+ */
+function generateTopProductsTable() {
+    const tableBody = document.querySelector('#topProductsTable tbody');
+    if (!tableBody) return;
+    
+    // Calculate product metrics
+    const productMetrics = {};
+    filteredOrders.forEach(order => {
+        order.items.forEach(item => {
+            if (!productMetrics[item.name]) {
+                productMetrics[item.name] = {
+                    orders: 0,
+                    quantity: 0,
+                    revenue: 0
+                };
+            }
+            productMetrics[item.name].orders++;
+            productMetrics[item.name].quantity += item.quantity;
+            productMetrics[item.name].revenue += item.price * item.quantity;
+        });
+    });
+    
+    // Sort by revenue and take top 10
+    const topProducts = Object.entries(productMetrics)
+        .sort(([,a], [,b]) => b.revenue - a.revenue)
+        .slice(0, 10);
+    
+    // Generate table rows
+    tableBody.innerHTML = topProducts.map(([name, metrics], index) => {
+        const avgPrice = metrics.revenue / metrics.quantity;
+        return `
+            <tr>
+                <td class="rank-cell">${index + 1}</td>
+                <td class="product-cell">${name}</td>
+                <td class="number-cell">${metrics.orders}</td>
+                <td class="number-cell">$${metrics.revenue.toFixed(2)}</td>
+                <td class="number-cell">$${avgPrice.toFixed(2)}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+/**
+ * Generate customer insights table
+ */
+function generateCustomerInsightsTable() {
+    const tableBody = document.querySelector('#customerInsightsTable tbody');
+    if (!tableBody) return;
+    
+    // Calculate customer metrics
+    const customerMetrics = {};
+    filteredOrders.forEach(order => {
+        if (!customerMetrics[order.customerName]) {
+            customerMetrics[order.customerName] = {
+                orders: 0,
+                totalSpent: 0,
+                items: {}
+            };
+        }
+        customerMetrics[order.customerName].orders++;
+        customerMetrics[order.customerName].totalSpent += order.total;
+        
+        // Track favorite items
+        order.items.forEach(item => {
+            const items = customerMetrics[order.customerName].items;
+            items[item.name] = (items[item.name] || 0) + item.quantity;
+        });
+    });
+    
+    // Sort by total spent and take top customers
+    const topCustomers = Object.entries(customerMetrics)
+        .sort(([,a], [,b]) => b.totalSpent - a.totalSpent)
+        .slice(0, 10);
+    
+    // Generate table rows
+    tableBody.innerHTML = topCustomers.map(([name, metrics]) => {
+        const avgOrder = metrics.totalSpent / metrics.orders;
+        const favoriteItem = Object.entries(metrics.items)
+            .sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A';
+        
+        return `
+            <tr>
+                <td class="product-cell">${name}</td>
+                <td class="number-cell">${metrics.orders}</td>
+                <td class="number-cell">$${metrics.totalSpent.toFixed(2)}</td>
+                <td class="number-cell">$${avgOrder.toFixed(2)}</td>
+                <td>${favoriteItem}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// ===================================
+// OVERVIEW STATS
+// ===================================
+
+/**
+ * Update overview statistics
+ */
+function updateOverviewStats() {
+    const todayOrders = filteredOrders.length;
+    const todayRevenue = filteredOrders
+        .filter(order => order.status === 'completed' || !order.status)
+        .reduce((sum, order) => sum + order.total, 0);
+    
+    const ordersWithPrepTime = filteredOrders.filter(order => order.prepTime !== null);
+    const avgPrepTime = ordersWithPrepTime.length > 0 ?
+        ordersWithPrepTime.reduce((sum, order) => sum + order.prepTime, 0) / ordersWithPrepTime.length : 0;
+    
+    // Update DOM elements
+    const todayOrdersEl = document.getElementById('todayOrders');
+    const todayRevenueEl = document.getElementById('todayRevenue');
+    const avgPrepTimeEl = document.getElementById('avgPrepTime');
+    
+    if (todayOrdersEl) todayOrdersEl.textContent = todayOrders;
+    if (todayRevenueEl) todayRevenueEl.textContent = `$${todayRevenue.toFixed(0)}`;
+    if (avgPrepTimeEl) avgPrepTimeEl.textContent = `${Math.round(avgPrepTime)}min`;
+    
+    // Update additional stats in charts
+    const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.total, 0);
+    const avgOrderValue = todayOrders > 0 ? totalRevenue / todayOrders : 0;
+    
+    const totalRevenueEl = document.getElementById('totalRevenue');
+    const avgOrderValueEl = document.getElementById('avgOrderValue');
+    
+    if (totalRevenueEl) totalRevenueEl.textContent = `$${totalRevenue.toFixed(0)}`;
+    if (avgOrderValueEl) avgOrderValueEl.textContent = `$${avgOrderValue.toFixed(2)}`;
+}
+
+// ===================================
+// REAL-TIME UPDATES
+// ===================================
+
+/**
+ * Set up real-time updates from Firebase
+ */
+function setupRealtimeUpdates() {
+    if (!db) {
+        console.warn('Firebase not available for real-time updates');
+        return;
+    }
+    
+    console.log('📡 Setting up real-time updates for sales dashboard...');
+    
+    try {
+        const ordersQuery = query(
+            collection(db, 'orders'),
+            orderBy('createdAt', 'desc')
+        );
+        
+        salesListener = onSnapshot(ordersQuery, (snapshot) => {
+            console.log('🔄 Real-time sales data update received');
+            
+            // Check if there are actual changes
+            let hasChanges = false;
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === 'added' || change.type === 'modified') {
+                    hasChanges = true;
+                }
+            });
+            
+            if (hasChanges) {
+                console.log('📊 Refreshing sales data...');
+                loadOrdersData().then(() => {
+                    filterOrdersByTimePeriod(currentTimePeriod);
+                }).catch(error => {
+                    console.error('Error refreshing sales data:', error);
+                });
+            }
+        }, (error) => {
+            console.error('Error in sales listener:', error);
+        });
+        
+    } catch (error) {
+        console.warn('Could not set up real-time updates:', error);
+    }
+}
+
+// ===================================
+// UTILITY FUNCTIONS
+// ===================================
+
+/**
+ * Show loading state
+ */
+function showLoading(show) {
+    const loadingEl = document.getElementById('salesLoading');
+    const analyticsEl = document.getElementById('analyticsGrid');
+    const tablesEl = document.getElementById('tablesSection');
+    
+    if (loadingEl) loadingEl.style.display = show ? 'block' : 'none';
+    if (analyticsEl) analyticsEl.style.display = show ? 'none' : 'grid';
+    if (tablesEl) tablesEl.style.display = show ? 'none' : 'block';
+}
+
+/**
+ * Show error message
+ */
+function showError(message) {
+    console.error('❌ Sales Error:', message);
+    
+    // Create error notification
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 15px;
+        font-weight: 600;
+        z-index: 1001;
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+        animation: slideInRight 0.3s ease-out;
+        max-width: 300px;
+    `;
+    notification.innerHTML = `⚠️ ${message}`;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+
+/**
+ * Show empty chart when no data
+ */
+function showEmptyChart(canvas, message) {
+    const container = canvas.parentElement;
+    if (container) {
+        container.innerHTML = `<div class="chart-loading">${message}</div>`;
+    }
+}
+
+// ===================================
+// USER ACTIONS
+// ===================================
+
+/**
+ * Filter by time period (called from HTML)
+ */
+function filterByTimePeriod(period) {
+    console.log(`📊 Filtering sales data by: ${period}`);
+    filterOrdersByTimePeriod(period);
+}
+
+/**
+ * Refresh sales data
+ */
+async function refreshSalesData() {
+    console.log('🔄 Manually refreshing sales data...');
+    
+    try {
+        showLoading(true);
+        await loadOrdersData();
+        filterOrdersByTimePeriod(currentTimePeriod);
+        
+        // Show success notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 15px;
+            font-weight: 600;
+            z-index: 1001;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        `;
+        notification.textContent = '✅ Sales data refreshed!';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => notification.remove(), 3000);
+        
+    } catch (error) {
+        console.error('❌ Error refreshing sales data:', error);
+        showError('Failed to refresh sales data');
+    } finally {
+        showLoading(false);
+    }
+}
+
+/**
+ * Export sales data
+ */
+function exportSalesData() {
+    const exportData = {
+        exportDate: new Date().toISOString(),
+        timePeriod: currentTimePeriod,
+        summary: {
+            totalOrders: filteredOrders.length,
+            totalRevenue: filteredOrders.reduce((sum, order) => sum + order.total, 0),
+            avgOrderValue: filteredOrders.length > 0 ? 
+                filteredOrders.reduce((sum, order) => sum + order.total, 0) / filteredOrders.length : 0,
+            avgPrepTime: filteredOrders.filter(o => o.prepTime !== null).length > 0 ?
+                filteredOrders.filter(o => o.prepTime !== null).reduce((sum, o) => sum + o.prepTime, 0) / 
+                filteredOrders.filter(o => o.prepTime !== null).length : 0
+        },
+        orders: filteredOrders,
+        analytics: {
+            productPopularity: calculateProductPopularity(),
+            categoryBreakdown: calculateCategoryBreakdown(filteredOrders.flatMap(o => o.items)),
+            hourlyPatterns: calculateHourlyPatterns(),
+            customerMetrics: calculateCustomerMetrics()
+        }
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `egghaus-sales-${currentTimePeriod}-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    
+    console.log('📤 Sales data exported');
+}
+
+/**
+ * Calculate product popularity for export
+ */
+function calculateProductPopularity() {
+    const popularity = {};
+    filteredOrders.forEach(order => {
+        order.items.forEach(item => {
+            popularity[item.name] = (popularity[item.name] || 0) + item.quantity;
+        });
+    });
+    return popularity;
+}
+
+/**
+ * Calculate hourly patterns for export
+ */
+function calculateHourlyPatterns() {
+    const hourlyData = new Array(24).fill(0);
+    filteredOrders.forEach(order => {
+        hourlyData[order.orderHour]++;
+    });
+    return hourlyData;
+}
+
+/**
+ * Calculate customer metrics for export
+ */
+function calculateCustomerMetrics() {
+    const metrics = {};
+    filteredOrders.forEach(order => {
+        if (!metrics[order.customerName]) {
+            metrics[order.customerName] = {
+                orders: 0,
+                totalSpent: 0,
+                avgOrderValue: 0
+            };
+        }
+        metrics[order.customerName].orders++;
+        metrics[order.customerName].totalSpent += order.total;
+        metrics[order.customerName].avgOrderValue = 
+            metrics[order.customerName].totalSpent / metrics[order.customerName].orders;
+    });
+    return metrics;
+}
+
+/**
+ * Go back to admin dashboard
+ */
+function goBackToAdmin() {
+    // Stop real-time listener
+    if (salesListener) {
+        salesListener();
+        salesListener = null;
+        console.log('📡 Stopped Firebase sales listener');
+    }
+    
+    // Clean up charts
+    destroyAllCharts();
+    
+    // Navigate back to admin
+    window.location.href = './admin.html';
+}
+
+// ===================================
+// GLOBAL FUNCTION EXPOSURE
+// ===================================
+
+window.filterByTimePeriod = filterByTimePeriod;
+window.refreshSalesData = refreshSalesData;
+window.exportSalesData = exportSalesData;
+window.goBackToAdmin = goBackToAdmin;
+
+// ===================================
+// INITIALIZATION ON LOAD
+// ===================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📊 Sales analytics page loaded');
+    
+    // Small delay to ensure DOM is fully ready
+    setTimeout(() => {
+        initializeSalesDashboard();
+    }, 100);
+});
+
+// Clean up on page unload
+window.addEventListener('beforeunload', () => {
+    if (salesListener) {
+        salesListener();
+    }
+    destroyAllCharts();
+});
+
+console.log('📊 Sales analytics script loaded successfully!'); + value.toFixed(0);
+                        },
+                        color: '#5d4037',
+                        font: { family: 'Inter', weight: '600' }
+                    },
+                    grid: {
+                        color: 'rgba(212, 175, 55, 0.2)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        color: '#5d4037',
+                        font: { family: 'Inter', weight: '600', size: 10 }
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            animation: {
+                duration: 2000,
+                easing: 'easeOutBounce'
+            }
+        },
+        plugins: [{
+            id: 'customerEggIcons',
+            afterDraw: function(chart) {
+                const ctx = chart.ctx;
+                chart.data.labels.forEach((label, index) => {
+                    const meta = chart.getDatasetMeta(0);
+                    const bar = meta.data[index];
+                    
+                    if (bar) {
+                        const x = bar.x;
+                        const y = bar.y - 25; // Position above the bar
+                        
+                        // Draw customer image or default egg
+                        if (customerImages[label]) {
+                            const img = customerImages[label];
+                            const size = 20;
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.arc(x, y, size/2, 0, 2 * Math.PI);
+                            ctx.clip();
+                            ctx.drawImage(img, x - size/2, y - size/2, size, size);
+                            ctx.restore();
+                            
+                            // Add a cute border
+                            ctx.beginPath();
+                            ctx.arc(x, y, size/2 + 1, 0, 2 * Math.PI);
+                            ctx.strokeStyle = '#D4AF37';
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
+                        } else {
+                            // Draw default egg emoji
+                            ctx.font = '20px Arial';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            
+                            // Add shadow for depth
+                            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                            ctx.fillText('🥚', x + 1, y + 1);
+                            
+                            // Main emoji
+                            ctx.fillStyle = '#FFD700';
+                            ctx.fillText('🥚', x, y);
+                        }
+                        
+                        // Add sparkles for top 3 customers
+                        if (index < 3) {
+                            const sparkles = ['✨', '🌟', '⭐'];
+                            ctx.font = '12px Arial';
+                            ctx.fillStyle = whimsicalColors[index];
+                            ctx.fillText(sparkles[index], x + 15, y - 10);
+                        }
+                    }
+                });
+            }
+        }]
+    });
+    
+    // Update stats
+    if (topSpenders.length > 0) {
+        const topSpenderAmount = topSpenders[0][1].total;
+        const loyalCustomers = Object.values(customerSpending).filter(c => c.orders >= 3).length;
+        
+        const topSpenderEl = document.getElementById('topSpenderAmount');
+        const loyalCustomersEl = document.getElementById('loyalCustomers');
+        
+        if (topSpenderEl) topSpenderEl.textContent = `${topSpenderAmount.toFixed(0)}`;
+        if (loyalCustomersEl) loyalCustomersEl.textContent = loyalCustomers;
+    }
 }
 
 /**
