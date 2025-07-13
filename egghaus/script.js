@@ -1519,7 +1519,9 @@ function toggleFloatingButtons() {
     hostBtn.style.display = "none";
   }
 }
-
+function goToHosts() {
+  window.location.href = 'admin.html';
+}
 // Run on load
 window.addEventListener('DOMContentLoaded', toggleFloatingButtons);
 
