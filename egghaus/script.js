@@ -54,16 +54,6 @@ window.checkGuestList = function() {
     return list;
 };
 
-// Admin function to add guest (for debugging)
-window.addToGuestList = function(name) {
-    const success = addToGuestList(name);
-    if (success) {
-        console.log(`✅ Added ${name.toLowerCase()} to guest list`);
-    } else {
-        console.log(`⚠️ ${name.toLowerCase()} is already on the guest list`);
-    }
-    return getGuestList();
-};
 
 // Admin function to view app configuration
 window.getAppConfig = function() {
