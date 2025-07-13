@@ -509,15 +509,37 @@ function initializeNameEntry() {
 // ===================================
 
 /**
+ * Render product image (emoji or image file) into a DOM element
+ * @param {HTMLElement} el - Target element
+ * @param {string} image - Emoji or image path
+ * @param {string} alt - Alt text
+ * @param {string} className - CSS class to apply to <img>
+ */
+function renderProductImage(el, image, alt = '', className = '') {
+    if (!el) return;
+    el.innerHTML = '';
+
+    if (typeof image === 'string' && image.match(/\.(png|jpg|jpeg|webp|gif)$/i)) {
+        const img = document.createElement('img');
+        img.src = image;
+        img.alt = alt;
+        img.className = className;
+        el.appendChild(img);
+    } else {
+        el.textContent = image;
+    }
+}
+
+/**
  * Display products in the grid
  * @param {Array} filteredProducts - Array of products to display
  */
 function displayProducts(filteredProducts = currentProducts) {
     const grid = getElement('productsGrid');
     if (!grid) return;
-    
+
     grid.innerHTML = '';
-    
+
     if (filteredProducts.length === 0) {
         grid.innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #8d6e63;">
@@ -528,23 +550,29 @@ function displayProducts(filteredProducts = currentProducts) {
         `;
         return;
     }
-    
+
     filteredProducts.forEach(product => {
         const productCard = createElement('div', {
             className: 'product-card',
             onclick: () => showProductDetail(product)
-        }, `
-            <div class="product-image">${product.image}</div>
+        });
+
+        const imageEl = createElement('div', { className: 'product-image' });
+        renderProductImage(imageEl, product.image, product.name, 'thumbnail-img');
+
+        productCard.appendChild(imageEl);
+        productCard.insertAdjacentHTML('beforeend', `
             <div class="product-name">${product.name}</div>
             <div class="product-description">${product.description.substring(0, 40)}...</div>
             <div class="product-price">${formatPrice(product.price)}</div>
         `);
-        
+
         grid.appendChild(productCard);
     });
-    
+
     console.log(`📦 Displayed ${filteredProducts.length} products`);
 }
+
 
 /**
  * Filter products by category within current season
@@ -590,7 +618,6 @@ const searchProducts = debounce((query) => {
 // ===================================
 // PRODUCT DETAIL FUNCTIONS
 // ===================================
-
 /**
  * Show product detail screen
  * @param {Object} product - Product object
@@ -599,25 +626,10 @@ function showProductDetail(product) {
     currentProduct = product;
     currentQuantity = 1;
 
-    const detailImageEl = getElement('detailImage');
-    if (detailImageEl) {
-        // Clear old content
-        detailImageEl.innerHTML = '';
-    
-        if (typeof product.image === 'string' && product.image.match(/\.(png|jpg|jpeg|webp|gif)$/i)) {
-            // It's a file path, use <img>
-            const img = document.createElement('img');
-            img.src = product.image;
-            img.alt = product.name;
-            img.className = 'detail-img';
-            detailImageEl.appendChild(img);
-        } else {
-            // It's an emoji or text
-            detailImageEl.textContent = product.image;
-        }
-    }
-    
-    // Update product detail elements
+    // Render large product image or emoji
+    renderProductImage(getElement('detailImage'), product.image, product.name, 'detail-img');
+
+    // Update other fields
     const updates = {
         detailRating: product.rating,
         detailPrice: formatPrice(product.price),
@@ -625,16 +637,17 @@ function showProductDetail(product) {
         detailDescription: product.description,
         quantityDisplay: currentQuantity
     };
-    
+
     Object.entries(updates).forEach(([id, value]) => {
         const element = getElement(id);
         if (element) {
             element.textContent = value;
         }
     });
-    
+
     showScreen('productDetail');
 }
+
 
 /**
  * Adjust quantity in product detail
