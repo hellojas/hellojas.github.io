@@ -47,8 +47,7 @@ async function fetchOrdersFromFirebase(userName) {
 
     try {
         console.log(`🔍 Fetching orders from Firebase for: ${userName}`);
-        
-        // Query orders by customer name (check both customer.name and customerInfo.name)
+
         const queries = [
             query(
                 collection(db, 'orders'),
@@ -63,18 +62,17 @@ async function fetchOrdersFromFirebase(userName) {
         ];
 
         let allOrders = [];
-        
-        // Execute both queries to catch orders stored with either field structure
+
         for (const q of queries) {
             try {
-                const querySnapshot = await getDocs(q);   
+                const querySnapshot = await getDocs(q);
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     const order = {
                         id: doc.id,
                         orderId: data.orderId || doc.id,
                         date: data.createdAt?.toDate() || new Date(data.orderTime) || new Date(),
-                        season: parseInt(inferredSeason), // use product season instead of date logic
+                        season: 3, // ✅ Placeholder; real season is inferred later
                         items: data.items || [],
                         total: data.pricing?.total || data.total || 0,
                         status: data.status || 'completed',
@@ -82,8 +80,7 @@ async function fetchOrdersFromFirebase(userName) {
                         estimatedTime: data.estimatedTime || 15,
                         customerName: data.customer?.name || data.customerInfo?.name || userName
                     };
-                    
-                    // Avoid duplicates
+
                     if (!allOrders.find(existing => existing.id === order.id)) {
                         allOrders.push(order);
                     }
@@ -93,20 +90,18 @@ async function fetchOrdersFromFirebase(userName) {
             }
         }
 
-        // Sort by date (newest first)
         allOrders.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
         console.log(`✅ Found ${allOrders.length} orders in Firebase for ${userName}`);
         return allOrders;
-        
+
     } catch (error) {
         console.error('❌ Error fetching orders from Firebase:', error);
-        
-        // Fallback to local data
         console.log('📱 Falling back to local order history');
         return getLocalOrderHistory(userName);
     }
 }
+
+
 
 
 /**
