@@ -346,7 +346,7 @@ export function getProductsBySeason(seasonId) {
  * @returns {Object|null} Season information object
  */
 export function getSeasonInfo(seasonId) {
-    const season = seasons[seasonId];
+    const season = seasons[seasonId - 1];
     if (!season) return null;
     
     return {
