@@ -1,75 +1,4 @@
 // ===================================
-// SEASON MANAGEMENT FUNCTIONS
-// ===================================
-
-/**
- * Change current season and update products display
- * @param {string|number} seasonId - Season ID
- */
-function changeSeason(seasonId) {
-    const newSeason = parseInt(seasonId);
-    console.log(`🎭 Changing to season ${newSeason}`);
-    
-    currentSeason = newSeason;
-    
-    // Update products for current season
-    currentProducts = getProductsBySeason(currentSeason);
-    console.log(`📦 Loaded ${currentProducts.length} products for season ${currentSeason}`);
-    
-    // Clear any active category filters and show all products for this season
-    document.querySelectorAll('.category-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    document.querySelector('.category-item').classList.add('active'); // First item (ALL)
-    
-    // Update display
-    displayProducts(currentProducts);
-    
-    // Show season change feedback
-    const seasonInfo = getSeasonInfo(currentSeason);
-    if (seasonInfo) {
-        showSeasonChangeFeedback(seasonInfo);
-    }
-}
-
-/**
- * Show visual feedback when season changes
- * @param {Object} seasonInfo - Season information
- */
-function showSeasonChangeFeedback(seasonInfo) {
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: linear-gradient(135deg, #d4af37, #ffd700);
-        color: #5d4037;
-        padding: 1rem 1.5rem;
-        border-radius: 15px;
-        font-weight: 600;
-        z-index: 1001;
-        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
-        animation: slideInDown 0.3s ease-out;
-        text-align: center;
-        max-width: 90vw;
-    `;
-    
-    notification.innerHTML = `
-        <div style="font-size: 1.1rem; margin-bottom: 0.3rem;">
-            🎭 ${seasonInfo.name}
-        </div>
-        <div style="font-size: 0.85rem; opacity: 0.8;">
-            ${seasonInfo.subtitle} • ${currentProducts.length} items
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.remove();
-    }, appConfig.notificationDuration);
-}// ===================================
 // FIREBASE IMPORTS - FIXED FOR BROWSER
 // ===================================
 import { 
@@ -142,7 +71,78 @@ window.getAppConfig = function() {
     return appConfig;
 };
 
+// ===================================
+// SEASON MANAGEMENT FUNCTIONS
+// ===================================
 
+/**
+ * Change current season and update products display
+ * @param {string|number} seasonId - Season ID
+ */
+function changeSeason(seasonId) {
+    const newSeason = parseInt(seasonId);
+    console.log(`🎭 Changing to season ${newSeason}`);
+    
+    currentSeason = newSeason;
+    
+    // Update products for current season
+    currentProducts = getProductsBySeason(currentSeason);
+    console.log(`📦 Loaded ${currentProducts.length} products for season ${currentSeason}`);
+    
+    // Clear any active category filters and show all products for this season
+    document.querySelectorAll('.category-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    document.querySelector('.category-item').classList.add('active'); // First item (ALL)
+    
+    // Update display
+    displayProducts(currentProducts);
+    
+    // Show season change feedback
+    const seasonInfo = getSeasonInfo(currentSeason);
+    if (seasonInfo) {
+        showSeasonChangeFeedback(seasonInfo);
+    }
+}
+
+/**
+ * Show visual feedback when season changes
+ * @param {Object} seasonInfo - Season information
+ */
+function showSeasonChangeFeedback(seasonInfo) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #d4af37, #ffd700);
+        color: #5d4037;
+        padding: 1rem 1.5rem;
+        border-radius: 15px;
+        font-weight: 600;
+        z-index: 1001;
+        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+        animation: slideInDown 0.3s ease-out;
+        text-align: center;
+        max-width: 90vw;
+    `;
+    
+    notification.innerHTML = `
+        <div style="font-size: 1.1rem; margin-bottom: 0.3rem;">
+            🎭 ${seasonInfo.name}
+        </div>
+        <div style="font-size: 0.85rem; opacity: 0.8;">
+            ${seasonInfo.subtitle} • ${currentProducts.length} items
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, appConfig.notificationDuration);
+}
 
 // ===================================
 // UTILITY FUNCTIONS
@@ -1380,7 +1380,10 @@ function initializeApp() {
     } else {
         // Optional: prefill input from localStorage if available
         if (savedUserName) {
-            document.getElementById('nameModalInput').value = savedUserName;
+            const nameInput = document.getElementById('nameModalInput');
+            if (nameInput) {
+                nameInput.value = savedUserName;
+            }
         }
         showScreen('welcome'); // ✅ Force welcome screen
     }
@@ -1519,7 +1522,6 @@ function toggleFloatingLinks() {
 window.addEventListener("DOMContentLoaded", toggleFloatingLinks);
 
 // Also call this whenever you switch screens
-
 
 // ===================================
 // ERROR HANDLING
