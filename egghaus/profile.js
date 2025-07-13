@@ -114,7 +114,8 @@ async function fetchOrdersFromFirebase(userName) {
  * @returns {Array} Local order history
  */
 function getLocalOrderHistory(userName) {
-    const historyKey = `orderHistory_${userName}`;
+    const normalized = userName.toLowerCase();
+    const historyKey = `orderHistory_${normalized}`;
     const localOrders = JSON.parse(localStorage.getItem(historyKey) || '[]');
     
     // Convert date strings back to Date objects
@@ -133,7 +134,8 @@ function getLocalOrderHistory(userName) {
  */
 function saveOrdersToLocal(userName, orders) {
     try {
-        const historyKey = `orderHistory_${userName}`;
+        const normalized = userName.toLowerCase();
+        const historyKey = `orderHistory_${normalized}`;
         localStorage.setItem(historyKey, JSON.stringify(orders));
         console.log(`💾 Saved ${orders.length} orders to localStorage for ${userName}`);
     } catch (error) {
