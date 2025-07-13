@@ -112,7 +112,7 @@ export const products = [
         name: "Chocolate Ganache Tart",
         price: 7.50,
         category: "noms",
-        image: "menu/ganache_tart",
+        image: "menu/ganache_tart.png",
         rating: 4.7,
         description: "Decadent chocolate tart with silky smooth ganache filling. Rich, indulgent, and perfect for chocolate lovers.",
         season: [2], 
@@ -124,7 +124,7 @@ export const products = [
         name: "Bagels",
         price: 5.50,
         category: "noms",
-        image: "menu/bagels.png",
+        image: "menu/bagel.png",
         rating: 4.4,
         description: "Freshly baked artisanal bagels. Choose from various flavors and enjoy with your favorite toppings.",
         season: [1, 2], // All seasons
