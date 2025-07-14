@@ -366,37 +366,44 @@ async function updateAllAnalytics() {
 async function initializeAllCharts() {
     console.log('📊 Initializing all charts...');
     
+    // Wait a bit for DOM to be fully ready
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
     try {
         const chartInitializers = [
-            { name: 'Revenue', fn: createRevenueChart },
-            { name: 'Popularity', fn: createPopularityChart },
-            { name: 'Hourly', fn: createHourlyChart },
-            { name: 'Category', fn: createCategoryChart },
-            { name: 'Prep Time', fn: createPrepTimeChart },
-            { name: 'Customer', fn: createCustomerChart },
-            { name: 'Customer Spenders', fn: createCustomerSpendersChart },
-            { name: 'Status', fn: createStatusChart },
-            { name: 'Seasonal', fn: createSeasonalChart },
-            { name: 'Metrics', fn: createMetricsChart },
-            { name: 'Daily', fn: createDailyChart }
+            { name: 'Revenue', fn: createRevenueChart, required: true },
+            { name: 'Popularity', fn: createPopularityChart, required: true },
+            { name: 'Hourly', fn: createHourlyChart, required: true },
+            { name: 'Category', fn: createCategoryChart, required: true },
+            { name: 'Prep Time', fn: createPrepTimeChart, required: true },
+            { name: 'Customer', fn: createCustomerChart, required: true },
+            { name: 'Customer Spenders', fn: createCustomerSpendersChart, required: false }, // Not required
+            { name: 'Status', fn: createStatusChart, required: true },
+            { name: 'Seasonal', fn: createSeasonalChart, required: true },
+            { name: 'Metrics', fn: createMetricsChart, required: true },
+            { name: 'Daily', fn: createDailyChart, required: true }
         ];
         
-        for (const { name, fn } of chartInitializers) {
+        for (const { name, fn, required } of chartInitializers) {
             try {
                 await fn();
                 console.log(`✅ ${name} chart initialized`);
             } catch (error) {
                 console.error(`❌ Error initializing ${name} chart:`, error);
+                if (required) {
+                    console.warn(`⚠️ ${name} chart is required but failed to initialize`);
+                } else {
+                    console.log(`ℹ️ ${name} chart is optional and will be skipped`);
+                }
             }
         }
         
-        console.log('✅ All charts initialization completed');
+        console.log('✅ Chart initialization process completed');
     } catch (error) {
         console.error('❌ Error in chart initialization process:', error);
         throw error;
     }
 }
-
 /**
  * Create revenue trends chart
  */
@@ -733,51 +740,61 @@ async function createCustomerChart() {
             }
         }
     });
-}/**
- * FIXED: Create customer spenders chart with enhanced debugging - ADD THIS TO YOUR sales.js
+}
+
+
+/**
+ * Enhanced customer spenders chart with DOM checking
  */
 async function createCustomerSpendersChart() {
+    // Check if the canvas exists
     const canvas = document.getElementById('customerSpendersChart');
     if (!canvas) {
-        console.error('❌ Customer spenders canvas not found');
-        return;
+        console.warn('⚠️ Customer spenders canvas not found - checking if HTML section exists...');
+        
+        // Check if the parent section exists
+        const section = document.querySelector('.customer-spenders-section');
+        if (!section) {
+            console.error('❌ Customer spenders section missing from HTML!');
+            console.log('🔧 Please add the customer spenders HTML section to your sales.html file');
+            
+            // Create the section dynamically as a fallback
+            createCustomerSpendersSection();
+            
+            // Try again after creating the section
+            await new Promise(resolve => setTimeout(resolve, 100));
+            return createCustomerSpendersChart();
+        } else {
+            console.error('❌ Section exists but canvas is missing - check your HTML structure');
+            return;
+        }
     }
+    
+    console.log('✅ Customer spenders canvas found, proceeding with chart creation...');
     
     destroyExistingChart('customerSpenders', 'customerSpendersChart');
     const ctx = canvas.getContext('2d');
     
-    // 🐛 DEBUG: Check what data we're working with
-    console.log('🔍 Debug - Total filtered orders:', filteredOrders.length);
-    console.log('🔍 Debug - Sample order:', filteredOrders[0]);
+    // Rest of your customer spenders chart code here...
+    // [Include the full createCustomerSpendersChart function from the previous artifact]
     
-    // More robust customer spending calculation
     const customerSpending = {};
     let processedOrders = 0;
     
     filteredOrders.forEach((order, index) => {
-        // 🐛 DEBUG: Log first few orders
-        if (index < 3) {
-            console.log(`🔍 Debug - Order ${index}:`, {
-                customerName: order.customerName,
-                total: order.total,
-                status: order.status,
-                hasCustomerInfo: !!(order.customer || order.customerInfo)
-            });
-        }
-        
         // Get customer name with multiple fallbacks
         let customerName = order.customerName 
             || order.customer?.name 
-            || order.customerInfo?.name 
-            || 'Unknown Customer';
+            || order.customerInfo?.name
+            || order.rawCustomerData?.customer?.name
+            || order.rawCustomerData?.customerInfo?.name
+            || `Customer_${order.orderId || order.id}`;
         
-        // Skip 'Unknown' customers if we want only real customers
-        if (customerName === 'Unknown' || customerName === 'Unknown Customer') {
-            console.warn(`⚠️ Skipping order with unknown customer:`, order.orderId);
+        if (!customerName || customerName.trim() === '') {
+            console.warn(`⚠️ Skipping order with empty customer:`, order.orderId);
             return;
         }
         
-        // Only count completed orders for spending (if you want)
         const orderTotal = (order.status === 'completed' || !order.status) ? order.total : 0;
         
         if (orderTotal > 0) {
@@ -796,85 +813,25 @@ async function createCustomerSpendersChart() {
         }
     });
     
-    // 🐛 DEBUG: Check processed data
-    console.log('🔍 Debug - Customer spending data:', customerSpending);
-    console.log('🔍 Debug - Processed orders:', processedOrders);
-    console.log('🔍 Debug - Unique customers:', Object.keys(customerSpending).length);
+    console.log('🔍 Customer spending analysis:', {
+        totalCustomers: Object.keys(customerSpending).length,
+        processedOrders: processedOrders,
+        sampleCustomers: Object.keys(customerSpending).slice(0, 5)
+    });
     
     const topSpenders = Object.entries(customerSpending)
-        .filter(([name, metrics]) => metrics.total > 0) // Only customers who actually spent money
+        .filter(([name, metrics]) => metrics.total > 0)
         .sort(([,a], [,b]) => b.total - a.total)
         .slice(0, 10);
     
-    console.log('🔍 Debug - Top spenders:', topSpenders);
-    
     if (topSpenders.length === 0) {
         console.warn('⚠️ No customer spending data found!');
-        console.log('🔍 Raw orders check:', filteredOrders.map(o => ({ 
-            customerName: o.customerName, 
-            total: o.total, 
-            status: o.status 
-        })));
-        
         showEmptyChart(canvas, '😞 No customer spending data available');
         return;
     }
     
     const labels = topSpenders.map(([name]) => name);
     const data = topSpenders.map(([,metrics]) => metrics.total);
-    
-    // Load customer egg PNG images (same as before)
-    const customerImages = {};
-    const imagePromises = labels.map(async (customerName) => {
-        try {
-            const filename = customerName.toLowerCase()
-                .replace(/\s+/g, '_')
-                .replace(/[^a-z0-9_]/g, '')
-                .trim();
-            
-            const possiblePaths = [
-                `eggs/${filename}.png`,
-                `./eggs/${filename}.png`,
-                `/eggs/${filename}.png`
-            ];
-            
-            let imageLoaded = false;
-            
-            for (const imagePath of possiblePaths) {
-                if (imageLoaded) break;
-                
-                await new Promise((resolve) => {
-                    const img = new Image();
-                    img.crossOrigin = 'anonymous';
-                    
-                    img.onload = () => {
-                        customerImages[customerName] = img;
-                        console.log(`✅ Loaded avatar for ${customerName}: ${imagePath}`);
-                        imageLoaded = true;
-                        resolve();
-                    };
-                    
-                    img.onerror = () => {
-                        resolve();
-                    };
-                    
-                    img.src = imagePath;
-                });
-            }
-            
-            if (!imageLoaded) {
-                console.warn(`⚠️ Could not load avatar for ${customerName}`);
-            }
-            
-            return Promise.resolve();
-        } catch (error) {
-            console.warn(`Error loading image for ${customerName}:`, error);
-            return Promise.resolve();
-        }
-    });
-    
-    // Wait for all images to load
-    await Promise.all(imagePromises);
     
     const whimsicalColors = [
         '#FFD700', '#FF6B9D', '#4ECDC4', '#45B7D1', '#96CEB4',
@@ -965,45 +922,27 @@ async function createCustomerSpendersChart() {
                         const y = bar.y - 30;
                         const size = 24;
                         
-                        if (customerImages[customerName]) {
-                            const img = customerImages[customerName];
-                            ctx.save();
-                            ctx.beginPath();
-                            ctx.arc(x, y, size/2, 0, 2 * Math.PI);
-                            ctx.clip();
-                            ctx.drawImage(img, x - size/2, y - size/2, size, size);
-                            ctx.restore();
-                            
-                            ctx.beginPath();
-                            ctx.arc(x, y, size/2 + 2, 0, 2 * Math.PI);
-                            ctx.strokeStyle = '#D4AF37';
-                            ctx.lineWidth = 3;
-                            ctx.stroke();
-                            
-                            ctx.beginPath();
-                            ctx.arc(x, y, size/2 + 1, 0, 2 * Math.PI);
-                            ctx.strokeStyle = '#FFF';
-                            ctx.lineWidth = 1;
-                            ctx.stroke();
-                            
-                        } else {
-                            ctx.font = '22px Arial';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            
-                            ctx.fillStyle = 'rgba(0,0,0,0.3)';
-                            ctx.fillText('🥚', x + 2, y + 2);
-                            
-                            ctx.fillStyle = '#FFD700';
-                            ctx.fillText('🥚', x, y);
-                            
-                            ctx.beginPath();
-                            ctx.arc(x, y, 16, 0, 2 * Math.PI);
-                            ctx.strokeStyle = '#D4AF37';
-                            ctx.lineWidth = 2;
-                            ctx.stroke();
-                        }
+                        // Draw egg emoji with styling
+                        ctx.font = '22px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
                         
+                        // Add shadow for depth
+                        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                        ctx.fillText('🥚', x + 2, y + 2);
+                        
+                        // Main emoji
+                        ctx.fillStyle = '#FFD700';
+                        ctx.fillText('🥚', x, y);
+                        
+                        // Add circular border around emoji
+                        ctx.beginPath();
+                        ctx.arc(x, y, 16, 0, 2 * Math.PI);
+                        ctx.strokeStyle = '#D4AF37';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        
+                        // Add sparkles for top 3 customers
                         if (index < 3) {
                             const sparkles = ['✨', '🌟', '⭐'];
                             ctx.font = '14px Arial';
@@ -1012,6 +951,7 @@ async function createCustomerSpendersChart() {
                             ctx.fillText(sparkles[index], x + 18, y - 12);
                         }
                         
+                        // Add rank number for top 3
                         if (index < 3) {
                             ctx.font = 'bold 10px Inter';
                             ctx.fillStyle = '#FFF';
@@ -1037,6 +977,51 @@ async function createCustomerSpendersChart() {
     }
     
     console.log('✅ Customer spenders chart created successfully!');
+}
+
+/**
+ * Dynamically create the customer spenders section if missing
+ */
+function createCustomerSpendersSection() {
+    console.log('🔧 Creating customer spenders section dynamically...');
+    
+    const analyticsGrid = document.getElementById('analyticsGrid');
+    if (!analyticsGrid) {
+        console.error('❌ Analytics grid not found!');
+        return;
+    }
+    
+    const section = document.createElement('div');
+    section.className = 'chart-section customer-spenders-section';
+    section.innerHTML = `
+        <div class="chart-header">
+            <h3 class="chart-title">🥚 Top Customer Spenders</h3>
+            <p class="chart-subtitle">Our most valued egg-cellent customers!</p>
+        </div>
+        <div class="chart-container">
+            <canvas id="customerSpendersChart"></canvas>
+        </div>
+        <div class="chart-stats">
+            <div class="stat-item">
+                <span class="stat-value" id="topSpenderAmount">$0</span>
+                <span class="stat-label">Top Spender</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="loyalCustomers">0</span>
+                <span class="stat-label">Loyal Customers</span>
+            </div>
+        </div>
+    `;
+    
+    // Insert after the customer section
+    const customerSection = document.querySelector('.customer-section');
+    if (customerSection) {
+        customerSection.insertAdjacentElement('afterend', section);
+    } else {
+        analyticsGrid.appendChild(section);
+    }
+    
+    console.log('✅ Customer spenders section created dynamically');
 }
 
 // 🐛 DEBUG HELPER: Add this function to check your data structure
