@@ -733,52 +733,105 @@ async function createCustomerChart() {
             }
         }
     });
-}
-/**
- * Create customer spenders chart with PNG avatars - COMPLETED
+}/**
+ * FIXED: Create customer spenders chart with enhanced debugging - ADD THIS TO YOUR sales.js
  */
 async function createCustomerSpendersChart() {
     const canvas = document.getElementById('customerSpendersChart');
-    if (!canvas) return;
+    if (!canvas) {
+        console.error('❌ Customer spenders canvas not found');
+        return;
+    }
     
     destroyExistingChart('customerSpenders', 'customerSpendersChart');
     const ctx = canvas.getContext('2d');
     
+    // 🐛 DEBUG: Check what data we're working with
+    console.log('🔍 Debug - Total filtered orders:', filteredOrders.length);
+    console.log('🔍 Debug - Sample order:', filteredOrders[0]);
+    
+    // More robust customer spending calculation
     const customerSpending = {};
-    filteredOrders.forEach(order => {
-        if (!customerSpending[order.customerName]) {
-            customerSpending[order.customerName] = {
-                total: 0,
-                orders: 0
-            };
+    let processedOrders = 0;
+    
+    filteredOrders.forEach((order, index) => {
+        // 🐛 DEBUG: Log first few orders
+        if (index < 3) {
+            console.log(`🔍 Debug - Order ${index}:`, {
+                customerName: order.customerName,
+                total: order.total,
+                status: order.status,
+                hasCustomerInfo: !!(order.customer || order.customerInfo)
+            });
         }
-        customerSpending[order.customerName].total += order.total;
-        customerSpending[order.customerName].orders++;
+        
+        // Get customer name with multiple fallbacks
+        let customerName = order.customerName 
+            || order.customer?.name 
+            || order.customerInfo?.name 
+            || 'Unknown Customer';
+        
+        // Skip 'Unknown' customers if we want only real customers
+        if (customerName === 'Unknown' || customerName === 'Unknown Customer') {
+            console.warn(`⚠️ Skipping order with unknown customer:`, order.orderId);
+            return;
+        }
+        
+        // Only count completed orders for spending (if you want)
+        const orderTotal = (order.status === 'completed' || !order.status) ? order.total : 0;
+        
+        if (orderTotal > 0) {
+            if (!customerSpending[customerName]) {
+                customerSpending[customerName] = {
+                    total: 0,
+                    orders: 0,
+                    avgOrder: 0
+                };
+            }
+            
+            customerSpending[customerName].total += orderTotal;
+            customerSpending[customerName].orders += 1;
+            customerSpending[customerName].avgOrder = customerSpending[customerName].total / customerSpending[customerName].orders;
+            processedOrders++;
+        }
     });
     
+    // 🐛 DEBUG: Check processed data
+    console.log('🔍 Debug - Customer spending data:', customerSpending);
+    console.log('🔍 Debug - Processed orders:', processedOrders);
+    console.log('🔍 Debug - Unique customers:', Object.keys(customerSpending).length);
+    
     const topSpenders = Object.entries(customerSpending)
+        .filter(([name, metrics]) => metrics.total > 0) // Only customers who actually spent money
         .sort(([,a], [,b]) => b.total - a.total)
         .slice(0, 10);
     
+    console.log('🔍 Debug - Top spenders:', topSpenders);
+    
     if (topSpenders.length === 0) {
-        showEmptyChart(canvas, 'No customer data available');
+        console.warn('⚠️ No customer spending data found!');
+        console.log('🔍 Raw orders check:', filteredOrders.map(o => ({ 
+            customerName: o.customerName, 
+            total: o.total, 
+            status: o.status 
+        })));
+        
+        showEmptyChart(canvas, '😞 No customer spending data available');
         return;
     }
     
     const labels = topSpenders.map(([name]) => name);
     const data = topSpenders.map(([,metrics]) => metrics.total);
     
-    // Load customer egg PNG images
+    // Load customer egg PNG images (same as before)
     const customerImages = {};
     const imagePromises = labels.map(async (customerName) => {
         try {
-            // Convert customer name to filename format
             const filename = customerName.toLowerCase()
-                .replace(/\s+/g, '_')      // Replace spaces with underscores
-                .replace(/[^a-z0-9_]/g, '') // Remove special characters
+                .replace(/\s+/g, '_')
+                .replace(/[^a-z0-9_]/g, '')
                 .trim();
             
-            // Try multiple possible paths for the image
             const possiblePaths = [
                 `eggs/${filename}.png`,
                 `./eggs/${filename}.png`,
@@ -802,7 +855,7 @@ async function createCustomerSpendersChart() {
                     };
                     
                     img.onerror = () => {
-                        resolve(); // Continue to next path
+                        resolve();
                     };
                     
                     img.src = imagePath;
@@ -810,7 +863,7 @@ async function createCustomerSpendersChart() {
             }
             
             if (!imageLoaded) {
-                console.warn(`⚠️ Could not load avatar for ${customerName} from any path`);
+                console.warn(`⚠️ Could not load avatar for ${customerName}`);
             }
             
             return Promise.resolve();
@@ -820,7 +873,7 @@ async function createCustomerSpendersChart() {
         }
     });
     
-    // Wait for all images to load (or fail)
+    // Wait for all images to load
     await Promise.all(imagePromises);
     
     const whimsicalColors = [
@@ -853,10 +906,11 @@ async function createCustomerSpendersChart() {
                             const customerName = context.label;
                             const amount = context.parsed.y;
                             const orders = customerSpending[customerName]?.orders || 0;
+                            const avgOrder = customerSpending[customerName]?.avgOrder || 0;
                             return [
                                 `💰 Total Spent: $${amount.toFixed(2)}`,
                                 `📦 Orders: ${orders}`,
-                                `📊 Avg Order: $${(amount / orders).toFixed(2)}`
+                                `📊 Avg Order: $${avgOrder.toFixed(2)}`
                             ];
                         },
                         title: function(context) {
@@ -908,35 +962,24 @@ async function createCustomerSpendersChart() {
                     
                     if (bar) {
                         const x = bar.x;
-                        const y = bar.y - 30; // Position above the bar
-                        const size = 24; // Avatar size
+                        const y = bar.y - 30;
+                        const size = 24;
                         
-                        // Draw customer PNG image or fallback to emoji
                         if (customerImages[customerName]) {
                             const img = customerImages[customerName];
-                            
-                            // Save context for clipping
                             ctx.save();
-                            
-                            // Create circular clipping path
                             ctx.beginPath();
                             ctx.arc(x, y, size/2, 0, 2 * Math.PI);
                             ctx.clip();
-                            
-                            // Draw the image
                             ctx.drawImage(img, x - size/2, y - size/2, size, size);
-                            
-                            // Restore context
                             ctx.restore();
                             
-                            // Add decorative border
                             ctx.beginPath();
                             ctx.arc(x, y, size/2 + 2, 0, 2 * Math.PI);
                             ctx.strokeStyle = '#D4AF37';
                             ctx.lineWidth = 3;
                             ctx.stroke();
                             
-                            // Add inner border for depth
                             ctx.beginPath();
                             ctx.arc(x, y, size/2 + 1, 0, 2 * Math.PI);
                             ctx.strokeStyle = '#FFF';
@@ -944,20 +987,16 @@ async function createCustomerSpendersChart() {
                             ctx.stroke();
                             
                         } else {
-                            // Fallback to egg emoji with enhanced styling
                             ctx.font = '22px Arial';
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
                             
-                            // Add shadow for depth
                             ctx.fillStyle = 'rgba(0,0,0,0.3)';
                             ctx.fillText('🥚', x + 2, y + 2);
                             
-                            // Main emoji
                             ctx.fillStyle = '#FFD700';
                             ctx.fillText('🥚', x, y);
                             
-                            // Add circular border around emoji
                             ctx.beginPath();
                             ctx.arc(x, y, 16, 0, 2 * Math.PI);
                             ctx.strokeStyle = '#D4AF37';
@@ -965,7 +1004,6 @@ async function createCustomerSpendersChart() {
                             ctx.stroke();
                         }
                         
-                        // Add sparkles for top 3 customers
                         if (index < 3) {
                             const sparkles = ['✨', '🌟', '⭐'];
                             ctx.font = '14px Arial';
@@ -974,7 +1012,6 @@ async function createCustomerSpendersChart() {
                             ctx.fillText(sparkles[index], x + 18, y - 12);
                         }
                         
-                        // Add rank number for top 3
                         if (index < 3) {
                             ctx.font = 'bold 10px Inter';
                             ctx.fillStyle = '#FFF';
@@ -987,7 +1024,7 @@ async function createCustomerSpendersChart() {
         }]
     });
     
-    // Update customer stats if elements exist
+    // Update customer stats
     if (topSpenders.length > 0) {
         const topSpenderAmount = topSpenders[0][1].total;
         const loyalCustomers = Object.values(customerSpending).filter(c => c.orders >= 3).length;
@@ -998,8 +1035,52 @@ async function createCustomerSpendersChart() {
         if (topSpenderEl) topSpenderEl.textContent = `$${topSpenderAmount.toFixed(0)}`;
         if (loyalCustomersEl) loyalCustomersEl.textContent = loyalCustomers;
     }
+    
+    console.log('✅ Customer spenders chart created successfully!');
 }
 
+// 🐛 DEBUG HELPER: Add this function to check your data structure
+function debugCustomerData() {
+    console.log('🔍 DEBUGGING CUSTOMER DATA:');
+    console.log('📊 All orders count:', allOrders.length);
+    console.log('📊 Filtered orders count:', filteredOrders.length);
+    console.log('📊 Current time period:', currentTimePeriod);
+    
+    // Check customer names in orders
+    const customerNames = filteredOrders.map(order => ({
+        orderId: order.orderId,
+        customerName: order.customerName,
+        total: order.total,
+        status: order.status,
+        hasCustomer: !!(order.customer),
+        hasCustomerInfo: !!(order.customerInfo)
+    }));
+    
+    console.log('📊 Customer names sample:', customerNames.slice(0, 5));
+    
+    // Check unique customers
+    const uniqueCustomers = [...new Set(filteredOrders.map(o => o.customerName))];
+    console.log('📊 Unique customers:', uniqueCustomers);
+    
+    // Check if all customers are "Unknown"
+    const unknownCount = filteredOrders.filter(o => 
+        o.customerName === 'Unknown' || 
+        o.customerName === 'Unknown Customer' || 
+        !o.customerName
+    ).length;
+    
+    console.log('📊 Unknown customers:', unknownCount, 'out of', filteredOrders.length);
+    
+    return {
+        totalOrders: allOrders.length,
+        filteredOrders: filteredOrders.length,
+        uniqueCustomers: uniqueCustomers,
+        unknownCount: unknownCount
+    };
+}
+
+// Add this to your global scope
+window.debugCustomerData = debugCustomerData;
 /**
  * Create order status flow chart
  */
