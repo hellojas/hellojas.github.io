@@ -1079,8 +1079,6 @@ function debugCustomerData() {
     };
 }
 
-// Add this to your global scope
-window.debugCustomerData = debugCustomerData;
 /**
  * Create order status flow chart
  */
@@ -1743,7 +1741,7 @@ window.filterByTimePeriod = filterByTimePeriod;
 window.refreshSalesData = refreshSalesData;
 window.exportSalesData = exportSalesData;
 window.goBackToAdmin = goBackToAdmin;
-
+window.debugCustomerData = debugCustomerData;
 // ===================================
 // INITIALIZATION ON LOAD
 // ===================================
