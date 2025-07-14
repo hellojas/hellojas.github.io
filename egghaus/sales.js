@@ -77,74 +77,27 @@ let isLoading = false;
  * Safely destroy existing chart and clean up canvas
  */
 function destroyExistingChart(chartKey, canvasId) {
-    console.log(`🧹 Destroying existing chart: ${chartKey} (${canvasId})`);
-    
-    // Method 1: Destroy from our charts object
     if (charts[chartKey]) {
         try {
             charts[chartKey].destroy();
-            console.log(`✅ Chart ${chartKey} destroyed from charts object`);
         } catch (error) {
-            console.warn(`⚠️ Warning destroying chart ${chartKey}:`, error);
+            console.warn(`Warning destroying chart ${chartKey}:`, error);
         }
         delete charts[chartKey];
     }
     
     const canvas = document.getElementById(canvasId);
-    if (!canvas) {
-        console.log(`ℹ️ Canvas ${canvasId} not found`);
-        return;
-    }
-    
-    // Method 2: Use Chart.js getChart method
-    try {
-        const existingChart = Chart.getChart(canvas);
-        if (existingChart) {
-            existingChart.destroy();
-            console.log(`✅ Chart destroyed using Chart.getChart for ${canvasId}`);
+    if (canvas) {
+        try {
+            const existingChart = Chart.getChart(canvas);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+        } catch (error) {
+            // Ignore errors here
         }
-    } catch (error) {
-        console.warn(`⚠️ Chart.getChart method failed for ${canvasId}:`, error);
-    }
-    
-    // Method 3: Force remove all Chart.js data attributes and references
-    try {
-        // Clear the canvas context
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-        
-        // Remove all Chart.js related attributes
-        canvas.removeAttribute('data-chartjs-chart-id');
-        canvas.removeAttribute('width');
-        canvas.removeAttribute('height');
-        canvas.removeAttribute('style');
-        
-        // Reset canvas size to force re-initialization
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
-        
-        console.log(`✅ Canvas ${canvasId} cleaned and reset`);
-        
-    } catch (error) {
-        console.warn(`⚠️ Canvas cleanup failed for ${canvasId}:`, error);
-    }
-    
-    // Method 4: Nuclear option - recreate the canvas element
-    try {
-        const parent = canvas.parentElement;
-        if (parent) {
-            const newCanvas = document.createElement('canvas');
-            newCanvas.id = canvasId;
-            parent.replaceChild(newCanvas, canvas);
-            console.log(`✅ Canvas ${canvasId} recreated`);
-        }
-    } catch (error) {
-        console.warn(`⚠️ Canvas recreation failed for ${canvasId}:`, error);
     }
 }
-
 
 /**
  * Enhanced chart destruction with waiting periods
@@ -179,8 +132,8 @@ async function destroyExistingChartAsync(chartKey, canvasId) {
 /**
  * Destroy all existing charts safely with async approach
  */
-async function destroyAllCharts() {
-    console.log('🧹 Cleaning up all existing charts...');
+function destroyAllCharts() {
+    console.log('🧹 Cleaning up existing charts...');
     
     const chartConfigs = [
         { key: 'revenue', canvasId: 'revenueChart' },
@@ -196,21 +149,14 @@ async function destroyAllCharts() {
         { key: 'daily', canvasId: 'dailyChart' }
     ];
     
-    // Destroy all charts in parallel
-    await Promise.all(
-        chartConfigs.map(({ key, canvasId }) => 
-            destroyExistingChartAsync(key, canvasId)
-        )
-    );
+    chartConfigs.forEach(({ key, canvasId }) => {
+        destroyExistingChart(key, canvasId);
+    });
     
-    // Clear the charts object
     charts = {};
-    
-    // Wait a bit more for all cleanup to complete
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    console.log('✅ All charts cleanup completed');
+    console.log('✅ Chart cleanup completed');
 }
+
 
 // ===================================
 // INITIALIZATION
@@ -224,14 +170,16 @@ async function initializeSalesDashboard() {
     
     try {
         showLoading(true);
+        
+        // Simple cleanup
         destroyAllCharts();
         
-        // First, load product and season data from data.js
+        // Load data
         await loadDataFromFile();
-        
-        // Then load and process orders from Firebase
         await loadOrdersData();
         filterOrdersByTimePeriod(currentTimePeriod);
+        
+        // Initialize charts
         await initializeAllCharts();
         generateDetailedTables();
         setupRealtimeUpdates();
@@ -420,23 +368,18 @@ function filterOrdersByTimePeriod(period) {
  */
 async function updateAllAnalytics() {
     try {
-        console.log('🔄 Updating all analytics...');
         showLoading(true);
         
-        // Clean up all existing charts first
-        await destroyAllCharts();
+        // Simple cleanup
+        destroyAllCharts();
         
-        // Wait a bit more for complete cleanup
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Short wait
+        await new Promise(resolve => setTimeout(resolve, 100));
         
-        // Re-initialize all charts
+        // Re-initialize
         await initializeAllCharts();
-        
-        // Update other components
         generateDetailedTables();
         updateOverviewStats();
-        
-        console.log('✅ All analytics updated successfully');
         
     } catch (error) {
         console.error('❌ Error updating analytics:', error);
@@ -445,6 +388,7 @@ async function updateAllAnalytics() {
         showLoading(false);
     }
 }
+
 // ===================================
 // CHART INITIALIZATION
 // ===================================
@@ -455,44 +399,36 @@ async function updateAllAnalytics() {
 async function initializeAllCharts() {
     console.log('📊 Initializing all charts...');
     
-    // Wait a bit for DOM to be fully ready
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Short wait for DOM
+    await new Promise(resolve => setTimeout(resolve, 100));
     
-    try {
-        const chartInitializers = [
-            { name: 'Revenue', fn: createRevenueChart, required: true },
-            { name: 'Popularity', fn: createPopularityChart, required: true },
-            { name: 'Hourly', fn: createHourlyChart, required: true },
-            { name: 'Category', fn: createCategoryChart, required: true },
-            { name: 'Prep Time', fn: createPrepTimeChart, required: true },
-            { name: 'Customer', fn: createCustomerChart, required: true },
-            { name: 'Customer Spenders', fn: createCustomerSpendersChart, required: true }, // Not required
-            { name: 'Status', fn: createStatusChart, required: true },
-            { name: 'Seasonal', fn: createSeasonalChart, required: true },
-            { name: 'Metrics', fn: createMetricsChart, required: true },
-            { name: 'Daily', fn: createDailyChart, required: true }
-        ];
-        
-        for (const { name, fn, required } of chartInitializers) {
-            try {
-                await fn();
-                console.log(`✅ ${name} chart initialized`);
-            } catch (error) {
-                console.error(`❌ Error initializing ${name} chart:`, error);
-                if (required) {
-                    console.warn(`⚠️ ${name} chart is required but failed to initialize`);
-                } else {
-                    console.log(`ℹ️ ${name} chart is optional and will be skipped`);
-                }
-            }
+    const chartInitializers = [
+        { name: 'Revenue', fn: createRevenueChart },
+        { name: 'Popularity', fn: createPopularityChart },
+        { name: 'Hourly', fn: createHourlyChart },
+        { name: 'Category', fn: createCategoryChart },
+        { name: 'Prep Time', fn: createPrepTimeChart },
+        { name: 'Customer', fn: createCustomerChart },
+        { name: 'Customer Spenders', fn: createCustomerSpendersChart },
+        { name: 'Status', fn: createStatusChart },
+        { name: 'Seasonal', fn: createSeasonalChart },
+        { name: 'Metrics', fn: createMetricsChart },
+        { name: 'Daily', fn: createDailyChart }
+    ];
+    
+    for (const { name, fn } of chartInitializers) {
+        try {
+            await fn();
+            console.log(`✅ ${name} chart initialized`);
+        } catch (error) {
+            console.error(`❌ Error initializing ${name} chart:`, error);
         }
-        
-        console.log('✅ Chart initialization process completed');
-    } catch (error) {
-        console.error('❌ Error in chart initialization process:', error);
-        throw error;
     }
+    
+    console.log('✅ Chart initialization completed');
 }
+
+
 /**
  * Create revenue trends chart
  */
