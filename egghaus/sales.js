@@ -1759,16 +1759,6 @@ function showError(message) {
     }, 5000);
 }
 
-/**
- * Show empty chart when no data
- */
-function showEmptyChart(canvas, message) {
-    const container = canvas.parentElement;
-    if (container) {
-        container.innerHTML = `<div class="chart-loading">${message}</div>`;
-    }
-}
-
 // ===================================
 // USER ACTIONS
 // ===================================
