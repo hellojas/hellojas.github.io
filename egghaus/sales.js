@@ -77,37 +77,110 @@ let isLoading = false;
  * Safely destroy existing chart and clean up canvas
  */
 function destroyExistingChart(chartKey, canvasId) {
+    console.log(`🧹 Destroying existing chart: ${chartKey} (${canvasId})`);
+    
+    // Method 1: Destroy from our charts object
     if (charts[chartKey]) {
         try {
             charts[chartKey].destroy();
+            console.log(`✅ Chart ${chartKey} destroyed from charts object`);
         } catch (error) {
-            console.warn(`Warning destroying chart ${chartKey}:`, error);
+            console.warn(`⚠️ Warning destroying chart ${chartKey}:`, error);
         }
         delete charts[chartKey];
     }
     
     const canvas = document.getElementById(canvasId);
-    if (canvas) {
+    if (!canvas) {
+        console.log(`ℹ️ Canvas ${canvasId} not found`);
+        return;
+    }
+    
+    // Method 2: Use Chart.js getChart method
+    try {
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) {
+            existingChart.destroy();
+            console.log(`✅ Chart destroyed using Chart.getChart for ${canvasId}`);
+        }
+    } catch (error) {
+        console.warn(`⚠️ Chart.getChart method failed for ${canvasId}:`, error);
+    }
+    
+    // Method 3: Force remove all Chart.js data attributes and references
+    try {
+        // Clear the canvas context
         const ctx = canvas.getContext('2d');
         if (ctx) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
-        canvas.removeAttribute('data-chartjs-chart-id');
         
-        if (window.Chart && window.Chart.getChart) {
-            const existingChart = window.Chart.getChart(canvas);
-            if (existingChart) {
-                existingChart.destroy();
-            }
+        // Remove all Chart.js related attributes
+        canvas.removeAttribute('data-chartjs-chart-id');
+        canvas.removeAttribute('width');
+        canvas.removeAttribute('height');
+        canvas.removeAttribute('style');
+        
+        // Reset canvas size to force re-initialization
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        
+        console.log(`✅ Canvas ${canvasId} cleaned and reset`);
+        
+    } catch (error) {
+        console.warn(`⚠️ Canvas cleanup failed for ${canvasId}:`, error);
+    }
+    
+    // Method 4: Nuclear option - recreate the canvas element
+    try {
+        const parent = canvas.parentElement;
+        if (parent) {
+            const newCanvas = document.createElement('canvas');
+            newCanvas.id = canvasId;
+            parent.replaceChild(newCanvas, canvas);
+            console.log(`✅ Canvas ${canvasId} recreated`);
         }
+    } catch (error) {
+        console.warn(`⚠️ Canvas recreation failed for ${canvasId}:`, error);
     }
 }
 
+
 /**
- * Destroy all existing charts safely
+ * Enhanced chart destruction with waiting periods
  */
-function destroyAllCharts() {
-    console.log('🧹 Cleaning up existing charts...');
+async function destroyExistingChartAsync(chartKey, canvasId) {
+    console.log(`🧹 Async destroying chart: ${chartKey} (${canvasId})`);
+    
+    // First attempt
+    destroyExistingChart(chartKey, canvasId);
+    
+    // Wait a bit for cleanup to complete
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Double-check and clean again if needed
+    const canvas = document.getElementById(canvasId);
+    if (canvas) {
+        try {
+            const stillExisting = Chart.getChart(canvas);
+            if (stillExisting) {
+                console.log(`⚠️ Chart still exists after first cleanup, destroying again...`);
+                stillExisting.destroy();
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+        } catch (error) {
+            console.warn(`⚠️ Second cleanup attempt failed:`, error);
+        }
+    }
+    
+    console.log(`✅ Async chart cleanup completed for ${chartKey}`);
+}
+
+/**
+ * Destroy all existing charts safely with async approach
+ */
+async function destroyAllCharts() {
+    console.log('🧹 Cleaning up all existing charts...');
     
     const chartConfigs = [
         { key: 'revenue', canvasId: 'revenueChart' },
@@ -123,12 +196,20 @@ function destroyAllCharts() {
         { key: 'daily', canvasId: 'dailyChart' }
     ];
     
-    chartConfigs.forEach(({ key, canvasId }) => {
-        destroyExistingChart(key, canvasId);
-    });
+    // Destroy all charts in parallel
+    await Promise.all(
+        chartConfigs.map(({ key, canvasId }) => 
+            destroyExistingChartAsync(key, canvasId)
+        )
+    );
     
+    // Clear the charts object
     charts = {};
-    console.log('✅ Chart cleanup completed');
+    
+    // Wait a bit more for all cleanup to complete
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    console.log('✅ All charts cleanup completed');
 }
 
 // ===================================
@@ -339,14 +420,23 @@ function filterOrdersByTimePeriod(period) {
  */
 async function updateAllAnalytics() {
     try {
+        console.log('🔄 Updating all analytics...');
         showLoading(true);
-        destroyAllCharts();
         
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Clean up all existing charts first
+        await destroyAllCharts();
         
+        // Wait a bit more for complete cleanup
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Re-initialize all charts
         await initializeAllCharts();
+        
+        // Update other components
         generateDetailedTables();
         updateOverviewStats();
+        
+        console.log('✅ All analytics updated successfully');
         
     } catch (error) {
         console.error('❌ Error updating analytics:', error);
@@ -355,7 +445,6 @@ async function updateAllAnalytics() {
         showLoading(false);
     }
 }
-
 // ===================================
 // CHART INITIALIZATION
 // ===================================
@@ -887,203 +976,135 @@ async function createCustomerChart() {
 async function createCustomerSpendersChart() {
     console.log('🥚 Starting customer spenders chart creation...');
     
-    // Helper function to wait for DOM element with retries
-    async function waitForElement(selector, maxRetries = 5, delay = 300) {
-        for (let i = 0; i < maxRetries; i++) {
-            const element = document.querySelector(selector);
-            if (element) {
-                console.log(`✅ Found element ${selector} on attempt ${i + 1}`);
-                return element;
-            }
-            
-            console.log(`⏳ Waiting for element ${selector}, attempt ${i + 1}/${maxRetries}`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
-        
-        console.error(`❌ Element ${selector} not found after ${maxRetries} attempts`);
-        return null;
-    }
-    
-    // Wait for canvas with retries
-    let canvas = await waitForElement('#customerSpendersChart', 3, 200);
-    
-    if (!canvas) {
-        console.warn('⚠️ Customer spenders canvas not found - checking section and rebuilding...');
-        
-        // Check if the parent section exists
-        const section = document.querySelector('.customer-spenders-section');
-        if (!section) {
-            console.log('❌ Customer spenders section missing - creating it...');
+    try {
+        // Step 1: Ensure canvas exists or create section
+        let canvas = document.getElementById('customerSpendersChart');
+        if (!canvas) {
+            console.log('⚠️ Customer spenders canvas not found - creating section...');
             createCustomerSpendersSection();
             
-            // Wait for the newly created canvas
-            canvas = await waitForElement('#customerSpendersChart', 3, 300);
-        } else {
-            console.log('✅ Section exists but canvas missing - rebuilding canvas...');
+            // Wait for DOM to update
+            await new Promise(resolve => setTimeout(resolve, 300));
+            canvas = document.getElementById('customerSpendersChart');
             
-            // The section exists but canvas is missing - rebuild the canvas
-            const chartContainer = section.querySelector('.chart-container');
-            if (chartContainer) {
-                // Clear the container and add fresh canvas
-                chartContainer.innerHTML = '<canvas id="customerSpendersChart"></canvas>';
-                console.log('🔧 Rebuilt canvas element');
-                
-                // Wait a bit for DOM to update
-                await new Promise(resolve => setTimeout(resolve, 100));
-                canvas = document.getElementById('customerSpendersChart');
+            if (!canvas) {
+                console.error('❌ Cannot create customer spenders canvas');
+                return;
             }
         }
-    }
-    
-    // Final check
-    if (!canvas) {
-        console.error('❌ Still cannot find customer spenders canvas after all attempts');
-        return;
-    }
-    
-    console.log('✅ Customer spenders canvas found, proceeding with chart creation...');
-    
-    // Ensure canvas is ready and has context
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-        console.error('❌ Cannot get 2D context from canvas');
-        return;
-    }
-    
-    // Destroy any existing chart
-    destroyExistingChart('customerSpenders', 'customerSpendersChart');
-    
-    // Try multiple data sources (NO MANUAL FALLBACK)
-    let customerSpending = {};
-    let processedOrders = 0;
-    let dataSource = 'unknown';
-    
-    // Method 1: Try using global Firebase function
-    if (window.getAllOrders && typeof window.getAllOrders === 'function') {
-        console.log('🔥 Using Firebase getAllOrders function...');
-        try {
-            const allFirebaseOrders = await window.getAllOrders();
-            console.log(`📊 Got ${allFirebaseOrders.length} orders from Firebase`);
+        
+        console.log('✅ Customer spenders canvas found');
+        
+        // Step 2: Thorough cleanup with async approach
+        await destroyExistingChartAsync('customerSpenders', 'customerSpendersChart');
+        
+        // Step 3: Re-get canvas after cleanup (in case it was recreated)
+        canvas = document.getElementById('customerSpendersChart');
+        if (!canvas) {
+            console.error('❌ Canvas lost after cleanup');
+            return;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            console.error('❌ Cannot get 2D context from canvas');
+            return;
+        }
+        
+        // Step 4: Process customer data
+        let customerSpending = {};
+        let processedOrders = 0;
+        
+        // Use filteredOrders for customer spending data
+        if (filteredOrders && filteredOrders.length > 0) {
+            console.log('📊 Processing customer spending data...');
             
-            allFirebaseOrders.forEach(order => {
-                const customerName = order.customer?.name || order.customerInfo?.name || 'Unknown';
+            filteredOrders.forEach(order => {
+                let customerName = order.customerName;
                 
-                if (customerName !== 'Unknown' && customerName.trim() !== '') {
+                // Skip invalid customer names
+                if (!customerName || customerName === 'Unknown' || customerName.trim() === '') {
+                    return;
+                }
+                
+                const orderTotal = (order.status === 'completed' || !order.status) ? order.total : 0;
+                
+                if (orderTotal > 0) {
                     if (!customerSpending[customerName]) {
                         customerSpending[customerName] = { total: 0, orders: 0 };
                     }
                     
-                    const orderTotal = order.pricing?.total || order.total || 0;
-                    if (orderTotal > 0) {
-                        customerSpending[customerName].total += orderTotal;
-                        customerSpending[customerName].orders += 1;
-                        processedOrders++;
-                    }
+                    customerSpending[customerName].total += orderTotal;
+                    customerSpending[customerName].orders += 1;
+                    processedOrders++;
                 }
             });
-            
-            dataSource = 'Firebase global function';
-            
-        } catch (error) {
-            console.warn('⚠️ Firebase function failed, trying filtered orders:', error);
         }
-    }
-    
-    // Method 2: Use filteredOrders if Firebase method didn't work
-    if (processedOrders === 0 && filteredOrders && filteredOrders.length > 0) {
-        console.log('📊 Using filteredOrders as fallback...');
         
-        filteredOrders.forEach(order => {
-            let customerName = order.customerName;
-            
-            // Fallback extractions
-            if (!customerName || customerName === 'Unknown' || customerName.trim() === '') {
-                customerName = order.customer?.name || order.customerInfo?.name;
-            }
-            
-            // Skip if still no valid customer name
-            if (!customerName || customerName === 'Unknown' || customerName.trim() === '') {
-                return;
-            }
-            
-            const orderTotal = (order.status === 'completed' || !order.status) ? order.total : 0;
-            
-            if (orderTotal > 0) {
-                if (!customerSpending[customerName]) {
-                    customerSpending[customerName] = { total: 0, orders: 0 };
+        // Step 5: Prepare chart data
+        const topSpenders = Object.entries(customerSpending)
+            .filter(([name, metrics]) => metrics.total > 0)
+            .sort(([,a], [,b]) => b.total - a.total)
+            .slice(0, 10);
+        
+        if (topSpenders.length === 0) {
+            console.warn('⚠️ No customer spending data found');
+            showEmptyChart(canvas, '😞 No customer spending data available yet');
+            return;
+        }
+        
+        console.log(`📊 Found ${topSpenders.length} top spenders from ${processedOrders} orders`);
+        
+        // Step 6: Create chart data
+        const labels = topSpenders.map(([name]) => name);
+        const data = topSpenders.map(([,metrics]) => metrics.total);
+        
+        const whimsicalColors = [
+            '#FFD700', '#FF6B9D', '#4ECDC4', '#45B7D1', '#96CEB4',
+            '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE'
+        ];
+        
+        // Step 7: Pre-load customer images
+        const customerImages = {};
+        await Promise.all(
+            labels.map(async (customerName) => {
+                try {
+                    const imagePath = `./eggs/${customerName.toLowerCase()}.png`;
+                    const img = new Image();
+                    
+                    return new Promise((resolve) => {
+                        img.onload = () => {
+                            customerImages[customerName] = img;
+                            resolve();
+                        };
+                        img.onerror = () => {
+                            customerImages[customerName] = null;
+                            resolve();
+                        };
+                        img.src = imagePath;
+                    });
+                } catch (error) {
+                    customerImages[customerName] = null;
                 }
-                
-                customerSpending[customerName].total += orderTotal;
-                customerSpending[customerName].orders += 1;
-                processedOrders++;
-            }
-        });
+            })
+        );
         
-        dataSource = 'filtered orders';
-    }
-    
-    // REMOVED: Manual fallback data - we only show real customer data now
-    
-    console.log('🔍 Customer spending analysis:', {
-        dataSource: dataSource,
-        totalCustomers: Object.keys(customerSpending).length,
-        processedOrders: processedOrders,
-        sampleCustomers: Object.keys(customerSpending).slice(0, 5)
-    });
-    
-    // Get top spenders
-    const topSpenders = Object.entries(customerSpending)
-        .filter(([name, metrics]) => metrics.total > 0)
-        .sort(([,a], [,b]) => b.total - a.total)
-        .slice(0, 10);
-    
-    if (topSpenders.length === 0) {
-        console.warn('⚠️ No customer spending data found - showing empty state');
-        showEmptyChart(canvas, '😞 No customer spending data available yet');
-        return;
-    }
-    
-    // Prepare chart data
-    const labels = topSpenders.map(([name]) => name);
-    const data = topSpenders.map(([,metrics]) => metrics.total);
-    
-    const whimsicalColors = [
-        '#FFD700', '#FF6B9D', '#4ECDC4', '#45B7D1', '#96CEB4',
-        '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE'
-    ];
-    
-    // IMPROVED: Pre-load customer images
-    const customerImages = {};
-    await Promise.all(
-        labels.map(async (customerName) => {
-            try {
-                const imagePath = `./eggs/${customerName.toLowerCase()}.png`;
-                const img = new Image();
-                
-                return new Promise((resolve) => {
-                    img.onload = () => {
-                        customerImages[customerName] = img;
-                        console.log(`✅ Loaded image for ${customerName}`);
-                        resolve();
-                    };
-                    img.onerror = () => {
-                        console.warn(`⚠️ No image found for ${customerName} at ${imagePath}`);
-                        customerImages[customerName] = null;
-                        resolve();
-                    };
-                    img.src = imagePath;
-                });
-            } catch (error) {
-                console.warn(`⚠️ Error loading image for ${customerName}:`, error);
-                customerImages[customerName] = null;
-            }
-        })
-    );
-    
-    // Create the chart with customer images
-    try {
-        console.log('🎨 Creating Chart.js chart with customer images...');
+        // Step 8: Create the chart with additional safeguards
+        console.log('🎨 Creating Chart.js chart...');
         
+        // Final check that no chart exists
+        try {
+            const stillExisting = Chart.getChart(canvas);
+            if (stillExisting) {
+                console.log('⚠️ Chart still exists right before creation, destroying...');
+                stillExisting.destroy();
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        } catch (error) {
+            console.warn('⚠️ Final chart check failed:', error);
+        }
+        
+        // Create the chart
         charts.customerSpenders = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -1165,22 +1186,17 @@ async function createCustomerSpendersChart() {
                         
                         if (bar) {
                             const x = bar.x;
-                            const y = bar.y - 35; // Moved up slightly for better positioning
-                            const avatarSize = 28; // Size for customer images
+                            const y = bar.y - 35;
+                            const avatarSize = 28;
                             
-                            // Check if we have a custom image for this customer
                             const customerImage = customerImages[customerName];
                             
                             if (customerImage) {
                                 // Draw customer image
                                 ctx.save();
-                                
-                                // Create circular clipping path
                                 ctx.beginPath();
                                 ctx.arc(x, y, avatarSize / 2, 0, 2 * Math.PI);
                                 ctx.clip();
-                                
-                                // Draw the customer image
                                 ctx.drawImage(
                                     customerImage, 
                                     x - avatarSize / 2, 
@@ -1188,46 +1204,24 @@ async function createCustomerSpendersChart() {
                                     avatarSize, 
                                     avatarSize
                                 );
-                                
                                 ctx.restore();
                                 
-                                // Add border around image
+                                // Add border
                                 ctx.beginPath();
                                 ctx.arc(x, y, avatarSize / 2, 0, 2 * Math.PI);
                                 ctx.strokeStyle = '#D4AF37';
                                 ctx.lineWidth = 3;
                                 ctx.stroke();
-                                
-                                // Add subtle shadow
-                                ctx.beginPath();
-                                ctx.arc(x + 2, y + 2, avatarSize / 2, 0, 2 * Math.PI);
-                                ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-                                ctx.lineWidth = 1;
-                                ctx.stroke();
-                                
                             } else {
-                                // Fallback to egg emoji if no image
+                                // Fallback to egg emoji
                                 ctx.font = '22px Arial';
                                 ctx.textAlign = 'center';
                                 ctx.textBaseline = 'middle';
-                                
-                                // Add shadow for depth
-                                ctx.fillStyle = 'rgba(0,0,0,0.3)';
-                                ctx.fillText('🥚', x + 2, y + 2);
-                                
-                                // Main emoji
                                 ctx.fillStyle = '#FFD700';
                                 ctx.fillText('🥚', x, y);
-                                
-                                // Add circular border around emoji
-                                ctx.beginPath();
-                                ctx.arc(x, y, 16, 0, 2 * Math.PI);
-                                ctx.strokeStyle = '#D4AF37';
-                                ctx.lineWidth = 2;
-                                ctx.stroke();
                             }
                             
-                            // Add sparkles for top 3 customers
+                            // Add sparkles for top 3
                             if (index < 3) {
                                 const sparkles = ['✨', '🌟', '⭐'];
                                 ctx.font = '14px Arial';
@@ -1235,40 +1229,34 @@ async function createCustomerSpendersChart() {
                                 ctx.textAlign = 'center';
                                 ctx.fillText(sparkles[index], x + 22, y - 15);
                             }
-                            
-                            // Add rank number for top 3
-                            if (index < 3) {
-                                ctx.font = 'bold 10px Inter';
-                                ctx.fillStyle = '#FFF';
-                                ctx.textAlign = 'center';
-                                ctx.fillText(`#${index + 1}`, x, y + 25);
-                            }
                         }
                     });
                 }
             }]
         });
         
-        console.log('✅ Customer spenders chart created successfully with custom images!');
+        console.log('✅ Customer spenders chart created successfully!');
         
-        // Update customer stats
+        // Step 9: Update stats
         if (topSpenders.length > 0) {
             const topSpenderAmount = topSpenders[0][1].total;
             const loyalCustomers = Object.values(customerSpending).filter(c => c.orders >= 3).length;
             
-            // Wait for stats elements to be available
-            const topSpenderEl = await waitForElement('#topSpenderAmount', 2, 100);
-            const loyalCustomersEl = await waitForElement('#loyalCustomers', 2, 100);
+            const topSpenderEl = document.getElementById('topSpenderAmount');
+            const loyalCustomersEl = document.getElementById('loyalCustomers');
             
             if (topSpenderEl) topSpenderEl.textContent = `$${topSpenderAmount.toFixed(0)}`;
             if (loyalCustomersEl) loyalCustomersEl.textContent = loyalCustomers;
-            
-            console.log(`📊 Updated stats - Top spender: $${topSpenderAmount.toFixed(0)}, Loyal customers: ${loyalCustomers}`);
         }
         
-    } catch (chartError) {
-        console.error('❌ Error creating chart:', chartError);
-        showEmptyChart(canvas, 'Error creating customer chart');
+    } catch (error) {
+        console.error('❌ Error creating customer spenders chart:', error);
+        
+        // Show error in chart area
+        const canvas = document.getElementById('customerSpendersChart');
+        if (canvas) {
+            showEmptyChart(canvas, 'Error creating customer chart');
+        }
     }
 }
 
