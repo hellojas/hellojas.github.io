@@ -1889,6 +1889,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 100);
 });
 
+
 window.addEventListener('beforeunload', () => {
     if (salesListener) {
         salesListener();
@@ -1896,4 +1897,12 @@ window.addEventListener('beforeunload', () => {
     destroyAllCharts();
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📊 Sales analytics page loaded');
+    
+    // Wait a bit longer for all DOM elements to be ready
+    setTimeout(() => {
+        initializeSalesDashboard();
+    }, 500); // Increased from 100ms to 500ms
+});
 console.log('📊 Sales analytics script loaded successfully!');
