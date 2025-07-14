@@ -377,7 +377,7 @@ async function initializeAllCharts() {
             { name: 'Category', fn: createCategoryChart, required: true },
             { name: 'Prep Time', fn: createPrepTimeChart, required: true },
             { name: 'Customer', fn: createCustomerChart, required: true },
-            { name: 'Customer Spenders', fn: createCustomerSpendersChart, required: false }, // Not required
+            { name: 'Customer Spenders', fn: createCustomerSpendersChart, required: true }, // Not required
             { name: 'Status', fn: createStatusChart, required: true },
             { name: 'Seasonal', fn: createSeasonalChart, required: true },
             { name: 'Metrics', fn: createMetricsChart, required: true },
