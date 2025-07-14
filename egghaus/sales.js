@@ -1727,6 +1727,7 @@ window.refreshSalesData = refreshSalesData;
 window.exportSalesData = exportSalesData;
 window.goBackToAdmin = goBackToAdmin;
 window.debugCustomerData = debugCustomerData;
+window.createCustomerSpendersChart = createCustomerSpendersChart;
 // ===================================
 // INITIALIZATION ON LOAD
 // ===================================
