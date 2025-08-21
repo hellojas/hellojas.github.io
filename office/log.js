@@ -9,6 +9,7 @@ import { getDatabase, ref, set, serverTimestamp } from 'https://www.gstatic.com/
 const firebaseConfig = {
   apiKey: "AIzaSyCJIAxjywQhuKuqWqBa4FgUZuM6RrQ7y-E",
   authDomain: "office-127b0.firebaseapp.com",
+  databaseURL: "https://office-127b0-default-rtdb.firebaseio.com/", // ADD THIS LINE
   projectId: "office-127b0",
   storageBucket: "office-127b0.firebasestorage.app",
   messagingSenderId: "554800223425",
