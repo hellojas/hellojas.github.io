@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Checker - Auto Update</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Location Checker</h1>
+        
+        <div class="answer checking" id="answer">...</div>
+        
+        <div class="subtitle" id="subtitle">Initializing location tracking...</div>
+        
+        <div class="details" id="details"></div>
+        
+        <div class="location">
+            <strong>Target:</strong> 75 9th Ave, New York, NY 10011<br>
+            Chelsea Market, Manhattan<br>
+            <span id="firebase-status">Connecting to Firebase...</span>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
