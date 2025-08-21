@@ -34,7 +34,7 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
 
 function getLocationMessage(isAtLocation, latitude, longitude) {
     if (isAtLocation) {
-        return "Jas is present, her soul is not.";
+        return "📈 Creating shareholder value.";
     }
     
     // Check for specific locations when not at office
