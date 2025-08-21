@@ -17,6 +17,78 @@ const firebaseConfig = {
 const app = initApp(firebaseConfig);
 const database = getDatabase(app);
 
+function getLocationMessage(isAtLocation, latitude, longitude) {
+    if (isAtLocation) {
+        return "Jas is present, her soul is not.";
+    }
+    
+    // Check for specific locations when not at office
+    const locations = [
+        {
+            // 75 9th Ave, New York, NY 10011 (Chelsea Market - Music Studio)
+            lat: 40.742352,
+            lng: -74.006210,
+            message: "🎶 Currently in a meeting with Bass, Guitar, and Saxophone."
+        },
+        {
+            lat: 40.716321,
+            lng: -73.948107,
+            message: "🏠 Today's commute: 12 steps."
+        },
+        {
+            // 221 N 14th St, Brooklyn, NY 11249 (climbing gym)
+            lat: 40.7168,
+            lng: -73.9542,
+            message: "🧗 Jas is upgrading her grip strength instead of her career."
+        },
+        {
+            // 182 Broome St, New York, NY 10002 (climbing gym)
+            lat: 40.7181,
+            lng: -73.9929,
+            message: "🧗 Jas is upgrading her grip strength instead of her career."
+        }
+    ];
+    
+    const radiusMeters = 160.9; // 0.1 mile in meters
+    
+    for (const location of locations) {
+        const distance = calculateDistance(latitude, longitude, location.lat, location.lng);
+        if (distance <= radiusMeters) {
+            return location.message;
+        }
+    }
+    
+    // Default message when not at any special location
+    return "🦄 Galavanting with a donut";
+}
+
+function calculateDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lng2-lng1) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c;
+}
+    if (!timestamp) return 'Unknown';
+    
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMinutes = Math.floor((now - date) / (1000 * 60));
+    
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
+    if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)} hours ago`;
+    
+    return date.toLocaleDateString() + ' at ' + date.toLocaleTimeString();
+}
+
 function formatTimestamp(timestamp) {
     if (!timestamp) return 'Unknown';
     
@@ -47,14 +119,19 @@ function showStatus(data) {
     }
     
     const isAtLocation = data.atLocation;
+    const latitude = data.latitude;
+    const longitude = data.longitude;
     
     // Show "No, :)" when NOT at location, "Yes, :(" when AT location
     answerEl.textContent = isAtLocation ? 'Yes, :(' : 'No, :)';
     answerEl.className = `answer ${isAtLocation ? 'yes' : 'no'}`;
     
+    // Get custom message based on location
+    const locationMessage = getLocationMessage(isAtLocation, latitude, longitude);
+    
     subtitleEl.innerHTML = `
         <span class="live-indicator"></span>
-        ${isAtLocation ? 'Jas is at the office' : 'Jas is not at the office'}
+        ${locationMessage}
     `;
     
     const distanceText = data.distance ? 
