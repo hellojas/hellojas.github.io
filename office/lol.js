@@ -17,6 +17,21 @@ const firebaseConfig = {
 const app = initApp(firebaseConfig);
 const database = getDatabase(app);
 
+function calculateDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lng2-lng1) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c;
+}
+
 function getLocationMessage(isAtLocation, latitude, longitude) {
     if (isAtLocation) {
         return "Jas is present, her soul is not.";
@@ -60,33 +75,6 @@ function getLocationMessage(isAtLocation, latitude, longitude) {
     
     // Default message when not at any special location
     return "🦄 Galavanting with a donut";
-}
-
-function calculateDistance(lat1, lng1, lat2, lng2) {
-    const R = 6371e3; // Earth's radius in meters
-    const φ1 = lat1 * Math.PI/180;
-    const φ2 = lat2 * Math.PI/180;
-    const Δφ = (lat2-lat1) * Math.PI/180;
-    const Δλ = (lng2-lng1) * Math.PI/180;
-
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ/2) * Math.sin(Δλ/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-    return R * c;
-}
-    if (!timestamp) return 'Unknown';
-    
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMinutes = Math.floor((now - date) / (1000 * 60));
-    
-    if (diffMinutes < 1) return 'Just now';
-    if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
-    if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)} hours ago`;
-    
-    return date.toLocaleDateString() + ' at ' + date.toLocaleTimeString();
 }
 
 function formatTimestamp(timestamp) {
