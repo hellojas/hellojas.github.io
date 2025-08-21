@@ -18,7 +18,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// Target location: Chelsea Market (Jas's office)
 const targetLocation = {
     lat: 40.742352,
     lng: -74.006210
