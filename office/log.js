@@ -1,3 +1,6 @@
+// Debug logging
+console.log('log.js loading...');
+
 // Firebase configuration (replace with your config)
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getDatabase, ref, set, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
@@ -13,11 +16,13 @@ const firebaseConfig = {
   measurementId: "G-8WXVRR5VJD"
 };
 
+console.log('Initializing Firebase...');
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
+// Target location coordinates
 const targetLocation = {
     lat: 40.742352,
     lng: -74.006210
@@ -39,11 +44,12 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
     return R * c;
 }
 
-async function updateFirebase(isAtOffice, location, distance) {
+async function updateFirebase(isAtLocation, location, distance) {
     try {
-        const statusRef = ref(database, 'jasOfficeStatus');
+        console.log('Updating Firebase...', { isAtLocation, location, distance });
+        const statusRef = ref(database, 'locationStatus');
         await set(statusRef, {
-            atOffice: isAtOffice,
+            atLocation: isAtLocation,
             latitude: location.lat,
             longitude: location.lng,
             distance: Math.round(distance),
@@ -53,6 +59,7 @@ async function updateFirebase(isAtOffice, location, distance) {
         
         document.getElementById('firebase-status').innerHTML = 
             `<span style="color: #2ecc71;">✓ Firebase updated</span>`;
+        console.log('Firebase update successful');
         return true;
     } catch (error) {
         console.error('Firebase update failed:', error);
@@ -63,16 +70,18 @@ async function updateFirebase(isAtOffice, location, distance) {
 }
 
 function showResult(isWithinRange, distance, currentLocation) {
+    console.log('Showing result:', { isWithinRange, distance, currentLocation });
+    
     const answerEl = document.getElementById('answer');
     const subtitleEl = document.getElementById('subtitle');
     const detailsEl = document.getElementById('details');
     
-    answerEl.textContent = isWithinRange ? 'AT OFFICE' : 'NOT AT OFFICE';
+    answerEl.textContent = isWithinRange ? 'AT LOCATION' : 'NOT AT LOCATION';
     answerEl.className = `answer ${isWithinRange ? 'yes' : 'no'}`;
     
     subtitleEl.innerHTML = `
         <span class="live-indicator"></span>
-        ${isWithinRange ? 'You are at the office' : 'You are away from office'} - Updating Firebase...
+        ${isWithinRange ? 'You are at the target location' : 'You are away from target location'} - Updating Firebase...
     `;
     
     const distanceText = distance < 1000 ? 
@@ -80,7 +89,7 @@ function showResult(isWithinRange, distance, currentLocation) {
         `${(distance/1000).toFixed(1)} kilometers`;
     
     detailsEl.innerHTML = `
-        Distance from office: ${distanceText}<br>
+        Distance from target: ${distanceText}<br>
         Your coordinates: ${currentLocation.lat.toFixed(6)}, ${currentLocation.lng.toFixed(6)}<br>
         Last checked: ${new Date().toLocaleTimeString()}
     `;
@@ -90,6 +99,8 @@ function showResult(isWithinRange, distance, currentLocation) {
 }
 
 function showError(message) {
+    console.error('Location error:', message);
+    
     const answerEl = document.getElementById('answer');
     const subtitleEl = document.getElementById('subtitle');
     const detailsEl = document.getElementById('details');
@@ -103,10 +114,14 @@ function showError(message) {
 }
 
 function checkLocation() {
+    console.log('Checking location...');
+    
     if (!navigator.geolocation) {
         showError('Your browser does not support location services');
         return;
     }
+    
+    console.log('Geolocation supported, requesting position...');
     
     const options = {
         enableHighAccuracy: true,
@@ -116,6 +131,8 @@ function checkLocation() {
     
     navigator.geolocation.getCurrentPosition(
         function(position) {
+            console.log('Location obtained:', position.coords);
+            
             const currentLocation = {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
@@ -130,6 +147,8 @@ function checkLocation() {
             showResult(isWithinRange, distance, currentLocation);
         },
         function(error) {
+            console.error('Geolocation error:', error);
+            
             let errorMessage;
             switch(error.code) {
                 case error.PERMISSION_DENIED:
@@ -155,7 +174,12 @@ function checkLocation() {
 document.getElementById('firebase-status').textContent = 'Firebase initialized';
 
 // Check location when page loads
-window.addEventListener('load', checkLocation);
+window.addEventListener('load', function() {
+    console.log('Page loaded, starting location check...');
+    checkLocation();
+});
 
 // Re-check and update Firebase every 30 seconds
 setInterval(checkLocation, 30000);
+
+console.log('log.js setup complete');
