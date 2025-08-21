@@ -142,7 +142,6 @@ function showStatus(data) {
     
     detailsEl.innerHTML = `
         Distance from target: ${distanceText}<br>
-        Last location: ${data.latitude ? `${data.latitude.toFixed(6)}, ${data.longitude.toFixed(6)}` : 'Unknown'}<br>
         Last updated: ${lastUpdated}
     `;
 }
