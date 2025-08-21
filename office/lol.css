@@ -40,11 +40,11 @@ h1 {
 }
 
 .yes {
-    color: #2ecc71;
+    color: #e74c3c;
 }
 
 .no {
-    color: #e74c3c;
+    color: #2ecc71;
 }
 
 .checking {
@@ -83,6 +83,21 @@ h1 {
     color: #e74c3c;
     font-size: 1.1rem;
     margin-top: 2rem;
+}
+
+.live-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background: #e74c3c;
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
 }
 
 @media (max-width: 600px) {
