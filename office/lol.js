@@ -2,6 +2,13 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getDatabase, ref, onValue, off } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
+// Debug logging
+console.log('lol.js loading...');
+
+// Firebase configuration (replace with your config)
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getDatabase, ref, onValue, off } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
 // Your Firebase config object (replace with your actual config)
 const firebaseConfig = {
   apiKey: "AIzaSyCJIAxjywQhuKuqWqBa4FgUZuM6RrQ7y-E",
@@ -13,6 +20,7 @@ const firebaseConfig = {
   measurementId: "G-8WXVRR5VJD"
 };
 
+console.log('Initializing Firebase...');
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -33,6 +41,8 @@ function formatTimestamp(timestamp) {
 }
 
 function showStatus(data) {
+    console.log('Showing status:', data);
+    
     const answerEl = document.getElementById('answer');
     const subtitleEl = document.getElementById('subtitle');
     const detailsEl = document.getElementById('details');
@@ -45,15 +55,15 @@ function showStatus(data) {
         return;
     }
     
-    const isAtOffice = data.atOffice;
+    const isAtLocation = data.atLocation;
     
-    // Show "No, :)" when NOT at office, "Yes, :(" when AT office
-    answerEl.textContent = isAtOffice ? 'Yes, :(' : 'No, :)';
-    answerEl.className = `answer ${isAtOffice ? 'yes' : 'no'}`;
+    // Show "No, :)" when NOT at location, "Yes, :(" when AT location
+    answerEl.textContent = isAtLocation ? 'Yes, :(' : 'No, :)';
+    answerEl.className = `answer ${isAtLocation ? 'yes' : 'no'}`;
     
     subtitleEl.innerHTML = `
         <span class="live-indicator"></span>
-        ${isAtOffice ? 'Jas is at the office' : 'Jas is not at the office'}
+        ${isAtLocation ? 'User is at the location' : 'User is not at the location'}
     `;
     
     const distanceText = data.distance ? 
@@ -63,13 +73,15 @@ function showStatus(data) {
     const lastUpdated = formatTimestamp(data.timestamp);
     
     detailsEl.innerHTML = `
-        Distance from office: ${distanceText}<br>
+        Distance from target: ${distanceText}<br>
         Last location: ${data.latitude ? `${data.latitude.toFixed(6)}, ${data.longitude.toFixed(6)}` : 'Unknown'}<br>
         Last updated: ${lastUpdated}
     `;
 }
 
 function showError(message) {
+    console.error('Firebase error:', message);
+    
     const answerEl = document.getElementById('answer');
     const subtitleEl = document.getElementById('subtitle');
     const detailsEl = document.getElementById('details');
@@ -81,12 +93,15 @@ function showError(message) {
 }
 
 function startListening() {
-    const statusRef = ref(database, 'jasOfficeStatus');
+    console.log('Starting Firebase listener...');
+    
+    const statusRef = ref(database, 'locationStatus');
     
     // Listen for real-time updates
     onValue(statusRef, (snapshot) => {
         try {
             const data = snapshot.val();
+            console.log('Firebase data received:', data);
             showStatus(data);
         } catch (error) {
             console.error('Error processing Firebase data:', error);
@@ -100,6 +115,7 @@ function startListening() {
 
 // Start listening when page loads
 window.addEventListener('load', function() {
+    console.log('Page loaded, starting Firebase listener...');
     try {
         startListening();
     } catch (error) {
@@ -110,6 +126,8 @@ window.addEventListener('load', function() {
 
 // Clean up listener when page unloads
 window.addEventListener('beforeunload', function() {
-    const statusRef = ref(database, 'jasOfficeStatus');
+    const statusRef = ref(database, 'locationStatus');
     off(statusRef);
 });
+
+console.log('lol.js setup complete');
