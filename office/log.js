@@ -4,15 +4,15 @@ import { getDatabase, ref, set, serverTimestamp } from 'https://www.gstatic.com/
 
 // Your Firebase config object (replace with your actual config)
 const firebaseConfig = {
-    // Add your Firebase config here
-    apiKey: "your-api-key",
-    authDomain: "your-project.firebaseapp.com",
-    databaseURL: "https://your-project-default-rtdb.firebaseio.com/",
-    projectId: "your-project-id",
-    storageBucket: "your-project.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "your-app-id"
+  apiKey: "AIzaSyCJIAxjywQhuKuqWqBa4FgUZuM6RrQ7y-E",
+  authDomain: "office-127b0.firebaseapp.com",
+  projectId: "office-127b0",
+  storageBucket: "office-127b0.firebasestorage.app",
+  messagingSenderId: "554800223425",
+  appId: "1:554800223425:web:ecb87d46fee7c3e5a1f040",
+  measurementId: "G-8WXVRR5VJD"
 };
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
