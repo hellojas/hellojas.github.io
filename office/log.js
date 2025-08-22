@@ -42,7 +42,7 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
 async function updateFirebase(isAtLocation, location, distance) {
     try {
         // Only log status info, not coordinates
-        console.log('Updating Firebase...', { isAtLocation, distance: Math.round(distance) });
+        console.log('Updating DB...', { isAtLocation, distance: Math.round(distance) });
         const statusRef = ref(database, 'locationStatus');
         await set(statusRef, {
             atLocation: isAtLocation,
@@ -55,10 +55,10 @@ async function updateFirebase(isAtLocation, location, distance) {
         
         document.getElementById('firebase-status').innerHTML = 
             `<span style="color: #2ecc71;">✓ Firebase updated</span>`;
-        console.log('Firebase update successful');
+        console.log('DB update successful');
         return true;
     } catch (error) {
-        console.error('Firebase update failed:', error);
+        console.error('DB update failed:', error);
         document.getElementById('firebase-status').innerHTML = 
             `<span style="color: #e74c3c;">✗ Firebase error: ${error.message}</span>`;
         return false;
