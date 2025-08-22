@@ -19,8 +19,8 @@ const database = getDatabase(app);
 
 // Target location coordinates
 const targetLocation = {
-    lat: 40.742352,
-    lng: -74.006210
+    lat: 40.7420,
+    lng: -74.0059
 };
 const allowedRadius = 100; // meters
 
@@ -41,7 +41,8 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
 
 async function updateFirebase(isAtLocation, location, distance) {
     try {
-        console.log('Updating Firebase...', { isAtLocation, location, distance });
+        // Only log status info, not coordinates
+        console.log('Updating Firebase...', { isAtLocation, distance: Math.round(distance) });
         const statusRef = ref(database, 'locationStatus');
         await set(statusRef, {
             atLocation: isAtLocation,
@@ -65,7 +66,8 @@ async function updateFirebase(isAtLocation, location, distance) {
 }
 
 function showResult(isWithinRange, distance, currentLocation) {
-    console.log('Showing result:', { isWithinRange, distance, currentLocation });
+    // Only log status info, not coordinates
+    console.log('Showing result:', { isWithinRange, distance: Math.round(distance) });
     
     const answerEl = document.getElementById('answer');
     const subtitleEl = document.getElementById('subtitle');
@@ -126,7 +128,7 @@ function checkLocation() {
     
     navigator.geolocation.getCurrentPosition(
         function(position) {
-            console.log('Location obtained:', position.coords);
+            console.log('Location obtained successfully');
             
             const currentLocation = {
                 lat: position.coords.latitude,
