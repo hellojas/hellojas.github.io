@@ -34,7 +34,7 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
 
 function getLocationMessage(isAtLocation, latitude, longitude) {
     if (isAtLocation) {
-        return "📈 Creating shareholder value.";
+        return "Jas is present, her soul is not.";
     }
     
     // Check for specific locations when not at office
@@ -92,7 +92,12 @@ function formatTimestamp(timestamp) {
 }
 
 function showStatus(data) {
-    console.log('Showing status:', data);
+    // Only log status info, not coordinates
+    console.log('Showing status:', { 
+        atLocation: data?.atLocation, 
+        distance: data?.distance,
+        hasData: !!data 
+    });
     
     const answerEl = document.getElementById('answer');
     const subtitleEl = document.getElementById('subtitle');
@@ -156,7 +161,8 @@ function startListening() {
     onValue(statusRef, (snapshot) => {
         try {
             const data = snapshot.val();
-            console.log('Firebase data received:', data);
+            // Don't log the full data object with coordinates
+            console.log('Firebase data received:', data ? 'Status updated' : 'No data');
             showStatus(data);
         } catch (error) {
             console.error('Error processing Firebase data:', error);
@@ -171,6 +177,10 @@ function startListening() {
 // Start listening when page loads
 window.addEventListener('load', function() {
     console.log('Page loaded, starting Firebase listener...');
+    
+    // Easter egg for curious developers
+    console.log('john get out of there 😸');
+    
     try {
         startListening();
     } catch (error) {
