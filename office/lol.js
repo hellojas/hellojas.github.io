@@ -1,6 +1,6 @@
 // Firebase configuration
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getDatabase, ref, set, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+import { initializeApp as initApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getDatabase, ref, onValue, off } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCJIAxjywQhuKuqWqBa4FgUZuM6RrQ7y-E",
@@ -14,15 +14,8 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+const app = initApp(firebaseConfig);
 const database = getDatabase(app);
-
-// Target location coordinates
-const targetLocation = {
-    lat: 40.7420,
-    lng: -74.0059
-};
-const allowedRadius = 100; // meters
 
 function calculateDistance(lat1, lng1, lat2, lng2) {
     const R = 6371e3; // Earth's radius in meters
@@ -39,144 +32,167 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
     return R * c;
 }
 
-async function updateFirebase(isAtLocation, location, distance) {
-    try {
-        // Only log status info, not coordinates
-        console.log('Updating DB...', { isAtLocation, distance: Math.round(distance) });
-        const statusRef = ref(database, 'locationStatus');
-        await set(statusRef, {
-            atLocation: isAtLocation,
-            latitude: location.lat,
-            longitude: location.lng,
-            distance: Math.round(distance),
-            lastUpdated: serverTimestamp(),
-            timestamp: Date.now()
-        });
-        
-        document.getElementById('firebase-status').innerHTML = 
-            `<span style="color: #2ecc71;">✓ Firebase updated</span>`;
-        console.log('DB update successful');
-        return true;
-    } catch (error) {
-        console.error('DB update failed:', error);
-        document.getElementById('firebase-status').innerHTML = 
-            `<span style="color: #e74c3c;">✗ Firebase error: ${error.message}</span>`;
-        return false;
+function getLocationMessage(isAtLocation, latitude, longitude) {
+    if (isAtLocation) {
+        return "Jas is present, her soul is not.";
     }
+    
+    // Check for specific locations when not at office
+    const locations = [
+        {
+            // 75 9th Ave, New York, NY 10011 (Chelsea Market - Music Studio)
+            lat: 40.742352,
+            lng: -74.006210,
+            message: "🎶 Currently in a meeting with Bass, Guitar, and Saxophone."
+        },
+        {
+            lat: 40.716321,
+            lng: -73.948107,
+            message: "🏠 Today's commute: 12 steps."
+        },
+        {
+            // 221 N 14th St, Brooklyn, NY 11249 (climbing gym)
+            lat: 40.7168,
+            lng: -73.9542,
+            message: "🧗 Jas is upgrading her grip strength instead of her career."
+        },
+        {
+            // 182 Broome St, New York, NY 10002 (climbing gym)
+            lat: 40.7181,
+            lng: -73.9929,
+            message: "🧗 Jas is upgrading her grip strength instead of her career."
+        }
+    ];
+    
+    const radiusMeters = 160.9; // 0.1 mile in meters
+    
+    for (const location of locations) {
+        const distance = calculateDistance(latitude, longitude, location.lat, location.lng);
+        if (distance <= radiusMeters) {
+            return location.message;
+        }
+    }
+    
+    // Default message when not at any special location
+    return "🦄 Galavanting with a donut";
 }
 
-function showResult(isWithinRange, distance, currentLocation) {
+function formatTimestamp(timestamp) {
+    if (!timestamp) return 'Unknown';
+    
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMinutes = Math.floor((now - date) / (1000 * 60));
+    
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
+    if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)} hours ago`;
+    
+    return date.toLocaleDateString() + ' at ' + date.toLocaleTimeString();
+}
+
+function showStatus(data) {
     // Only log status info, not coordinates
-    console.log('Showing result:', { isWithinRange, distance: Math.round(distance) });
+    console.log('Showing status:', { 
+        atLocation: data?.atLocation, 
+        distance: data?.distance,
+        hasData: !!data 
+    });
     
     const answerEl = document.getElementById('answer');
     const subtitleEl = document.getElementById('subtitle');
     const detailsEl = document.getElementById('details');
     
-    answerEl.textContent = isWithinRange ? 'AT LOCATION' : 'NOT AT LOCATION';
-    answerEl.className = `answer ${isWithinRange ? 'yes' : 'no'}`;
-    
-    subtitleEl.innerHTML = `
-        <span class="live-indicator"></span>
-        ${isWithinRange ? 'You are at the target location' : 'You are away from target location'} - Updating Firebase...
-    `;
-    
-    const distanceText = distance < 1000 ? 
-        `${Math.round(distance)} meters` : 
-        `${(distance/1000).toFixed(1)} kilometers`;
-    
-    detailsEl.innerHTML = `
-        Distance from target: ${distanceText}<br>
-        Your coordinates: ${currentLocation.lat.toFixed(6)}, ${currentLocation.lng.toFixed(6)}<br>
-        Last checked: ${new Date().toLocaleTimeString()}
-    `;
-    
-    // Update Firebase with status
-    updateFirebase(isWithinRange, currentLocation, distance);
-}
-
-function showError(message) {
-    console.error('Location error:', message);
-    
-    const answerEl = document.getElementById('answer');
-    const subtitleEl = document.getElementById('subtitle');
-    const detailsEl = document.getElementById('details');
-    
-    answerEl.textContent = 'ERROR';
-    answerEl.className = 'answer error';
-    subtitleEl.textContent = 'Unable to determine location';
-    detailsEl.innerHTML = `<div class="error">${message}</div>`;
-    document.getElementById('firebase-status').innerHTML = 
-        `<span style="color: #f39c12;">⚠ Cannot update Firebase - location unknown</span>`;
-}
-
-function checkLocation() {
-    console.log('Checking location...');
-    
-    if (!navigator.geolocation) {
-        showError('Your browser does not support location services');
+    if (!data) {
+        answerEl.textContent = '?';
+        answerEl.className = 'answer error';
+        subtitleEl.innerHTML = '<span class="live-indicator"></span>No data available';
+        detailsEl.innerHTML = '<div class="error">No status updates found</div>';
         return;
     }
     
-    console.log('Geolocation supported, requesting position...');
+    const isAtLocation = data.atLocation;
+    const latitude = data.latitude;
+    const longitude = data.longitude;
     
-    const options = {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 30000
-    };
+    // Show "No, :)" when NOT at location, "Yes, :(" when AT location
+    answerEl.textContent = isAtLocation ? 'Yes, :(' : 'No, :)';
+    answerEl.className = `answer ${isAtLocation ? 'yes' : 'no'}`;
     
-    navigator.geolocation.getCurrentPosition(
-        function(position) {
-            console.log('Location obtained successfully');
-            
-            const currentLocation = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-            };
-            
-            const distance = calculateDistance(
-                currentLocation.lat, currentLocation.lng,
-                targetLocation.lat, targetLocation.lng
-            );
-            
-            const isWithinRange = distance <= allowedRadius;
-            showResult(isWithinRange, distance, currentLocation);
-        },
-        function(error) {
-            console.error('Geolocation error:', error);
-            
-            let errorMessage;
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    errorMessage = "Please enable location access and refresh this page";
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    errorMessage = "Location information is unavailable";
-                    break;
-                case error.TIMEOUT:
-                    errorMessage = "Location request timed out";
-                    break;
-                default:
-                    errorMessage = "An unknown error occurred";
-                    break;
-            }
-            showError(errorMessage);
-        },
-        options
-    );
+    // Get custom message based on location
+    const locationMessage = getLocationMessage(isAtLocation, latitude, longitude);
+    
+    subtitleEl.innerHTML = `
+        <span class="live-indicator"></span>
+        ${locationMessage}
+    `;
+    
+    const distanceText = data.distance ? 
+        (data.distance < 1000 ? `${data.distance}m` : `${(data.distance/1000).toFixed(1)}km`) : 
+        'Unknown';
+    
+    const lastUpdated = formatTimestamp(data.timestamp);
+    
+    detailsEl.innerHTML = `
+        Distance from target: ${distanceText}<br>
+        Last updated: ${lastUpdated}
+    `;
 }
 
-// Initialize Firebase status
-document.getElementById('firebase-status').textContent = 'Firebase initialized';
+function showError(message) {
+    console.error('DB error:', message);
+    
+    const answerEl = document.getElementById('answer');
+    const subtitleEl = document.getElementById('subtitle');
+    const detailsEl = document.getElementById('details');
+    
+    answerEl.textContent = '?';
+    answerEl.className = 'answer error';
+    subtitleEl.innerHTML = '<span class="live-indicator"></span>Connection error';
+    detailsEl.innerHTML = `<div class="error">${message}</div>`;
+}
 
-// Check location when page loads
+function startListening() {
+    console.log('Starting DB listener...');
+    
+    const statusRef = ref(database, 'locationStatus');
+    
+    // Listen for real-time updates
+    onValue(statusRef, (snapshot) => {
+        try {
+            const data = snapshot.val();
+            // Don't log the full data object with coordinates
+            console.log('DB data received:', data ? 'Status updated' : 'No data');
+            showStatus(data);
+        } catch (error) {
+            console.error('Error processing DB data:', error);
+            showError('Error processing status data');
+        }
+    }, (error) => {
+        console.error('DB listening error:', error);
+        showError(`DB connection error: ${error.message}`);
+    });
+}
+
+// Start listening when page loads
 window.addEventListener('load', function() {
-    console.log('Page loaded, starting location check...');
-    checkLocation();
+    console.log('Page loaded, starting DB listener...');
+    
+    // Easter egg for curious developers
+    console.log('john get out of there 😸');
+    
+    try {
+        startListening();
+    } catch (error) {
+        console.error('Failed to initialize DB listener:', error);
+        showError('Failed to connect to DB');
+    }
 });
 
-// Re-check and update Firebase every 30 seconds
-setInterval(checkLocation, 30000);
+// Clean up listener when page unloads
+window.addEventListener('beforeunload', function() {
+    const statusRef = ref(database, 'locationStatus');
+    off(statusRef);
+});
 
-console.log("john get out of there 😸");
+console.log('john get out of there 😸');
