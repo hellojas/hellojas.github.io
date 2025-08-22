@@ -194,5 +194,3 @@ window.addEventListener('beforeunload', function() {
     const statusRef = ref(database, 'locationStatus');
     off(statusRef);
 });
-
-console.log('john get out of there 😸');
